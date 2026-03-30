@@ -1,0 +1,528 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<xml>
+	<!-- CABECERA -->				
+	<coll name="coll1" sql="select CONCAT('  ',O.NUMEROORDEN) AS MAP_NUMEROORDEN,
+                CONCAT('  ',O.DESCRIPCION) AS MAP_DESCRIPCION,
+                CONCAT('  ',O.OBSERVACIONES) AS MAP_OBSERVACIONES,
+                concat('RESUMEN OT - ',O.NUMEROORDEN) AS MAP_TITULO,
+                '/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/ide_iberdrola.png' AS MAP_LOGO,
+                O.ID as ID,
+                O.NUMEROORDEN,
+				O.TASK_ID,
+                IFNULL(O.PDF_CREADO,0) AS PDF_CREADO,
+                O.CLAVE_GRUPO_HR,
+                O.CONTADOR_GRUPOS_HR,
+                concat('  ', O.CONTADOR_GRUPOS_HR) as MAP_CONTADOR_GRUPO_HR,
+                concat('  ', O.CLASE_ORDEN,' - ',CO.DESCRIPCION) AS MAP_CLASE_ORDEN,
+                concat('  ', O.CLASE_ACTIVIDAD,' - ',IFNULL(CA.DESCRIPCION,'Sin descripción')) AS MAP_CLASE_ACTIVIDAD,
+                concat('  ',ROUND(ifnull(H.HORAS_VIAJE_FINALES,0), 2)) AS MAP_HORAS_DESPLAZAMIENTO,
+                concat('  ',ROUND(ifnull(H.HORAS_TRABAJO_FINALES,0),2)) AS MAP_HORAS_INTERVENCION,	
+                concat('  ',CASE WHEN O.PUESTO_TRABAJO2 IS NULL OR O.PUESTO_TRABAJO2 = '' THEN 'Sin brigada' ELSE O.PUESTO_TRABAJO2 END) as MAP_PUESTO_TRABAJO2,
+                concat('  ',CASE WHEN O.CODIGO_EQUIPO IS NULL OR O.CODIGO_EQUIPO = '' THEN 'Sin Equipo' ELSE O.CODIGO_EQUIPO END) as MAP_CODIGO_EQUIPO,
+                concat('  ',CASE WHEN O.UBICACION_TECNICA IS NOT NULL THEN concat(O.UBICACION_TECNICA,' - ') ELSE '' END,O.NOMBRE_UBICACION) AS MAP_INSTALACION,	
+                'Medios Auxiliares – Obligatorio' as MAP_TITLE_MEDAUX,
+                (select COUNT(1) from gen_uts_mediosauxiliares mea where mea.NUMEROORDEN=O.NUMEROORDEN) AS MAP_VER_MEDIOS_AUX,
+                'Operaciones – Obligatorio' as MAP_TITLE_OPER,
+                (select COUNT(1) from gen_uts_operaciones mea where mea.NUMEROORDEN=O.NUMEROORDEN and mea.BAJA=0) AS MAP_VER_OPER,
+                'Contadores – Obligatorio' as MAP_TITLE_CONT,
+                (select count(1) from gen_ot_cabecera O2
+				INNER JOIN gen_uts_puntosmedidaequipo gup ON gup.TIPO_PTO_MEDIDA='C' AND gup.COD_EQUIPO=O2.CODIGO_EQUIPO
+				inner join gen_uts_medicionequipos me on  gup.COD_EQUIPO=O2.CODIGO_EQUIPO AND me.PUNTO_MEDIDA = gup.PUNTO_MEDIDA AND me.NUMEROORDEN=O2.NUMEROORDEN
+				WHERE O2.NUMEROORDEN=O.NUMEROORDEN and O2.TASK_ID=O.TASK_ID) AS MAP_VER_CONT,
+                'Anomalías – Obligatorio' as MAP_TITLE_ANOM,
+                (select COUNT(1) from gen_uts_an_anomalias mea where (mea.NUMEROORDEN=O.NUMEROORDEN or mea.ORDEN_ORIGEN=O.NUMEROORDEN) AND mea.BAJA=0) AS MAP_VER_ANOM,
+                'Galería OT – Opcional' as MAP_TITLE_GALERIA,
+                (select COUNT(1) from gen_ot_fotos mea where mea.NUMEROORDEN=O.NUMEROORDEN and mea.BAJA=0 and mea.TIPO not in ('EVIDENCIAS_UTS','EVIDENCIAS_PREV_UTS')) AS MAP_VER_GALERIA		
+,
+		'Estudio de Inundabilidad' AS MAP_TITLE_INUNDABILIDAD,
+		(SELECT COUNT(1) FROM gen_inundabilidad_ot_bloques_rev ir
+		 WHERE ir.NUMEROORDEN = O.NUMEROORDEN AND ir.revisado = 1
+		   AND O.CLASE_ORDEN IN ('DPRP','DPRN')
+		   AND O.UBICACION_TECNICA LIKE 'C%') AS MAP_VER_INUNDABILIDAD,
+		O.UBICACION_TECNICA AS MAP_UBICACION_TECNICA	            from gen_ot_cabecera O
+                LEFT JOIN gen_maestro_clase_orden CO ON CO.CODIGO = O.CLASE_ORDEN
+                LEFT JOIN (SELECT SUM(HORAS_VIAJE_FINALES) AS HORAS_VIAJE_FINALES,SUM(HORAS_TRABAJO_FINALES) AS HORAS_TRABAJO_FINALES,NUMEROORDEN from gen_ot_estados_ex goee WHERE BAJA=0 GROUP BY NUMEROORDEN) H ON H.NUMEROORDEN = O.NUMEROORDEN
+                LEFT JOIN gen_maestro_clase_actividad CA ON CA.CODIGO = O.CLASE_ACTIVIDAD" lmargin="5%" rmargin="5%" tmargin="5%" bmargin="5%" 
+				filter="O.ID=##ID## order by O.ID DESC" entry-point="true" show-header="false" show-pagination="true" show-file-date-creation="true"> 
+				
+				<footer height="20p">
+					<prop name="MAP_TITLE_FOOTER" type="TL" width="98%" height="15p" title="La revisión se ha realizado según lo indicado en el manual técnico MT 2.04.02" align="center" font-size="10" lines="1" forecolor="#000000" lmargin="1%"/>
+				</footer>
+				
+				<prop name="MAP_TITULO" type="T" lmargin="8%" tmargin="5p" width="64%" align="center" fontbold="true" font-size="18" copy-to-all-pages="true"/>
+				<prop name="MAP_LOGO" 	type="IMG" 	lmargin="19%" width="9%" align="right"  copy-to-all-pages="true" newline="false" keep-aspect-ratio="true"/>
+			
+				<frame name="frmDatosIdentificativos" width="100%" border-color="#000000" tmargin="15p">
+
+					<frame name="frmTITLE_DATOS_IDENTIFICACION" border="true" border-left="true" border-bottom="true" border-right="true" border-top="true" border-color="#000000" width="100%" bgcolor="#7b9c66">
+						<prop name="MAP_TITLE_DATOS_IDENTIFICACION" type="TL" width="98%" height="15p" title="Datos identificativos" align="center" 
+							  bgcolor="#00000000" font-size="10" lines="1" fontbold="true" border-color="#000000" forecolor="#ffffff" lmargin="1%"/>
+					</frame>
+					
+					<prop name="MAP_TL_NUMEROORDEN" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Numero de OT:  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000" />
+					<prop name="MAP_NUMEROORDEN" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000" />
+			
+					<prop name="MAP_TL_CLASE_ORDEN" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Clase de Orden: " align="center" bgcolor="#ffffff" lines="1" font-size="9" text-border-color="#000000" />
+					<prop name="MAP_CLASE_ORDEN" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1" newline="false" bgcolor="#ffffff" font-size="9" text-border-color="#000000" />
+			
+					<prop name="MAP_TL_CLASE_ACTIVIDAD" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Clase de Actividad: " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000"/>
+					<prop name="MAP_CLASE_ACTIVIDAD" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1" newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000"/>
+				
+					<prop name="MAP_TL_INSTALACION" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Instalación / UTS: " align="center" bgcolor="#ffffff" lines="1" font-size="9" text-border-color="#000000"/>
+					<prop name="MAP_INSTALACION" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1" newline="false" bgcolor="#ffffff" font-size="9" text-border-color="#000000"/>
+					
+					<prop name="MAP_TL_PUESTO_TRABAJO2" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Brigada: " align="center" bgcolor="#ffffff" lines="1" font-size="9" text-border-color="#000000"/>
+					<prop name="MAP_PUESTO_TRABAJO2" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1" newline="false" bgcolor="#ffffff" font-size="9" text-border-color="#000000"/>
+					
+					<prop name="MAP_TL_CODIGO_EQUIPO" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Equipo: " align="center" bgcolor="#ffffff" lines="1" font-size="9" text-border-color="#000000"/>
+					<prop name="MAP_CODIGO_EQUIPO" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1" newline="false" bgcolor="#ffffff" font-size="9" text-border-color="#000000"/>
+					
+				</frame>
+                
+                <frame name="frmDatosGenerales" width="100%" tmargin="15p">
+					<frame name="frmTITLE_DATOS_GENERALES" border="true" border-left="true" border-bottom="true" border-right="true" border-top="true" border-color="#000000" width="100%" bgcolor="#7b9c66">
+						<prop name="MAP_TITLE_DATOS_GENERALES" type="TL" width="98%" height="15p" title="Datos Generales" align="center"
+							  bgcolor="#00000000" font-size="10" lines="1" fontbold="true" forecolor="#ffffff" border-color="#000000" lmargin="1%"/>
+					</frame>
+					
+				</frame>
+
+				<prop name="MAP_HOJAS_RUTA" content="@HojasRuta" type="Z" />
+				<content name="@HojasRuta" src="HojasRuta" filter="COD_HR='##FLD_CLAVE_GRUPO_HR##' AND CONT_HR='##FLD_CONTADOR_GRUPOS_HR##' AND IFNULL(SUBOPERACION,0) &gt; 0 ORDER BY IFNULL(SUBOPERACION,0) ASC"/>
+				
+                <prop name="MAP_TL_CONTADOR_GRUPO_HR" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Contador: " align="center" bgcolor="#ffffff" lines="1" font-size="9" text-border-color="#000000"/>
+				<prop name="MAP_CONTADOR_GRUPO_HR" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1" newline="false" bgcolor="#ffffff" font-size="9" text-border-color="#000000"/>
+					
+				<prop name="MAP_HR" type="TL" title=" " width="100%" height="2p" bgcolor="#000000" lines="1" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" text-border-top="true" text-border-color="#000000"/>
+				
+				<prop name="MAP_TITLE_NOTIFICACION" border="true" text-border-left="true" text-border-bottom="true" type="TL" title="  Notificación" width="13%" height="15p" align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000"/>
+				<prop name="MAP_TL_HORAS_DESPLAZAMIENTO" border="true" text-border-left="true" text-border-bottom="true" type="TL" title="  Horas Desplazamiento " width="23%" height="15p" align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000" newline="false"/>
+				<prop name="MAP_HORAS_DESPLAZAMIENTO" border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="64%" height="15p"  align="left" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000" newline="false"/>
+
+				<prop name="MAP_TITLE_NOTIFICACION_VACIO" border="true" text-border-left="true" text-border-bottom="true" type="TL" title=" " width="13%" height="15p" align="center" bgcolor="#ffffff" lines="1" font-size="9" text-border-color="#000000"/>
+				<prop name="MAP_TL_HORAS_INTERVENCION" border="true" text-border-left="true" text-border-bottom="true" type="TL" title="  Horas Intervencion " width="23%" height="15p" align="center" bgcolor="#ffffff" lines="1" font-size="9" text-border-color="#000000" newline="false"/>
+				<prop name="MAP_HORAS_INTERVENCION" border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="64%" height="15p"  align="left" bgcolor="#ffffff" lines="1" font-size="9" text-border-color="#000000" newline="false"/>
+				
+                <break-page />
+                <!-- Medios auxiliares -->
+                <frame name="frmMediosAuxiliares" width="100%" tmargin="15p" >
+					<frame name="frmMEDAUX"  border="true" border-left="true" border-bottom="true" border-right="true" border-top="true" border-color="#000000" width="100%" bgcolor="#7b9c66">
+						<prop name="MAP_TITLE_MEDAUX" type="T" width="98%" height="15p" align="center"
+							  bgcolor="#00000000" font-size="10" lines="1" fontbold="true" forecolor="#ffffff" border-color="#000000" lmargin="1%"/>
+					</frame>
+				</frame>
+	
+				<prop name="MAP_LITERAL_MEDAUX" disablevisible="MAP_VER_MEDIOS_AUX&gt;0" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="TL" title="  Sin medios auxiliares  " width="100%" height="15p"	align="left" lines="1" bgcolor="#e3eadf" font-size="9" text-border-color="#000000" />
+	
+				<prop name="MAP_MEDIOS_AUXILIARES" content="@MediosAuxiliares" disablevisible="MAP_VER_MEDIOS_AUX=0" type="Z"/>
+				<content name="@MediosAuxiliares" src="MediosAuxiliares" filter="mea.NUMEROORDEN='##FLD_NUMEROORDEN##'"/>
+
+                <break-page />
+                <!-- Operaciones -->
+                <frame name="frmOperaciones" width="100%" tmargin="15p" >
+					<frame name="frmOPER"  border="true" border-left="true" border-bottom="true" border-right="true" border-top="true" border-color="#000000" width="100%" bgcolor="#7b9c66">
+						<prop name="MAP_TITLE_OPER" type="T" width="98%" height="15p" align="center"
+							  bgcolor="#00000000" font-size="10" lines="1" fontbold="true" forecolor="#ffffff" border-color="#000000" lmargin="1%"/>
+					</frame>
+				</frame>
+	
+				<prop name="MAP_LITERAL_OPER" disablevisible="MAP_VER_OPER&gt;0" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="TL" title="  Sin Operaciones  " width="100%" height="15p"	align="left" lines="1" bgcolor="#e3eadf" font-size="9" text-border-color="#000000" />
+	
+				<prop name="MAP_MEDIOS_OPER" content="@Operaciones" disablevisible="MAP_VER_OPER=0" type="Z"/>
+				<content name="@Operaciones" src="Operaciones" filter="mea.NUMEROORDEN='##FLD_NUMEROORDEN##' AND mea.BAJA=0"/>
+
+                <break-page />
+                <!-- Contadores -->
+                <frame name="frmContadores" width="100%" tmargin="15p" >
+					<frame name="frmCONT"  border="true" border-left="true" border-bottom="true" border-right="true" border-top="true" border-color="#000000" width="100%" bgcolor="#7b9c66">
+						<prop name="MAP_TITLE_CONT" type="T" width="98%" height="15p" align="center"
+							  bgcolor="#00000000" font-size="10" lines="1" fontbold="true" forecolor="#ffffff" border-color="#000000" lmargin="1%"/>
+					</frame>
+				</frame>
+	
+				<prop name="MAP_LITERAL_CONT" disablevisible="MAP_VER_CONT&gt;0" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="TL" title="  Sin Contadores  " width="100%" height="15p"	align="left" lines="1" bgcolor="#e3eadf" font-size="9" text-border-color="#000000" />
+	
+				<prop name="MAP_CONTADORES" content="@Contadores" disablevisible="MAP_VER_CONT=0" type="Z"/>
+				<content name="@Contadores" src="Contadores" filter="O.NUMEROORDEN='##FLD_NUMEROORDEN##' AND me.BAJA=0 AND O.TASK_ID='##FLD_TASK_ID##'"/>
+
+                <break-page />
+                <!-- Anomalias -->
+                <frame name="frmAnomalias" width="100%" tmargin="15p" >
+					<frame name="frmANOM"  border="true" border-left="true" border-bottom="true" border-right="true" border-top="true" border-color="#000000" width="100%" bgcolor="#7b9c66">
+						<prop name="MAP_TITLE_ANOM" type="T" width="98%" height="15p" align="center"
+							  bgcolor="#00000000" font-size="10" lines="1" fontbold="true" forecolor="#ffffff" border-color="#000000" lmargin="1%"/>
+					</frame>
+				</frame>
+	
+				<prop name="MAP_LITERAL_ANOM" disablevisible="MAP_VER_ANOM&gt;0" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="TL" title="  Sin anomalías  " width="100%" height="15p"	align="left" lines="1" bgcolor="#e3eadf" font-size="9" text-border-color="#000000" />
+	
+				<prop name="MAP_ANOMALIAS" content="@Anomalias" disablevisible="MAP_VER_ANOM=0" type="Z"/>
+				<content name="@Anomalias" src="AnomaliasDetalle" filter="(mea.NUMEROORDEN='##FLD_NUMEROORDEN##' or mea.ORDEN_ORIGEN='##FLD_NUMEROORDEN##') AND mea.BAJA=0"/>
+
+                <break-page />
+                <!-- Galeria -->
+                <frame name="frmGaleria" width="100%" tmargin="15p" >
+					<frame name="frmGALERIA"  border="true" border-left="true" border-bottom="true" border-right="true" border-top="true" border-color="#000000" width="100%" bgcolor="#7b9c66">
+						<prop name="MAP_TITLE_GALERIA" type="T" width="98%" height="15p" align="center"
+							  bgcolor="#00000000" font-size="10" lines="1" fontbold="true" forecolor="#ffffff" border-color="#000000" lmargin="1%"/>
+					</frame>
+				</frame>
+	
+				<prop name="MAP_LITERAL_GALERIA" disablevisible="MAP_VER_GALERIA&gt;0" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="TL" title="  Sin Fotos  " width="100%" height="15p"	align="left" lines="1" bgcolor="#e3eadf" font-size="9" text-border-color="#000000" />
+	
+                <prop name="MAP_GALERIA" disablevisible="MAP_VER_GALERIA=0" grid-column="4" viewmode="grid" content="@Galeria"  type="Z"/>
+                <content name="@Galeria" src="FotosOt" filter="F.NUMEROORDEN='##FLD_NUMEROORDEN##' AND F.CLAVE_MODELO is null AND F.TIPO not in ('EVIDENCIAS_UTS','EVIDENCIAS_PREV_UTS') AND F.BAJA=0 and substring_index(lower(F.NOMBRE_FICHERO),'.',-1) in ('png','jpg','jpeg')"/>
+
+	
+				<break-page />
+
+				<frame name="frmInundabilidad" disablevisible="MAP_VER_INUNDABILIDAD=0" width="100%" tmargin="15p">
+					<frame name="frmInundabilidad_2" border="true" border-left="true" border-bottom="true" border-right="true" border-top="true" border-color="#000000" width="100%" bgcolor="#7b9c66">
+						<prop name="MAP_TITLE_INUNDABILIDAD" type="T" width="98%" height="15p" align="center"
+							  bgcolor="#00000000" font-size="10" lines="1" fontbold="true" forecolor="#ffffff" border-color="#000000" lmargin="1%"/>
+					</frame>
+				</frame>
+
+				<prop name="MAP_INUNDABILIDAD" content="@Inundabilidad" disablevisible="MAP_VER_INUNDABILIDAD=0" type="Z"/>
+				<content name="@Inundabilidad" src="Inundabilidad" filter="rev.NUMEROORDEN='##FLD_NUMEROORDEN##'"/>
+
+</coll>
+	
+    <coll name="HojasRuta" sql="SELECT 
+						CASE WHEN (@i := @i + 1) % 2 = 0 THEN '#FFFFFF' ELSE '#e3eadf' end MAP_BACKGROUND_COLOR,
+						case when @i = 1 then '  Hoja de ruta' else '' end MAP_TITLE,
+						concat('  Paso ',@i) as MAP_PASO,
+						concat('  ', r.DESCRIPCION) as DESCRIPCION
+						FROM gen_operacioneshr  r
+						cross join (select @i := 0) r" 
+						lmargin="10p" rmargin="10p" tmargin="10p" filter="" show-header="false">
+
+			<prop name="MAP_TITLE" border="true" text-border-left="true" text-border-bottom="true" type="T" width="13%" height="15p" align="center" bgcolor="##FLD_MAP_BACKGROUND_COLOR##" lines="1" font-size="9" text-border-color="#000000"/>
+			<prop name="MAP_PASO" border="true" text-border-left="true" text-border-bottom="true" type="T" width="23%" height="15p" align="center" bgcolor="##FLD_MAP_BACKGROUND_COLOR##" lines="1" font-size="9" text-border-color="#000000" newline="false"/>
+			<prop name="DESCRIPCION" border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="64%" height="15p"  align="left" bgcolor="##FLD_MAP_BACKGROUND_COLOR##" lines="1" font-size="9" text-border-color="#000000" newline="false"/>
+	
+	</coll>	
+
+    <!-- Medios auxiliares -->
+     
+    <coll name="MediosAuxiliares" sql="SELECT 
+	'Medio auxiliar' AS MAP_TITLE_MEDAUX,
+	CONCAT('  ',mea.AP_MED_AUX) AS MAP_AP_MED_AUX,
+	CONCAT('  ',mea.DESCRIPCION) AS MAP_DESCRIPCION
+	FROM gen_uts_mediosauxiliares mea"
+					lmargin="10p" rmargin="10p" tmargin="10p" filter="" show-header="false">
+
+		<frame name="frmMEDAUX" width="100%" tmargin="15p">
+			<frame name="frmTITLE_MEDAUX" border="true" border-left="true" border-bottom="true" border-right="true" border-top="true" border-color="#000000" width="100%" bgcolor="#7b9c66">
+				<prop name="MAP_TITLE_MEDAUX" type="T" width="98%" height="15p" align="center"
+						bgcolor="#00000000" font-size="10" lines="1" fontbold="true" forecolor="#ffffff" border-color="#000000" lmargin="1%"/>
+			</frame>
+		</frame>
+		
+		<prop name="MAP_TL_AP_MED_AUX" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Medio auxiliar  " align="center" bgcolor="#ffffff" lines="1" font-size="9" text-border-color="#000000" />
+		<prop name="MAP_AP_MED_AUX" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#ffffff" font-size="9" text-border-color="#000000" />
+		
+		<prop name="MAP_TL_DESCRIPCION" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Descripción  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000" />
+		<prop name="MAP_DESCRIPCION" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000" />
+				
+	</coll> 
+    
+    <!-- Operaciones -->
+    
+    <coll name="Operaciones" sql="SELECT 
+        'Operacion' AS MAP_TITLE_OPER,
+        mea.NUMEROORDEN,
+        mea.EQUIPO,
+		mea.CLAVE_MODELO,
+		replace(mea.CLAVE_MODELO,'#','') as MAP_CLAVE_MODELO_2,
+        CONCAT('  ',mea.CLAVE_MODELO) AS MAP_CLAVE_MODELO,
+        CONCAT('  ',mea.TEXTO_CLAVE_MODELO) AS MAP_TEXTO_CLAVE_MODELO,
+        CONCAT('  ',mea.EQUIPO) AS MAP_EQUIPO,
+        CONCAT('  ',mea.STATUS) AS MAP_STATUS,
+        CONCAT('  ',CASE WHEN mea.CLAVE_MODELO LIKE '%#' THEN 'Si' ELSE 'No' END) AS MAP_INFORME_ADICIONAL,		
+		(SELECT COUNT(1) from gen_uts_medicionequipos m WHERE m.NUMEROORDEN=mea.NUMEROORDEN AND m.POSICION_MEDIDA LIKE CONCAT(replace(mea.CLAVE_MODELO,'#',''),'%') AND m.BAJA=0) as MAP_NUM_MEDICIONES_EQUIPO,
+        (SELECT COUNT(1) from gen_ot_fotos F where F.NUMEROORDEN=mea.NUMEROORDEN AND F.TIPO='EVIDENCIAS_PREV_UTS' AND F.BAJA=0 AND F.CLAVE_MODELO=mea.CLAVE_MODELO) AS MAP_NUM_FOTOS_PREV,
+        (SELECT COUNT(1) from gen_ot_fotos F where F.NUMEROORDEN=mea.NUMEROORDEN AND F.TIPO='EVIDENCIAS_UTS' AND F.BAJA=0 AND F.CLAVE_MODELO=mea.CLAVE_MODELO) AS MAP_NUM_FOTOS_FIN
+        from gen_uts_operaciones mea"
+					lmargin="10p" rmargin="10p" tmargin="10p" filter="" show-header="false">
+
+		<frame name="frmOPER" width="100%" tmargin="15p">
+			<frame name="frmTITLE_OPER" border="true" border-left="true" border-bottom="true" border-right="true" border-top="true" border-color="#000000" width="100%" bgcolor="#7b9c66">
+				<prop name="MAP_TITLE_OPER" type="T" width="98%" height="15p" align="center"
+						bgcolor="#00000000" font-size="10" lines="1" fontbold="true" forecolor="#ffffff" border-color="#000000" lmargin="1%"/>
+			</frame>
+		</frame>
+		
+		<prop name="MAP_TL_CLAVE_MODELO" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Clave Modelo  " align="center" bgcolor="#ffffff" lines="1" font-size="9" text-border-color="#000000" />
+		<prop name="MAP_CLAVE_MODELO" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#ffffff" font-size="9" text-border-color="#000000" />
+		
+		<prop name="MAP_TL_TEXTO_CLAVE_MODELO" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Descripción  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000" />
+		<prop name="MAP_TEXTO_CLAVE_MODELO" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000" />
+			
+		<prop name="MAP_TL_EQUIPO" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Código equipo  " align="center" bgcolor="#ffffff" lines="1" font-size="9" text-border-color="#000000" />
+		<prop name="MAP_EQUIPO" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#ffffff" font-size="9" text-border-color="#000000" />
+			
+		<prop name="MAP_TL_STATUS" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Estado  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000" />
+		<prop name="MAP_STATUS" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000" />
+			
+		<prop name="MAP_TL_INFORME_ADICIONAL" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Informe adicional  " align="center" bgcolor="#ffffff" lines="1" font-size="9" text-border-color="#000000" />
+		<prop name="MAP_INFORME_ADICIONAL" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#ffffff" font-size="9" text-border-color="#000000" />
+		
+        <!-- mediciones -->
+        <prop name="MAP_TL_MEDICIONES_EQUIPO" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="TL" title="  Mediciones equipo  " width="100%" height="15p"	align="left" lines="1" bgcolor="#e3eadf" font-size="9" text-border-color="#000000" />
+        <prop name="MAP_TL_MEDICIONES_EQUIPO_SIN_VAL" disablevisible="MAP_NUM_MEDICIONES_EQUIPO&gt;0" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="TL" title="  Sin mediciones  " width="100%" height="15p"	align="left" lines="1" bgcolor="#e3eadf" font-size="9" text-border-color="#000000" />
+        
+        <prop name="MAP_MEDICIONES_EQUIPO" content="@medicionesEquipoUTS" disablevisible="MAP_NUM_MEDICIONES_EQUIPO=0" type="Z"/>
+        <content name="@medicionesEquipoUTS" src="medicionesEquipoUTS" filter="mea.NUMEROORDEN='##FLD_NUMEROORDEN##' AND mea.POSICION_MEDIDA LIKE '##FLD_MAP_CLAVE_MODELO_2##%' AND mea.BAJA=0"/>
+
+        <!-- Fotos previas -->
+        <prop name="MAP_TL_EVICENCIAS_PREV" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="TL" title="  Evidencias previas  " width="100%" height="15p"	align="left" lines="1" bgcolor="#e3eadf" font-size="9" text-border-color="#000000" />
+		<prop name="MAP_TL_EVICENCIAS_PREV_SIN_VAL" disablevisible="MAP_NUM_FOTOS_PREV&gt;0" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="TL" title="  Sin fotos  " width="100%" height="15p"	align="left" lines="1" bgcolor="#e3eadf" font-size="9" text-border-color="#000000" />
+
+		<!-- <frame name="frmEVP" width="100%">
+			<frame name="frmTITLE_EVP" border="true" border-left="true" border-bottom="true" border-right="true" border-top="true" border-color="#000000" width="100%" bgcolor="#e3eadf"> -->
+		<prop name="MAP_EVICENCIAS_PREV" disablevisible="MAP_NUM_FOTOS_PREV=0" grid-column="4" viewmode="grid" content="@FotosOtPrev"  type="Z"/>
+		<content name="@FotosOtPrev" src="FotosOt" filter="F.NUMEROORDEN='##FLD_NUMEROORDEN##' AND F.TIPO='EVIDENCIAS_PREV_UTS' AND F.BAJA=0 AND F.CLAVE_MODELO='##FLD_CLAVE_MODELO##' and substring_index(lower(F.NOMBRE_FICHERO),'.',-1) in ('png','jpg','jpeg')"/>
+			<!-- </frame>
+		</frame> -->
+        <!-- Fotos fin trabajo -->
+        <prop name="MAP_TL_EVICENCIAS_FIN" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="TL" title="  Evidencias fin trabajo  " width="100%" height="15p"	align="left" lines="1" bgcolor="#e3eadf" font-size="9" text-border-color="#000000" />
+		<prop name="MAP_TL_EVICENCIAS_FIN_SIN_VAL" disablevisible="MAP_NUM_FOTOS_FIN&gt;0" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="TL" title="  Sin fotos  " width="100%" height="15p"	align="left" lines="1" bgcolor="#e3eadf" font-size="9" text-border-color="#000000" />
+
+		<!-- <frame name="frmEVF" width="100%">
+			<frame name="frmTITLE_EVF" border="true" border-left="true" border-bottom="true" border-right="true" border-top="true" border-color="#000000" width="100%" bgcolor="#e3eadf"> -->
+		<prop name="MAP_EVICENCIAS_FIN" disablevisible="MAP_NUM_FOTOS_FIN=0" grid-column="4" viewmode="grid" content="@FotosOtFin"  type="Z"/>
+		<content name="@FotosOtFin" src="FotosOt" filter="F.NUMEROORDEN='##FLD_NUMEROORDEN##' AND F.TIPO='EVIDENCIAS_UTS' AND F.BAJA=0 AND F.CLAVE_MODELO='##FLD_CLAVE_MODELO##' and substring_index(lower(F.NOMBRE_FICHERO),'.',-1) in ('png','jpg','jpeg')"/>
+			<!-- </frame>
+		</frame> -->
+	</coll>
+
+    <!-- Mediciones equipo -->
+
+    <coll name="medicionesEquipoUTS" sql="SELECT 
+            'Medicion equipo' AS MAP_TITLE_MEDEQ,
+            CONCAT('  ',mea.POSICION_MEDIDA) AS MAP_POSICION_MEDIDA,
+            CONCAT('  ',mea.VAL_MODIFICADO) AS MAP_VAL_MODIFICADO,
+            CONCAT('  ',mea.PUNTO_MEDIDA) AS MAP_PUNTO_MEDIDA,
+            CONCAT('  ',CASE 
+                WHEN mea.DIA_MEDICION LIKE '%-%' 
+                THEN mea.DIA_MEDICION
+                ELSE CONCAT(SUBSTR(mea.DIA_MEDICION,1,4),'-',SUBSTR(mea.DIA_MEDICION,5,2),'-',SUBSTR(mea.DIA_MEDICION,7,2))
+            END
+            ) AS MAP_FECHA_MED,
+            CONCAT('  ',CASE 
+                WHEN mea.HORA_MEDICION LIKE '%:%' 
+                THEN mea.HORA_MEDICION
+                ELSE CONCAT(SUBSTR(mea.HORA_MEDICION,1,2),':',SUBSTR(mea.HORA_MEDICION,3,2),':',SUBSTR(mea.HORA_MEDICION,5,2))
+            END
+            ) AS MAP_HORA_MED
+            from gen_uts_medicionequipos mea"
+					lmargin="10p" rmargin="10p" tmargin="10p" filter="" show-header="false">
+
+		<frame name="frmMEDEQ" width="100%" tmargin="15p">
+			<frame name="frmTITLE_MEDEQ" border="true" border-left="true" border-bottom="true" border-right="true" border-top="true" border-color="#000000" width="100%" bgcolor="#7b9c66">
+				<prop name="MAP_TITLE_MEDEQ" type="T" width="98%" height="15p" align="center"
+						bgcolor="#00000000" font-size="10" lines="1" fontbold="true" forecolor="#ffffff" border-color="#000000" lmargin="1%"/>
+			</frame>
+		</frame>
+		
+		<prop name="MAP_TL_POSICION_MEDIDA" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Posición medida  " align="center" bgcolor="#ffffff" lines="1" font-size="9" text-border-color="#000000" />
+		<prop name="MAP_POSICION_MEDIDA" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#ffffff" font-size="9" text-border-color="#000000" />
+		
+		<prop name="MAP_TL_VAL_MODIFICADO" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Valor  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000" />
+		<prop name="MAP_VAL_MODIFICADO" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000" />
+			
+		<prop name="MAP_TL_PUNTO_MEDIDA" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Punto medida  " align="center" bgcolor="#ffffff" lines="1" font-size="9" text-border-color="#000000" />
+		<prop name="MAP_PUNTO_MEDIDA" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#ffffff" font-size="9" text-border-color="#000000" />
+			
+		<prop name="MAP_TL_FECHA_MED" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Fecha medición  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000" />
+		<prop name="MAP_FECHA_MED" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000" />
+			
+		<prop name="MAP_TL_HORA_MED" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Hora medición  " align="center" bgcolor="#ffffff" lines="1" font-size="9" text-border-color="#000000" />
+		<prop name="MAP_HORA_MED" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#ffffff" font-size="9" text-border-color="#000000" />
+		
+
+	</coll>
+	
+	<!-- Contadores -->
+
+	<coll name="Contadores" sql="select 	
+           'Contador' AS MAP_TITLE_CONT, 
+			CONCAT('  ',me.COD_EQUIPO) AS MAP_COD_EQUIPO,
+			CONCAT('  ',CASE WHEN me.MEDICION_REALIZADA='S' THEN 'Si'
+				WHEN me.REINICIAR_VALOR ='N' THEN 'No'
+				ELSE 'No' END) AS MAP_MEDIR_CONTADOR,
+			CONCAT('  ',eq.CLASE_OBJETO) AS MAP_CATEGORIA,
+			CONCAT('  ',gup.POSICION_MEDIDA) AS MAP_POSICION,
+			CONCAT('  ',mpm.DENOM_POS_MEDIDA) AS MAP_DESCRIPCION,
+			CONCAT('  ',me.VAL_CONTADOR) AS MAP_VALOR_ANTERIOR,
+			CONCAT('  ',me.VAL_MODIFICADO) AS MAP_VALOR,
+			CONCAT('  ',me.PUNTO_MEDIDA) AS MAP_PUNTO_MEDIDA,
+			CONCAT('  ',me.JUSTIFICACION_NO_MED) AS MAP_JUSTIFICACION_NO_MED,
+			CONCAT('  ',me.ANOMALIA_CREADA) AS MAP_ANOMALIA_CREADA,			
+			CONCAT('  ',CASE WHEN me.REINICIAR_VALOR = 'X' THEN 'Si'
+				WHEN me.REINICIAR_VALOR IS NULL THEN 'No'
+				ELSE 'No'
+				END ) AS MAP_REINICIAR_VALOR from gen_ot_cabecera O
+			INNER JOIN gen_uts_puntosmedidaequipo gup ON gup.TIPO_PTO_MEDIDA='C' AND gup.COD_EQUIPO=O.CODIGO_EQUIPO
+			inner join gen_uts_medicionequipos me on  gup.COD_EQUIPO=O.CODIGO_EQUIPO AND me.PUNTO_MEDIDA = gup.PUNTO_MEDIDA AND me.NUMEROORDEN=O.NUMEROORDEN
+			inner join gen_uts_equipo eq on eq.cod_equipo = me.cod_equipo
+			INNER JOIN gen_maestro_uts_posiciones_medida mpm on mpm.COD_POS_MEDIDA=gup.POSICION_MEDIDA"
+					lmargin="10p" rmargin="10p" tmargin="10p" filter="" show-header="false">
+
+		<frame name="frmCONT" width="100%" tmargin="15p">
+			<frame name="frmTITLE_CONT" border="true" border-left="true" border-bottom="true" border-right="true" border-top="true" border-color="#000000" width="100%" bgcolor="#7b9c66">
+				<prop name="MAP_TITLE_CONT" type="T" width="98%" height="15p" align="center"
+						bgcolor="#00000000" font-size="10" lines="1" fontbold="true" forecolor="#ffffff" border-color="#000000" lmargin="1%"/>
+			</frame>
+		</frame>
+		
+		<prop name="MAP_TL_COD_EQUIPO" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Ubicación  " align="center" bgcolor="#ffffff" lines="1" font-size="9" text-border-color="#000000" />
+		<prop name="MAP_COD_EQUIPO" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#ffffff" font-size="9" text-border-color="#000000" />
+		
+		<prop name="MAP_TL_MEDIR_CONTADOR" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Se puede medir el contador  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000" />
+		<prop name="MAP_MEDIR_CONTADOR" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000" />
+			
+		<prop name="MAP_TL_CATEGORIA" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Categoría  " align="center" bgcolor="#ffffff" lines="1" font-size="9" text-border-color="#000000" />
+		<prop name="MAP_CATEGORIA" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#ffffff" font-size="9" text-border-color="#000000" />
+		
+		<prop name="MAP_TL_POSICION" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Posición  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000" />
+		<prop name="MAP_POSICION" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000" />
+		
+		<prop name="MAP_TL_DESCRIPCION" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Descripción  " align="center" bgcolor="#ffffff" lines="1" font-size="9" text-border-color="#000000" />
+		<prop name="MAP_DESCRIPCION" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#ffffff" font-size="9" text-border-color="#000000" />
+		
+		<!--<prop name="MAP_TL_NUM_FABRIC" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Número de fabricación  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000" />
+		<prop name="MAP_NUM_FABRIC" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000" />
+			
+		<prop name="MAP_TL_FECHA_MED" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Fecha medición  " align="center" bgcolor="#ffffff" lines="1" font-size="9" text-border-color="#000000" />
+		<prop name="MAP_FECHA_MED" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#ffffff" font-size="9" text-border-color="#000000" />
+		
+		<prop name="MAP_TL_HORA_MED" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Hora medicion  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000" />
+		<prop name="MAP_HORA_MED" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000" />
+		-->
+		<prop name="MAP_TL_PUNTO_MEDIDA" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Punto medida  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000" />
+		<prop name="MAP_PUNTO_MEDIDA" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000" />
+		
+		<prop name="MAP_TL_VALOR_ANTERIOR" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Valor anterior  " align="center" bgcolor="#ffffff" lines="1" font-size="9" text-border-color="#000000" />
+		<prop name="MAP_VALOR_ANTERIOR" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#ffffff" font-size="9" text-border-color="#000000" />
+		
+		<prop name="MAP_TL_VALOR" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Valor  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000" />
+		<prop name="MAP_VALOR" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000" />
+		
+		<prop name="MAP_TL_REINICIAR_VALOR" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Reiniciar valor  " align="center" bgcolor="#ffffff" lines="1" font-size="9" text-border-color="#000000" />
+		<prop name="MAP_REINICIAR_VALOR" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#ffffff" font-size="9" text-border-color="#000000" />
+		
+		<prop name="MAP_TL_JUSTIFICACION_NO_MED" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Justificación de  no medición  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000" />
+		<prop name="MAP_JUSTIFICACION_NO_MED" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000" />
+		
+		<prop name="MAP_TL_ANOMALIA_CREADA" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Anomalía creada  " align="center" bgcolor="#ffffff" lines="1" font-size="9" text-border-color="#000000" />
+		<prop name="MAP_ANOMALIA_CREADA" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#ffffff" font-size="9" text-border-color="#000000" />
+				
+
+	</coll>
+
+    <!-- Anomalias -->
+    <coll name="AnomaliasDetalle" 
+	sql="select 
+        'Anomalía' AS MAP_TITLE_AVISOS,
+        CONCAT('  ',mea.COD_AN_ANOMALIA) AS MAP_COD_AN_ANOMALIA,
+        mea.COD_AN_ANOMALIA,
+        mea.CODIGO_AVISO_GAMAD,
+        CONCAT('  ',case 
+                    when IFNULL(mea.SOLUCIONADO,0) = 1 then 'Corregida'
+                    when IFNULL(mea.ANULADA,0) = 1 then 'Anulada'
+                    else 'Abierta' end) as MAP_ESTADO,
+        CONCAT('  ',IFNULL(mea.FECHA_ALTA,'Sin fecha')) as MAP_FECHA
+        from gen_uts_an_anomalias mea "
+							lmargin="10p" rmargin="10p" tmargin="10p" filter="" show-header="false">
+
+			<frame name="frmAvisos" width="100%" tmargin="15p">
+				<frame name="frmAVISOS" border="true" border-left="true" border-bottom="true" border-right="true" border-top="true" border-color="#000000" width="100%" bgcolor="#7b9c66">
+					<prop name="MAP_TITLE_AVISOS" type="T" width="98%" height="15p" align="center"
+						  bgcolor="#00000000" font-size="10" lines="1" fontbold="true" forecolor="#ffffff" border-color="#000000" lmargin="1%"/>
+				</frame>
+			</frame>
+
+			<!--<prop name="MAP_TL_CODIGO_ANOMALIA" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Código anomalía  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000" />
+			<prop name="MAP_CODIGO_ANOMALIA" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000" />-->
+
+			<prop name="MAP_TL_COD_AN_ANOMALIA" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Anomalía Tipo  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000" />
+			<prop name="MAP_COD_AN_ANOMALIA" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000" />
+
+			<prop name="MAP_TL_ESTADO" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Estado Anomalía  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000" />
+			<prop name="MAP_ESTADO" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000" />
+						
+			<prop name="MAP_FECHA_TITLE" text-border="true" text-border-left="true" text-border-bottom="true" type="T" width="30%" height="15p"	title="  Dudosa  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000" />
+			<prop name="MAP_FECHA" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000" />
+			
+			<prop name="MAP_FOTO_ANOMALIAS" grid-column="4" viewmode="grid" content="@FotosAnomalias"  type="Z"/>
+			<content name="@FotosAnomalias" src="FotosAnomalias" filter="(CASE WHEN IFNULL(F.COD_AN_ANOMALIA,'-') = '' THEN '-' ELSE  IFNULL(F.COD_AN_ANOMALIA,'-') END ='##FLD_COD_AN_ANOMALIA##' OR CASE WHEN IFNULL(F.CODIGO_AVISO_GAMAD,'-') = '' THEN '-' ELSE  IFNULL(F.CODIGO_AVISO_GAMAD,'-') END = '##FLD_CODIGO_AVISO_GAMAD##') and IFNULL(F.BAJA,0)=0 and substring_index(lower(F.NOMBRE_FICHERO),'.',-1) in ('png','jpg','jpeg')"/>		
+
+	</coll>
+
+    <!-- Fotos Ot -->
+    <coll name="FotosOt" sql="SELECT concat('/var/www/vhosts/xoneideintcore.com/xonerepository/ReplicaFiles/1KEGG99N/',NOMBRE_FICHERO) as MAP_TER_IMG FROM gen_ot_fotos F" 
+						lmargin="10p" rmargin="10p" tmargin="10p" filter="" show-header="false">
+
+		<frame name="frmIMAGEN" width="100%"  height="100p" align="center" border="true" border-left="true" border-bottom="true" border-right="true" border-top="true" border-color="#000000" bgcolor="#e3eadf">
+			<prop name="MAP_TER_IMG" type="IMG" width="98%" height="96p" keep-aspect-ratio="true" must-exist="true"/>
+		</frame>
+	</coll>
+
+    <!-- Fotos Anomalia -->
+	<coll name="FotosAnomalias" sql="SELECT concat('/var/www/vhosts/xoneideintcore.com/xonerepository/ReplicaFiles/1KEGG99N/',NOMBRE_FICHERO) as MAP_TER_IMG FROM gen_an_foto F" 
+						lmargin="10p" rmargin="10p" tmargin="10p" filter="" show-header="false">
+
+		<frame name="frmIMAGEN" width="100%"  height="100p" align="center" border="true" border-left="true" border-bottom="true" border-right="true" border-top="true" border-color="#000000" bgcolor="#e3eadf">
+			<prop name="MAP_TER_IMG" type="IMG" width="98%" height="96p" keep-aspect-ratio="true" must-exist="true"/>
+		</frame>
+	</coll>
+	
+
+	<!-- Estudio de Inundabilidad -->
+	<coll name="Inundabilidad" sql="SELECT
+		ct.UBICACION_TECNICA,
+		CONCAT('  ', IFNULL(ct.B_INUNDABILIDAD, '')) AS MAP_B_INUNDABILIDAD,
+		CONCAT('  ', IFNULL(ct.CAN_ALT_INUND, '')) AS MAP_CAN_ALT_INUND,
+		CONCAT('  ', IFNULL(ct.B_INUNDADO, '')) AS MAP_B_INUNDADO,
+		CONCAT('  ', IFNULL(ct.CAN_ALT_RASANTE_SUELO, '')) AS MAP_CAN_ALT_RASANTE_SUELO,
+		CONCAT('  ', IFNULL(ct.CAN_ALT_RASANTE_AGUA, '')) AS MAP_CAN_ALT_RASANTE_AGUA,
+		CONCAT('  ', IFNULL(mrv.DESCRIPCION, '')) AS MAP_RIESGO_INUND,
+		CONCAT('  ', IFNULL(ct.CAN_ALT_RASANTE_EQ_STAR, '')) AS MAP_CAN_ALT_RASANTE_EQ_STAR,
+		CONCAT('  ', IFNULL(ct.CAN_ALT_RASANTE_MAN_CEL, '')) AS MAP_CAN_ALT_RASANTE_MAN_CEL,
+		CONCAT('  ', IFNULL(ct.CAN_ALT_RASANTE_CBT, '')) AS MAP_CAN_ALT_RASANTE_CBT
+		FROM gen_ct ct
+		LEFT JOIN gen_inundabilidad_ot_bloques_rev rev ON rev.G3E_FID = ct.G3E_FID AND rev.G3E_FNO = ct.G3E_FNO
+		LEFT JOIN gen_maestrovetipriesgoinundvl mrv ON mrv.COD_TIP_RIESGO_INUND = ct.COD_TIP_RIESGO_INUND"
+					lmargin="10p" rmargin="10p" tmargin="10p" filter="" show-header="false">
+
+		<prop name="MAP_TL_B_INUNDABILIDAD" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="40%" height="15p" title="  Inundabilidad  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000"/>
+		<prop name="MAP_B_INUNDABILIDAD" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="60%" height="15p" align="left" lines="1" newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000"/>
+
+		<prop name="MAP_TL_CAN_ALT_INUND" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="40%" height="15p" title="  Altura inundación ZI100 instalación (cm)  " align="center" bgcolor="#ffffff" lines="1" font-size="9" text-border-color="#000000"/>
+		<prop name="MAP_CAN_ALT_INUND" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="60%" height="15p" align="left" lines="1" newline="false" bgcolor="#ffffff" font-size="9" text-border-color="#000000"/>
+
+		<prop name="MAP_TL_B_INUNDADO" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="40%" height="15p" title="  Inundado previamente  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000"/>
+		<prop name="MAP_B_INUNDADO" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="60%" height="15p" align="left" lines="1" newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000"/>
+
+		<prop name="MAP_TL_CAN_ALT_RASANTE_SUELO" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="40%" height="15p" title="  Altura rasante a cota 0 instalación (cm)  " align="center" bgcolor="#ffffff" lines="1" font-size="9" text-border-color="#000000"/>
+		<prop name="MAP_CAN_ALT_RASANTE_SUELO" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="60%" height="15p" align="left" lines="1" newline="false" bgcolor="#ffffff" font-size="9" text-border-color="#000000"/>
+
+		<prop name="MAP_TL_CAN_ALT_RASANTE_AGUA" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="40%" height="15p" title="  Altura cota 0 instalación a marca agua (cm)  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000"/>
+		<prop name="MAP_CAN_ALT_RASANTE_AGUA" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="60%" height="15p" align="left" lines="1" newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000"/>
+
+		<prop name="MAP_TL_RIESGO_INUND" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="40%" height="15p" title="  Riesgo de inundabilidad  " align="center" bgcolor="#ffffff" lines="1" font-size="9" text-border-color="#000000"/>
+		<prop name="MAP_RIESGO_INUND" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="60%" height="15p" align="left" lines="1" newline="false" bgcolor="#ffffff" font-size="9" text-border-color="#000000"/>
+
+		<prop name="MAP_TL_CAN_ALT_RASANTE_EQ_STAR" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="40%" height="15p" title="  Altura cota 0 instalación a equipos digitales (cm)  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000"/>
+		<prop name="MAP_CAN_ALT_RASANTE_EQ_STAR" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="60%" height="15p" align="left" lines="1" newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000"/>
+
+		<prop name="MAP_TL_CAN_ALT_RASANTE_MAN_CEL" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="40%" height="15p" title="  Altura cota 0 instalación a mando/control celdas (cm)  " align="center" bgcolor="#ffffff" lines="1" font-size="9" text-border-color="#000000"/>
+		<prop name="MAP_CAN_ALT_RASANTE_MAN_CEL" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="60%" height="15p" align="left" lines="1" newline="false" bgcolor="#ffffff" font-size="9" text-border-color="#000000"/>
+
+		<prop name="MAP_TL_CAN_ALT_RASANTE_CBT" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="40%" height="15p" title="  Altura cota 0 instalación a cuadro BT (cm)  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000"/>
+		<prop name="MAP_CAN_ALT_RASANTE_CBT" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="60%" height="15p" align="left" lines="1" newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000"/>
+
+	</coll>
+</xml>

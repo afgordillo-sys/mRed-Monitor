@@ -1,0 +1,510 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<xml>
+	<!-- CABECERA -->				
+	<coll name="coll1" sql="select CONCAT('  ',O.NUMEROORDEN) AS MAP_NUMEROORDEN,
+	CONCAT('  ',O.DESCRIPCION) AS MAP_DESCRIPCION,
+	CONCAT('  ',O.OBSERVACIONES) AS MAP_OBSERVACIONES,
+						'/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/qr_iberdrola.png' AS MAP_QR,
+						concat('RESUMEN OT - ',O.NUMEROORDEN) AS MAP_TITULO,
+						'/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/ide_iberdrola.png' AS MAP_LOGO,
+                        O.ID as ID,
+						O.NUMEROORDEN,
+                        IFNULL(O.PDF_CREADO,0) AS PDF_CREADO,
+						O.CLAVE_GRUPO_HR,
+						O.CONTADOR_GRUPOS_HR,
+						(select count(1) from (select n.G3E_FID,n.G3E_FNO,n.NUMEROORDEN,count(1) as NUM 
+	from gen_ot_etiquetas_nuevas n
+group by n.G3E_FID,n.G3E_FNO,n.NUMEROORDEN having count(1) > 1 ) n where n.NUMEROORDEN=O.NUMEROORDEN) AS MAP_MOSTRAR_APOYOS_REPETIDOS,
+						CASE WHEN substr(PUESTO_TRABAJO,4,1) = 'E' THEN 1 ELSE 0 END AS MAP_EXTERNO,
+						IFNULL(O.CONTADOR_CHIPS_NFC_NUEVOS,0) AS MAP_CONTADOR_CHIPS_NUEVOS_UTILIZADOS,
+						concat('  ', O.CLASE_ORDEN,' - ',CO.DESCRIPCION) AS MAP_CLASE_ORDEN,
+						concat('  ', O.CLASE_ACTIVIDAD,' - ',CA.DESCRIPCION) AS MAP_CLASE_ACTIVIDAD,	
+						concat('  ',CASE WHEN O.UBICACION_TECNICA IS NOT NULL THEN concat(O.UBICACION_TECNICA,' - ') ELSE '' END,O.NOMBRE_UBICACION) AS MAP_INSTALACION,
+						concat('  ',ROUND(ifnull(H.HORAS_VIAJE_FINALES,0), 2)) AS MAP_HORAS_DESPLAZAMIENTO,
+						concat('  ',ROUND(ifnull(H.HORAS_TRABAJO_FINALES,0),2)) AS MAP_HORAS_INTERVENCION,	
+						concat('  ',IFNULL(ETN.NUM,0)) AS MAP_NUM_ETIQUETAS_NUEVAS_USADAS,
+						concat('  Tramo subterráneo',CASE WHEN O.UBICACION_TECNICA IS NOT NULL THEN concat(' - ',O.UBICACION_TECNICA) ELSE '' END) AS MAP_DESCRIPCION_TRAMO,
+						concat('  ',CAST((select count(distinct apoyo.ID)
+							from gen_tramo tramo
+							inner join gen_seglinea seglinea on seglinea.ID_PADRE_TRAMO = tramo.G3E_FID and seglinea.BAJA=0
+							inner join gen_relacionnmalf aposeg on seglinea.G3E_FID = aposeg.G3E_FID_1 and aposeg.BAJA=0
+							inner join gen_apoyo apoyo on apoyo.G3E_FID = aposeg.G3E_FID_2 and apoyo.BAJA=0
+							inner join view_ot_cod_brigada cb on cb.COD_BRIGADA = apoyo.COD_BRIGADA
+							where tramo.G3E_FID=O.CODIGO_UBICACION AND cb.numeroorden=O.NUMEROORDEN and apoyo.BAJA=0 and tramo.BAJA=0) AS CHAR)) as MAP_TOTAL_APOYOS_TRAMO,
+						concat('  ',CAST((SELECT count(1) from gen_apoyorev apr where apr.NUMEROORDEN=O.NUMEROORDEN) AS CHAR)) as MAP_TOTAL_APOYOS_REV,
+						
+		'Robos' as MAP_TITLE_Robos_OT_2,
+		(SELECT count(*) FROM gen_ot_cabecera cab INNER JOIN gen_rob_ot_robos rob ON rob.NUMEROORDEN=cab.NUMEROORDEN WHERE cab.CLASE_ORDEN ='DROB' and cab.CLASE_ACTIVIDAD in ('DB4','DB5') and cab.NUMEROORDEN=O.NUMEROORDEN) as MAP_VER_ROBOS_OT,
+		'Fugas a tierra' as MAP_TITLE_FUGAS_TIERRA,
+		(SELECT count(*) FROM gen_avf_ot_fugas_tierra fug INNER JOIN gen_ot_cabecera cab ON cab.NUMEROORDEN = fug.NUMEROORDEN WHERE cab.NUMEROORDEN = O.NUMEROORDEN) as MAP_VER_FUGAS_TIERRA_OT
+		
+,
+		'Estudio de Inundabilidad' AS MAP_TITLE_INUNDABILIDAD,
+		(SELECT COUNT(1) FROM gen_inundabilidad_ot_bloques_rev ir
+		 WHERE ir.NUMEROORDEN = O.NUMEROORDEN AND ir.revisado = 1
+		   AND O.CLASE_ORDEN IN ('DPRP','DPRN')
+		   AND O.UBICACION_TECNICA LIKE 'C%') AS MAP_VER_INUNDABILIDAD,
+		O.UBICACION_TECNICA AS MAP_UBICACION_TECNICA						from gen_ot_cabecera O
+						LEFT JOIN gen_maestro_clase_orden CO ON CO.CODIGO = O.CLASE_ORDEN
+						LEFT JOIN gen_maestro_clase_actividad CA ON CA.CODIGO = O.CLASE_ACTIVIDAD
+						LEFT JOIN (SELECT SUM(HORAS_VIAJE_FINALES) AS HORAS_VIAJE_FINALES,SUM(HORAS_TRABAJO_FINALES) AS HORAS_TRABAJO_FINALES,NUMEROORDEN from gen_ot_estados_ex goee WHERE BAJA=0 GROUP BY NUMEROORDEN) H ON H.NUMEROORDEN = O.NUMEROORDEN
+						LEFT JOIN (SELECT count(DISTINCT G3E_FID,ID_CHIP_NFC) AS NUM,NUMEROORDEN FROM gen_ot_etiquetas_nuevas GROUP BY NUMEROORDEN) ETN ON ETN.NUMEROORDEN = O.NUMEROORDEN" lmargin="5%" rmargin="5%" tmargin="5%" bmargin="5%" 
+		  filter="O.ID=##ID## order by O.ID DESC" entry-point="true" show-header="false" show-pagination="true" show-file-date-creation="true"> 
+				<footer height="20p">
+					<prop name="MAP_TITLE_FOOTER" type="TL" width="98%" height="15p" title="La revisión se ha realizado según lo indicado en el manual técnico MT 2.04.02" align="center" font-size="10" lines="1" forecolor="#000000" lmargin="1%"/>
+				</footer>
+						
+				<prop name="MAP_TITULO" type="T" lmargin="8%" tmargin="5p" width="64%" align="center" fontbold="true" font-size="18" copy-to-all-pages="true"/>
+				<prop name="MAP_LOGO" 	type="IMG" 	lmargin="19%" width="9%" align="right"  copy-to-all-pages="true" newline="false" keep-aspect-ratio="true"/>
+			
+				<frame name="frmDatosIdentificativos" width="100%" border-color="#000000" tmargin="15p">
+
+					<frame name="frmTITLE_DATOS_IDENTIFICACION" border="true" border-left="true" border-bottom="true" border-right="true" border-top="true" border-color="#000000" width="100%" bgcolor="#7b9c66">
+						<prop name="MAP_TITLE_DATOS_IDENTIFICACION" type="TL" width="98%" height="15p" title="Datos identificativos" align="center" 
+							  bgcolor="#00000000" font-size="10" lines="1" fontbold="true" border-color="#000000" forecolor="#ffffff" lmargin="1%"/>
+					</frame>
+					
+					<prop name="MAP_TL_NUMEROORDEN" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Numero de OT:  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000" />
+					<prop name="MAP_NUMEROORDEN" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000" />
+			
+					<prop name="MAP_TL_CLASE_ORDEN" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Clase de Orden: " align="center" bgcolor="#ffffff" lines="1" font-size="9" text-border-color="#000000" />
+					<prop name="MAP_CLASE_ORDEN" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1" newline="false" bgcolor="#ffffff" font-size="9" text-border-color="#000000" />
+			
+					<prop name="MAP_TL_CLASE_ACTIVIDAD" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Clase de Actividad: " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000"/>
+					<prop name="MAP_CLASE_ACTIVIDAD" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1" newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000"/>
+				
+					<prop name="MAP_TL_INSTALACION" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Instalacion: " align="center" bgcolor="#ffffff" lines="1" font-size="9" text-border-color="#000000"/>
+					<prop name="MAP_INSTALACION" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1" newline="false" bgcolor="#ffffff" font-size="9" text-border-color="#000000"/>
+					
+					<prop name="MAP_TL_DESCRIPCION" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Descripción: " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000"/>
+					<prop name="MAP_DESCRIPCION" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1" newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000"/>
+					
+					<prop name="MAP_TL_TOTAL_APOYOS_TRAMO" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Nº apoyos del tramo: " align="center" bgcolor="#ffffff" lines="1" font-size="9" text-border-color="#000000"/>
+					<prop name="MAP_TOTAL_APOYOS_TRAMO" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1" newline="false" bgcolor="#ffffff" font-size="9" text-border-color="#000000"/>
+					
+					<prop name="MAP_TL_TOTAL_APOYOS_REV" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Nº apoyos revisados: " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000"/>
+					<prop name="MAP_TOTAL_APOYOS_REV" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1" newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000"/>
+						
+					<prop name="MAP_TL_OBSERVACIONES" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Observaciones: " align="center" bgcolor="#ffffff" lines="2" font-size="9" text-border-color="#000000"/>
+					<prop name="MAP_OBSERVACIONES" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1" newline="false" bgcolor="#ffffff" font-size="9" text-border-color="#000000"/>
+					
+				</frame>
+
+				<frame name="frmDatosGenerales" width="100%" tmargin="15p">
+					<frame name="frmTITLE_DATOS_GENERALES" border="true" border-left="true" border-bottom="true" border-right="true" border-top="true" border-color="#000000" width="100%" bgcolor="#7b9c66">
+						<prop name="MAP_TITLE_DATOS_GENERALES" type="TL" width="98%" height="15p" title="Datos Generales" align="center"
+							  bgcolor="#00000000" font-size="10" lines="1" fontbold="true" forecolor="#ffffff" border-color="#000000" lmargin="1%"/>
+					</frame>
+					
+				</frame>
+
+				<prop name="MAP_HOJAS_RUTA" content="@HojasRuta" type="Z" />
+				<content name="@HojasRuta" src="HojasRuta" filter="COD_HR='##FLD_CLAVE_GRUPO_HR##' AND CONT_HR='##FLD_CONTADOR_GRUPOS_HR##' AND IFNULL(SUBOPERACION,0) &gt; 0 ORDER BY IFNULL(SUBOPERACION,0) ASC"/>
+				
+				<prop name="MAP_HR" type="TL" title=" " width="100%" height="2p" bgcolor="#000000" lines="1" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" text-border-top="true" text-border-color="#000000"/>
+				
+				<prop name="MAP_TITLE_NOTIFICACION" border="true" text-border-left="true" text-border-bottom="true" type="TL" title="  Notificación" width="13%" height="15p" align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000"/>
+				<prop name="MAP_TL_HORAS_DESPLAZAMIENTO" border="true" text-border-left="true" text-border-bottom="true" type="TL" title="  Horas Desplazamiento " width="23%" height="15p" align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000" newline="false"/>
+				<prop name="MAP_HORAS_DESPLAZAMIENTO" border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="64%" height="15p"  align="left" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000" newline="false"/>
+
+				<prop name="MAP_TITLE_NOTIFICACION_VACIO" border="true" text-border-left="true" text-border-bottom="true" type="TL" title=" " width="13%" height="15p" align="center" bgcolor="#ffffff" lines="1" font-size="9" text-border-color="#000000"/>
+				<prop name="MAP_TL_HORAS_INTERVENCION" border="true" text-border-left="true" text-border-bottom="true" type="TL" title="  Horas Intervencion " width="23%" height="15p" align="center" bgcolor="#ffffff" lines="1" font-size="9" text-border-color="#000000" newline="false"/>
+				<prop name="MAP_HORAS_INTERVENCION" border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="64%" height="15p"  align="left" bgcolor="#ffffff" lines="1" font-size="9" text-border-color="#000000" newline="false"/>
+				
+				<prop name="MAP_HR_2" type="TL" title=" " width="100%" height="2p" bgcolor="#000000" lines="1" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" text-border-top="true" text-border-color="#000000"/>
+				
+				<prop name="MAP_TITLE_ETIQUETAS_NUEVAS_USADAS" border="true" text-border-left="true" text-border-bottom="true" type="TL" title="  Etiquetas NFC" width="13%" height="15p" align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000"/>
+				<prop name="MAP_TL_ETIQUETAS_NUEVAS_USADAS" border="true" text-border-left="true" text-border-bottom="true" type="TL" title="  Nuevas" width="23%" height="15p" align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000" newline="false"/>
+				<prop name="MAP_NUM_ETIQUETAS_NUEVAS_USADAS" border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="64%" height="15p"  align="left" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000" newline="false"/>
+
+				<frame name="frmAPETQMAsUnaVEz" disablevisible="MAP_MOSTRAR_APOYOS_REPETIDOS=0" width="100%" tmargin="15p">
+					<frame name="frmAPETQMAsUnaVEz"  disablevisible="MAP_MOSTRAR_APOYOS_REPETIDOS=0" border="true" border-left="true" border-bottom="true" border-right="true" border-top="true" border-color="#000000" width="100%" bgcolor="#7b9c66">
+						<prop name="MAP_TITLE_APOYO_ETIQUETAO_MAS_UNO" disablevisible="MAP_MOSTRAR_APOYOS_REPETIDOS=0" type="TL" width="98%" height="15p" title="Apoyos etiquetados más de una vez" align="center"
+							  bgcolor="#00000000" font-size="10" lines="1" fontbold="true" forecolor="#ffffff" border-color="#000000" lmargin="1%"/>
+					</frame>
+				</frame>
+	
+				<prop name="MAP_APOYO_ETIQUETAO_MAS_UNO" disablevisible="MAP_MOSTRAR_APOYOS_REPETIDOS&gt;0" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="TL" title="  Sin repetidos" width="100%" height="15p"	align="left" lines="1" bgcolor="#e3eadf" font-size="9" text-border-color="#000000" />
+				
+				<prop name="MAP_APOYO_NUEVOS_ETIQUETADOS_DUPLICADOS" content="@ApoyosNuevosEtiquetados"  type="Z"/>
+				<content name="@ApoyosNuevosEtiquetados" src="ApoyosNuevosEtiquetados" filter="n.NUMEROORDEN='##FLD_NUMEROORDEN##'"/>
+
+				<frame name="frmExpedientes" width="100%" tmargin="15p" disablevisible="MAP_EXTERNO=1">
+					<frame name="frmEXPEDIENTES" disablevisible="MAP_EXTERNO=1" border="true" border-left="true" border-bottom="true" border-right="true" border-top="true" border-color="#000000" width="100%" bgcolor="#7b9c66">
+						<prop name="MAP_EXPEDIENTES" disablevisible="MAP_EXTERNO=1" type="TL" width="98%" height="15p" title="Expedientes" align="center"
+								bgcolor="#00000000" font-size="10" lines="1" fontbold="true" forecolor="#ffffff" border-color="#000000" lmargin="1%"/>
+					</frame>
+				</frame>
+				
+				<prop name="HorasExpedientes" disablevisible="MAP_EXTERNO=1" content="@HorasExpedientes"  type="Z"/>
+				<content name="@HorasExpedientes" src="HorasExpedientes" filter="p.NUMEROORDEN='##FLD_NUMEROORDEN##' ORDER BY FECHA ASC"/>
+					
+				<break-page />
+		
+				<!--<prop name="MAP_ICONO_ETIQUETADO" 	type="IMG" 	width="4%" align="right"/>-->
+				<prop name="MAP_DESCRIPCION_TRAMO" type="T" width="96%" height="20p" align="center" lines="1" font-size="10"/>	
+				
+				<prop name="MAP_ANOMALIAS" content="@Anomalias"  type="Z"/>
+				<content name="@Anomalias" src="Anomalias" filter="AN.NUMEROORDEN='##FLD_NUMEROORDEN##' AND AN.INCOMPLETO=0"/>
+								
+				<break-page />
+
+				<frame name="frmRobos_OT" width="100%" tmargin="15p" >
+					<frame name="frmRobos_OT_2" border="true" border-left="true" border-bottom="true" border-right="true" border-top="true" border-color="#000000" width="100%" bgcolor="#7b9c66">
+						<prop name="MAP_TITLE_Robos_OT_2" type="T" width="98%" height="15p" align="center"
+							  bgcolor="#00000000" font-size="10" lines="1" fontbold="true" forecolor="#ffffff" border-color="#000000" lmargin="1%"/>
+					</frame>
+				</frame>
+	
+				<prop name="MAP_LITERAL_ROBOS_OT" disablevisible="MAP_VER_ROBOS_OT&gt;0" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="TL" title="  Sin robos  " width="100%" height="15p"	align="left" lines="1" bgcolor="#e3eadf" font-size="9" text-border-color="#000000" />
+	
+				<prop name="MAP_ROBOS_OT" content="@Robos_OT" disablevisible="MAP_VER_ROBOS_OT=0" type="Z" />
+				<content name="@Robos_OT" src="Robos_OT" filter="cab.CLASE_ORDEN ='DROB' and cab.CLASE_ACTIVIDAD in ('DB4','DB5') and cab.NUMEROORDEN='##FLD_NUMEROORDEN##'"/>
+									
+				<break-page />
+
+				<frame name="frmFUGAS_TIERRA" width="100%" tmargin="15p" >
+					<frame name="frmFUGAS_TIERRA_2" border="true" border-left="true" border-bottom="true" border-right="true" border-top="true" border-color="#000000" width="100%" bgcolor="#7b9c66">
+						<prop name="MAP_TITLE_FUGAS_TIERRA" type="T" width="98%" height="15p" align="center"
+							  bgcolor="#00000000" font-size="10" lines="1" fontbold="true" forecolor="#ffffff" border-color="#000000" lmargin="1%"/>
+					</frame>
+				</frame>
+	
+				<prop name="MAP_LITERAL_FUGAS_TIERRA" disablevisible="MAP_VER_FUGAS_TIERRA_OT&gt;0" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="TL" title="  Sin fugas a tierra  " width="100%" height="15p"	align="left" lines="1" bgcolor="#e3eadf" font-size="9" text-border-color="#000000" />
+	
+				<prop name="MAP_FUGAS_TIERRA" content="@FUGAS_TIERRA_OT" disablevisible="MAP_VER_FUGAS_TIERRA_OT=0" type="Z" />
+				<content name="@FUGAS_TIERRA_OT" src="FUGAS_TIERRA_OT" filter="cab.NUMEROORDEN='##FLD_NUMEROORDEN##'" />
+				
+			
+	
+				<break-page />
+
+				<frame name="frmInundabilidad" disablevisible="MAP_VER_INUNDABILIDAD=0" width="100%" tmargin="15p">
+					<frame name="frmInundabilidad_2" border="true" border-left="true" border-bottom="true" border-right="true" border-top="true" border-color="#000000" width="100%" bgcolor="#7b9c66">
+						<prop name="MAP_TITLE_INUNDABILIDAD" type="T" width="98%" height="15p" align="center"
+							  bgcolor="#00000000" font-size="10" lines="1" fontbold="true" forecolor="#ffffff" border-color="#000000" lmargin="1%"/>
+					</frame>
+				</frame>
+
+				<prop name="MAP_INUNDABILIDAD" content="@Inundabilidad" disablevisible="MAP_VER_INUNDABILIDAD=0" type="Z"/>
+				<content name="@Inundabilidad" src="Inundabilidad" filter="rev.NUMEROORDEN='##FLD_NUMEROORDEN##'"/>
+
+</coll>
+	
+	<!--HOJA DE RUTA -->
+	
+	<coll name="HojasRuta" sql="SELECT 
+						CASE WHEN (@i := @i + 1) % 2 = 0 THEN '#FFFFFF' ELSE '#e3eadf' end MAP_BACKGROUND_COLOR,
+						case when @i = 1 then '  Hoja de ruta' else '' end MAP_TITLE,
+						concat('  Paso ',@i) as MAP_PASO,
+						concat('  ', r.DESCRIPCION) as DESCRIPCION
+						FROM gen_operacioneshr  r
+						cross join (select @i := 0) r" 
+						lmargin="10p" rmargin="10p" tmargin="10p" filter="" show-header="false">
+
+			<prop name="MAP_TITLE" border="true" text-border-left="true" text-border-bottom="true" type="T" width="13%" height="15p" align="center" bgcolor="##FLD_MAP_BACKGROUND_COLOR##" lines="1" font-size="9" text-border-color="#000000"/>
+			<prop name="MAP_PASO" border="true" text-border-left="true" text-border-bottom="true" type="T" width="23%" height="15p" align="center" bgcolor="##FLD_MAP_BACKGROUND_COLOR##" lines="1" font-size="9" text-border-color="#000000" newline="false"/>
+			<prop name="DESCRIPCION" border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="64%" height="15p"  align="left" bgcolor="##FLD_MAP_BACKGROUND_COLOR##" lines="1" font-size="9" text-border-color="#000000" newline="false"/>
+	
+	</coll>	
+	
+	<coll name="ApoyosNuevosEtiquetados" sql="select CASE WHEN (@i := @i + 1) % 2 = 0 THEN '#FFFFFF' ELSE '#e3eadf' end MAP_BACKGROUND_COLOR,
+					n.G3E_FID,n.G3E_FNO,n.NUMEROORDEN,
+					concat('  ',n.NUM) as NUM,
+					concat('  ',ap.NUM_APOYO) AS NUM_APOYO 
+					from (select n.G3E_FID,n.G3E_FNO,n.NUMEROORDEN,count(1) as NUM 
+					from gen_ot_etiquetas_nuevas n
+					group by n.G3E_FID,n.G3E_FNO,n.NUMEROORDEN having count(1) > 1 ) n
+					inner join gen_apoyo ap on n.G3E_FID = ap.G3E_FID and n.G3E_FNO = ap.G3E_FNO and ap.BAJA = 0
+					cross join (select @i := 0) r" 
+						lmargin="10p" rmargin="10p" tmargin="10p" filter="" show-header="false">
+
+			<prop name="NUM_APOYO" border="true" text-border-left="true" text-border-bottom="true" type="T" width="13%" height="15p" align="center" bgcolor="##FLD_MAP_BACKGROUND_COLOR##" lines="1" font-size="9" text-border-color="#000000"/>
+			<prop name="NUM" border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="87%" height="15p" align="center" bgcolor="##FLD_MAP_BACKGROUND_COLOR##" lines="1" font-size="9" text-border-color="#000000" newline="false"/>
+			
+	</coll>					
+
+	<coll name="FotosAnomalias" sql="SELECT concat('/var/www/vhosts/xoneideintcore.com/xonerepository/ReplicaFiles/1KEGG99N/',NOMBRE_FICHERO) as MAP_TER_IMG FROM gen_an_foto F" 
+						lmargin="10p" rmargin="10p" tmargin="10p" filter="" show-header="false">
+
+		<frame name="frmIMAGEN" width="100%"  height="100p" align="center" border="true" border-left="true" border-bottom="true" border-right="true" border-top="true" border-color="#000000" bgcolor="#e3eadf">
+			<prop name="MAP_TER_IMG" type="IMG" width="98%" height="96p" keep-aspect-ratio="true" must-exist="true"/>
+		</frame>
+	</coll>
+
+	<coll name="Anomalias" sql="SELECT distinct 
+	CONCAT('ANOMALÍAS - ',
+					case when O2.CLASE_ORDEN = 'DPRP' then 'OBLIGATORIA' 
+						WHEN O2.CLASE_ORDEN = 'DPRN' AND  INSTR(O2.ESTADO_USUARIO_VISUAL,'INC') &gt; 0 THEN 'OBLIGATORIA' 
+					else 'OPCIONAL' END						
+					) AS MAP_TITLE_ANOMALIAS,
+									IFNULL(IFNULL(ct.G3E_FID,ctc.G3E_FID),0) AS MAP_G3E_FID,
+									IFNULL(IFNULL(ct.G3E_FNO,ctc.G3E_FNO),0) AS MAP_G3E_FNO,
+									'  Revisión realizada.' as LITERAL,
+						AN.ID,AN.NUMEROORDEN,O2.CODIGO_UBICACION
+						FROM gen_otanomaliarev AN
+						INNER JOIN (SELECT MAX(O.ID) AS ID,O.NUMEROORDEN FROM gen_ot_cabecera O GROUP BY O.NUMEROORDEN) O ON O.NUMEROORDEN = AN.NUMEROORDEN
+                        INNER JOIN gen_ot_cabecera O2 ON O2.ID=O.ID
+						left outer join gen_ct ct on ct.g3e_fid = O2.codigo_ubicacion
+						left outer join gen_ctc ctc on ctc.g3e_fid = O2.codigo_ubicacion" 
+						lmargin="10p" rmargin="10p" tmargin="10p" filter="" show-header="false">
+
+		<frame name="frmAnomalias" width="100%" tmargin="15p">
+			<frame name="frmAAnomalias" border="true" border-left="true" border-bottom="true" border-right="true" border-top="true" border-color="#000000" width="100%" bgcolor="#7b9c66">
+				<prop name="MAP_TITLE_ANOMALIAS" type="T" width="98%" height="15p" align="center"
+						bgcolor="#00000000" font-size="10" lines="1" fontbold="true" forecolor="#ffffff" border-color="#000000" lmargin="1%"/>
+			</frame>
+		</frame>
+		<prop name="LITERAL" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="100%" height="15p"	align="left" lines="1" bgcolor="#e3eadf" font-size="9" text-border-color="#000000" />
+		
+
+		<prop name="MAP_ANOMALIAS_DETALLE" content="@AnomaliasDetalle"  type="Z"/>
+		<content name="@AnomaliasDetalle" src="AnomaliasDetalle" filter="gaa.FID_UT = ##FLD_CODIGO_UBICACION## and gaa.BAJA = 0 and (gaa.ORDEN_ORIGEN = '##FLD_NUMEROORDEN##' OR gaa.NUMEROORDEN = '##FLD_NUMEROORDEN##' OR gaa.ORDEN_ACTUALIZACION = '##FLD_NUMEROORDEN##')"/>
+
+		<!-- <prop name="MAP_LITERAL_ANOMALIAS" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="TL" title="  Realizada" width="100%" height="15p"	align="left" lines="1" bgcolor="#e3eadf" font-size="9" text-border-color="#000000" />-->
+						
+	</coll>
+
+	<coll name="AnomaliasDetalle" 
+	sql="select 
+		CONCAT('  ','Código anomalía','  ',ifnull(gaa.CODIGO_AVISO_GAMAD,gaa.COD_AN_ANOMALIA)) as MAP_TITLE_AVISOS,
+		gaa.ID,gaa.COD_AN_ANOMALIA,gaa.CODIGO_AVISO_GAMAD,gaa.SOLUCIONADO_AL_MOMENTO,
+		CONCAT('  ',ifnull(gaa.CODIGO_AVISO_GAMAD,gaa.COD_AN_ANOMALIA)) as MAP_CODIGO_ANOMALIA,
+		CONCAT('  ',gata.DESC_TIPO_ANOM) AS MAP_ANOMALIA_TIPO_DESC,
+		CONCAT('  ',case 
+			when IFNULL(gaa.SOLUCIONADO,0) = 1 then 'Corregida'
+			when IFNULL(gaa.ANULADA,0) = 1 then 'Anulada'
+			else 'Abierta' end) as MAP_ESTADO,
+		CONCAT('  ',case when IFNULL(gaa.SOLUCIONADO_AL_MOMENTO,0) = 1 then 'Si' else 'No' end) as MAP_SOLUCIONADO_AL_MOMENTO,
+		CASE WHEN DISTANCIA &gt; 0 then 1 else 0 END AS MAP_MOSTRAR_DISTANCIA,
+		CONCAT('  ',DISTANCIA) as MAP_DISTANCIA_AFECTADA,
+		CONCAT('  ',SOL.DESC_TIPO_SOL) AS MAP_SOLUCION_SELECCIONADA_DESC,
+		CASE WHEN IFNULL(gaa.NUMEROORDEN,'') &lt;&gt; '' THEN CONCAT('  ',gaa.NUMEROORDEN) ELSE '' END AS MAP_NUMEROOTDPA,
+		CONCAT('  ',CASE WHEN IFNULL(gaa.DUDOSA,0) = 0 THEN 'No' ELSE 'Si' END) AS MAP_DUDOSA,
+		CONCAT('  ',case when gaa.FECHA_MODIF is null then gaa.FECHA_ALTA else gaa.FECHA_MODIF end) as MAP_FECHA,
+		CONCAT('  ',case when gaa.FECHA_MODIF is null then 'Fecha creación'
+			when gaa.FECHA_MODIF is not null and IFNULL(gaa.SOLUCIONADO,0) = 1 then 'Fecha corrección'
+			when gaa.FECHA_MODIF is not null and IFNULL(gaa.ANULADA,0) = 1 then 'Fecha anulación'
+			else 'Fecha Revisión'
+		end) as MAP_FECHA_TITLE
+	from gen_an_anomalia gaa 
+	inner join gen_an_tipo_anomalia gata on gaa.COD_AN_TIP_ANOMALIA = gata.ID_TIPO_ANOM
+	inner join gen_an_tipo_solucion SOL on SOL.ID_TIPO_SOL = gaa.COD_AN_TIP_SOLUCION_GRUPO AND SOL.CONT_TIPO_SOL = gaa.COD_AN_TIP_SOLUCION_CONTADOR"
+							lmargin="10p" rmargin="10p" tmargin="10p" filter="" show-header="false">
+
+			<frame name="frmAvisos" width="100%" tmargin="15p">
+				<frame name="frmAVISOS" border="true" border-left="true" border-bottom="true" border-right="true" border-top="true" border-color="#000000" width="100%" bgcolor="#7b9c66">
+					<prop name="MAP_TITLE_AVISOS" type="T" width="98%" height="15p" align="center"
+						  bgcolor="#00000000" font-size="10" lines="1" fontbold="true" forecolor="#ffffff" border-color="#000000" lmargin="1%"/>
+				</frame>
+			</frame>
+			
+			<!--<prop name="MAP_TL_CODIGO_ANOMALIA" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Código anomalía  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000" />
+			<prop name="MAP_CODIGO_ANOMALIA" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000" />-->
+
+			<prop name="MAP_TL_ANOMALIA_TIPO_DESC" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Anomalía Tipo  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000" />
+			<prop name="MAP_ANOMALIA_TIPO_DESC" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000" />
+
+			<prop name="MAP_TL_ESTADO" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Estado Anomalía  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000" />
+			<prop name="MAP_ESTADO" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000" />
+			
+			<prop name="MAP_TL_NUMEROOTDPA" disablevisible="MAP_NUMEROOTDPA=''" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Número de OT DPA  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000" />
+			<prop name="MAP_NUMEROOTDPA" disablevisible="MAP_NUMEROOTDPA=''" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000" />
+			
+			<prop name="MAP_TL_SOLUCIONADO_AL_MOMENTO" disablevisible="SOLUCIONADO_AL_MOMENTO=0" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Solucionada al momento  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000" />
+			<prop name="MAP_SOLUCIONADO_AL_MOMENTO" disablevisible="SOLUCIONADO_AL_MOMENTO=0" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000" />
+			
+			<prop name="MAP_TL_DISTANCIA_AFECTADA" disablevisible="MAP_MOSTRAR_DISTANCIA=0" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Distancia afectada  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000" />
+			<prop name="MAP_DISTANCIA_AFECTADA" disablevisible="MAP_MOSTRAR_DISTANCIA=0" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000" />
+
+			<prop name="MAP_TL_DUDOSA" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Dudosa  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000" />
+			<prop name="MAP_DUDOSA" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000" />
+			
+			<prop name="MAP_FECHA_TITLE" text-border="true" text-border-left="true" text-border-bottom="true" type="T" width="30%" height="15p"	title="  Dudosa  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000" />
+			<prop name="MAP_FECHA" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000" />
+			
+			<prop name="MAP_FOTO_ANOMALIAS" grid-column="4" viewmode="grid" content="@FotosAnomalias"  type="Z"/>
+			<content name="@FotosAnomalias" src="FotosAnomalias" filter="(CASE WHEN IFNULL(F.COD_AN_ANOMALIA,'-') = '' THEN '-' ELSE  IFNULL(F.COD_AN_ANOMALIA,'-') END='##FLD_COD_AN_ANOMALIA##' OR CASE WHEN IFNULL(F.CODIGO_AVISO_GAMAD,'-') = '' THEN '-' ELSE  IFNULL(F.CODIGO_AVISO_GAMAD,'-') END = '##FLD_CODIGO_AVISO_GAMAD##') and IFNULL(F.BAJA,0)=0 and substring_index(lower(F.NOMBRE_FICHERO),'.',-1) in ('png','jpg','jpeg')"/>		
+
+	</coll>
+
+
+	<!-- Robos  -->
+	<coll name="Robos_OT" sql="select cab.NUMEROORDEN, cab.CLASE_ORDEN, cab.CLASE_ACTIVIDAD, cab.UBICACION_TECNICA,
+		concat('  ',rob.COD_ROBO) as MAP_TIPOROBO,
+		rob.NUMEROORDEN,
+		'Robos' as MAP_TITLE_Robos_OT,
+		concat('  ',CASE WHEN rob.NUM_SERIE = '0' THEN 'N/A' ELSE rob.NUM_SERIE END) as MAP_NUM_SERIE_ROBO,
+		concat('  ',CASE WHEN rob.MARCA = '0' THEN 'N/A' ELSE rob.MARCA END) as MAP_MARCA_ROBO,		
+		concat('  ',rob.DESCRIPCION) as MAP_DESCRI_ROBO,
+		concat('  ',rob.FECHA) as MAP_FECHA_ROBO,
+		rob.FNO_EQ,
+		rob.FID_EQ 
+
+		from gen_ot_cabecera cab
+			INNER JOIN gen_rob_ot_robos rob ON rob.NUMEROORDEN=cab.NUMEROORDEN 
+		" lmargin="10p" rmargin="10p" tmargin="10p" filter="" show-header="false">
+
+		<frame name="frmRobo" width="100%" tmargin="15p">
+			<frame name="frmTITLE_Robos_OT" border="true" border-left="true" border-bottom="true" border-right="true" border-top="true" border-color="#000000" width="100%" bgcolor="#7b9c66">
+				<prop name="MAP_TITLE_Robos_OT" type="T" width="98%" height="15p" align="center"
+						bgcolor="#00000000" font-size="10" lines="1" fontbold="true" forecolor="#ffffff" border-color="#000000" lmargin="1%"/>
+			</frame>
+		</frame>
+		
+		<prop name="MAP_TL_TIPOROBO" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Tipo robo  " align="center" bgcolor="#ffffff" lines="1" font-size="9" text-border-color="#000000" />
+		<prop name="MAP_TIPOROBO" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#ffffff" font-size="9" text-border-color="#000000" />
+		
+		<prop name="MAP_TL_DESCRI_ROBO" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Descripción de robo  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000" />
+		<prop name="MAP_DESCRI_ROBO" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000" />
+		
+		<prop name="MAP_TL_MARCA_ROBO" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Marca  " align="center" bgcolor="#ffffff" lines="1" font-size="9" text-border-color="#000000" />
+		<prop name="MAP_MARCA_ROBO" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#ffffff" font-size="9" text-border-color="#000000" />
+		
+		<prop name="MAP_TL_NUM_SERIE_ROBO" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Número de serie  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000" />
+		<prop name="MAP_NUM_SERIE_ROBO" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000" />
+		
+		<prop name="MAP_TL_FECHA_ROBO" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Fecha robo  " align="center" bgcolor="#ffffff" lines="1" font-size="9" text-border-color="#000000" />
+		<prop name="MAP_FECHA_ROBO" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#ffffff" font-size="9" text-border-color="#000000" />
+	</coll> 
+	
+	
+	
+	<!-- Fugas a tierra  -->
+	<coll name="FUGAS_TIERRA_OT" sql="SELECT cab.NUMEROORDEN, 'Fugas a tierra' as MAP_TITLE_FUGAS_TIERRA_OT, concat('  ',fug.FECHA_CARGA) as MAP_FECHA_CARGA, 
+		concat('  ',fug.NUM_AVISO) as MAP_NUM_AVISO, concat('  ',fug.UBICACION_TECNICA) as MAP_CODIGO_INSTALACION, concat('  ',fug.DESCRIPCION) as MAP_DESCRIPCION_FUGA_TIERRA, 
+		concat('  ',fug.TIPO_FUGA) as MAP_TIPO_FUGA, concat('  ',fug.CORRIENTE_FUG_PREV) as MAP_CORRIENTE_FUG_PREV, concat('  ',fug.FECHA_VERIF) as MAP_FECHA_VERIF, 
+		concat('  ',fug.CORRIENTE_FUG_PREV) as MAP_CORRIENTE_FUG_PREV, concat('  ',fug.FECHA_VERIF) as MAP_FECHA_VERIF, concat('  ',fug.CORRIENTE_FUG_REAL) as MAP_CORRIENTE_FUG_REAL, 
+		concat('  ',fug.CONTADOR) as MAP_CONTADOR, concat('  ',fug.DEFECT_LOCALIZADO) as MAP_DEFECT_LOCALIZADO, concat('  ',fug.DEFECT_CORREGIDO) as MAP_DEFECT_CORREGIDO,
+		concat('  ',fug.ORIGEN_FUGA) as MAP_ORIGEN_FUGA, concat('  ',fug.TIPO_CLIENTE) as MAP_TIPO_CLIENTE, concat('  ',fug.TIPO_USO) as MAP_TIPO_USO, 
+		concat('  ',fug.CAUSA_FUGA) as MAP_CAUSA_FUGA, concat('  ',fug.ESTADO_FUGA) as MAP_ESTADO_FUGA
+		FROM gen_avf_ot_fugas_tierra fug 
+			INNER JOIN gen_ot_cabecera cab ON cab.NUMEROORDEN = fug.NUMEROORDEN" lmargin="10p" rmargin="10p" tmargin="10p" filter="" show-header="false">
+
+		<frame name="frmFugaTierra" width="100%" tmargin="15p">
+			<frame name="frmTITLE_FUGAS_TIERRA_OT" border="true" border-left="true" border-bottom="true" border-right="true" border-top="true" border-color="#000000" width="100%" bgcolor="#7b9c66">
+				<prop name="MAP_TITLE_FUGAS_TIERRA_OT" type="T" width="98%" height="15p" align="center"
+						bgcolor="#00000000" font-size="10" lines="1" fontbold="true" forecolor="#ffffff" border-color="#000000" lmargin="1%"/>
+			</frame>
+		</frame>
+		
+		<prop name="MAP_TL_FECHA_CARGA" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Fecha carga  " align="center" bgcolor="#ffffff" lines="1" font-size="9" text-border-color="#000000" />
+		<prop name="MAP_FECHA_CARGA" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#ffffff" font-size="9" text-border-color="#000000" />
+		
+		<prop name="MAP_TL_CODIGO_INSTALACION" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Código Instalación  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000" />
+		<prop name="MAP_CODIGO_INSTALACION" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000" />
+				
+		<prop name="MAP_TL_NUM_AVISO" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Código Aviso  " align="center" bgcolor="#ffffff" lines="1" font-size="9" text-border-color="#000000" />
+		<prop name="MAP_NUM_AVISO" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#ffffff" font-size="9" text-border-color="#000000" />
+		
+		<prop name="MAP_TL_DESCRIPCION_FUGA_TIERRA" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Descripción  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000" />
+		<prop name="MAP_DESCRIPCION_FUGA_TIERRA" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000" />
+		
+		<prop name="MAP_TL_TIPO_FUGA" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Tipo de fuga  " align="center" bgcolor="#ffffff" lines="1" font-size="9" text-border-color="#000000" />
+		<prop name="MAP_TIPO_FUGA" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#ffffff" font-size="9" text-border-color="#000000" />
+		
+		<prop name="MAP_TL_CORRIENTE_FUG_PREV" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Corriente de fuga prevista A  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000" />
+		<prop name="MAP_CORRIENTE_FUG_PREV" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000" />
+		
+		<prop name="MAP_TL_FECHA_VERIF" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Fecha verificación  " align="center" bgcolor="#ffffff" lines="1" font-size="9" text-border-color="#000000" />
+		<prop name="MAP_FECHA_VERIF" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#ffffff" font-size="9" text-border-color="#000000" />
+		
+		<prop name="MAP_TL_CORRIENTE_FUG_REAL" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Corriente real fuga (A)  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000" />
+		<prop name="MAP_CORRIENTE_FUG_REAL" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000" />
+		
+		<prop name="MAP_TL_CONTADOR" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  CN  " align="center" bgcolor="#ffffff" lines="1" font-size="9" text-border-color="#000000" />
+		<prop name="MAP_CONTADOR" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#ffffff" font-size="9" text-border-color="#000000" />
+		
+		<prop name="MAP_TL_DEFECT_LOCALIZADO" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Defecto localizado  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000" />
+		<prop name="MAP_DEFECT_LOCALIZADO" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000" />
+				
+		<prop name="MAP_TL_DEFECT_CORREGIDO" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Defecto corregido  " align="center" bgcolor="#ffffff" lines="1" font-size="9" text-border-color="#000000" />
+		<prop name="MAP_DEFECT_CORREGIDO" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#ffffff" font-size="9" text-border-color="#000000" />
+		
+		<prop name="MAP_TL_FECHA_CORRECCION" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Fecha corrección  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000" />
+		<prop name="MAP_FECHA_CORRECCION" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000" />
+		
+		<prop name="MAP_TL_ORIGEN_FUGA" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Origen de la fuga  " align="center" bgcolor="#ffffff" lines="1" font-size="9" text-border-color="#000000" />
+		<prop name="MAP_ORIGEN_FUGA" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#ffffff" font-size="9" text-border-color="#000000" />
+		
+		<prop name="MAP_TL_TIPO_CLIENTE" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Tipo  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000" />
+		<prop name="MAP_TIPO_CLIENTE" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000" />
+				
+		<prop name="MAP_TL_TIPO_USO" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Uso  " align="center" bgcolor="#ffffff" lines="1" font-size="9" text-border-color="#000000" />
+		<prop name="MAP_TIPO_USO" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#ffffff" font-size="9" text-border-color="#000000" />
+		
+		<prop name="MAP_TL_CAUSA_FUGA" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Causa  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000" />
+		<prop name="MAP_CAUSA_FUGA" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000" />
+		
+		<prop name="MAP_TL_ESTADO_FUGA" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Estado  " align="center" bgcolor="#ffffff" lines="1" font-size="9" text-border-color="#000000" />
+		<prop name="MAP_ESTADO_FUGA" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#ffffff" font-size="9" text-border-color="#000000" />	
+	</coll> 
+	
+	<coll name="HorasExpedientes" sql="SELECT 
+		CONCAT('  ',ROUND(HORAS_VIAJE_FINALES,2)) AS MAP_HORAS_VIAJE_FINALES,
+		CONCAT('  ',ROUND(HORAS_TRABAJO_FINALES,2)) AS MAP_HORAS_TRABAJO_FINALES,
+		CONCAT('  ',NUMEROORDEN) AS MAP_NUMEROORDEN,
+		CONCAT('  ',EXPEDIENTE) AS MAP_EXPEDIENTE,
+		CONCAT('  ',FECHA) AS MAP_FECHA
+		FROM (SELECT SUM(HORAS_VIAJE_FINALES) AS HORAS_VIAJE_FINALES,SUM(HORAS_TRABAJO_FINALES) AS HORAS_TRABAJO_FINALES,
+		NUMEROORDEN,EXPEDIENTE,DATE_FORMAT(FECHA, '%Y-%m-%d') AS FECHA 
+		from gen_ot_estados_ex goee WHERE BAJA=0 group by NUMEROORDEN,EXPEDIENTE,DATE_FORMAT(FECHA, '%Y-%m-%d')) p"
+					lmargin="10p" rmargin="10p" tmargin="10p" filter="" show-header="false">
+
+		<frame name="frmTp2" width="100%" >
+			<frame name="frmTITLE_PROPIEDAD2" border="true" border-left="true" border-bottom="true" border-right="true" border-top="true" border-color="#000000" width="100%" bgcolor="#ffffff">
+				<prop name="MAP_FECHA" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="25%" height="15p"	align="left" lines="1"  bgcolor="#ffffff" font-size="8" text-border-color="#000000" />
+				<prop name="MAP_EXPEDIENTE" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="25%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#ffffff" font-size="8" text-border-color="#000000" />
+				<prop name="MAP_HORAS_VIAJE_FINALES" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="25%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#ffffff" font-size="8" text-border-color="#000000" />
+				<prop name="MAP_HORAS_TRABAJO_FINALES" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="25%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#ffffff" font-size="8" text-border-color="#000000" />
+			</frame>
+		</frame>
+	</coll>
+
+
+	<!-- Estudio de Inundabilidad -->
+	<coll name="Inundabilidad" sql="SELECT
+		ct.UBICACION_TECNICA,
+		CONCAT('  ', IFNULL(ct.B_INUNDABILIDAD, '')) AS MAP_B_INUNDABILIDAD,
+		CONCAT('  ', IFNULL(ct.CAN_ALT_INUND, '')) AS MAP_CAN_ALT_INUND,
+		CONCAT('  ', IFNULL(ct.B_INUNDADO, '')) AS MAP_B_INUNDADO,
+		CONCAT('  ', IFNULL(ct.CAN_ALT_RASANTE_SUELO, '')) AS MAP_CAN_ALT_RASANTE_SUELO,
+		CONCAT('  ', IFNULL(ct.CAN_ALT_RASANTE_AGUA, '')) AS MAP_CAN_ALT_RASANTE_AGUA,
+		CONCAT('  ', IFNULL(mrv.DESCRIPCION, '')) AS MAP_RIESGO_INUND,
+		CONCAT('  ', IFNULL(ct.CAN_ALT_RASANTE_EQ_STAR, '')) AS MAP_CAN_ALT_RASANTE_EQ_STAR,
+		CONCAT('  ', IFNULL(ct.CAN_ALT_RASANTE_MAN_CEL, '')) AS MAP_CAN_ALT_RASANTE_MAN_CEL,
+		CONCAT('  ', IFNULL(ct.CAN_ALT_RASANTE_CBT, '')) AS MAP_CAN_ALT_RASANTE_CBT
+		FROM gen_ct ct
+		LEFT JOIN gen_inundabilidad_ot_bloques_rev rev ON rev.G3E_FID = ct.G3E_FID AND rev.G3E_FNO = ct.G3E_FNO
+		LEFT JOIN gen_maestrovetipriesgoinundvl mrv ON mrv.COD_TIP_RIESGO_INUND = ct.COD_TIP_RIESGO_INUND"
+					lmargin="10p" rmargin="10p" tmargin="10p" filter="" show-header="false">
+
+		<prop name="MAP_TL_B_INUNDABILIDAD" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="40%" height="15p" title="  Inundabilidad  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000"/>
+		<prop name="MAP_B_INUNDABILIDAD" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="60%" height="15p" align="left" lines="1" newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000"/>
+
+		<prop name="MAP_TL_CAN_ALT_INUND" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="40%" height="15p" title="  Altura inundación ZI100 instalación (cm)  " align="center" bgcolor="#ffffff" lines="1" font-size="9" text-border-color="#000000"/>
+		<prop name="MAP_CAN_ALT_INUND" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="60%" height="15p" align="left" lines="1" newline="false" bgcolor="#ffffff" font-size="9" text-border-color="#000000"/>
+
+		<prop name="MAP_TL_B_INUNDADO" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="40%" height="15p" title="  Inundado previamente  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000"/>
+		<prop name="MAP_B_INUNDADO" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="60%" height="15p" align="left" lines="1" newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000"/>
+
+		<prop name="MAP_TL_CAN_ALT_RASANTE_SUELO" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="40%" height="15p" title="  Altura rasante a cota 0 instalación (cm)  " align="center" bgcolor="#ffffff" lines="1" font-size="9" text-border-color="#000000"/>
+		<prop name="MAP_CAN_ALT_RASANTE_SUELO" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="60%" height="15p" align="left" lines="1" newline="false" bgcolor="#ffffff" font-size="9" text-border-color="#000000"/>
+
+		<prop name="MAP_TL_CAN_ALT_RASANTE_AGUA" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="40%" height="15p" title="  Altura cota 0 instalación a marca agua (cm)  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000"/>
+		<prop name="MAP_CAN_ALT_RASANTE_AGUA" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="60%" height="15p" align="left" lines="1" newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000"/>
+
+		<prop name="MAP_TL_RIESGO_INUND" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="40%" height="15p" title="  Riesgo de inundabilidad  " align="center" bgcolor="#ffffff" lines="1" font-size="9" text-border-color="#000000"/>
+		<prop name="MAP_RIESGO_INUND" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="60%" height="15p" align="left" lines="1" newline="false" bgcolor="#ffffff" font-size="9" text-border-color="#000000"/>
+
+		<prop name="MAP_TL_CAN_ALT_RASANTE_EQ_STAR" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="40%" height="15p" title="  Altura cota 0 instalación a equipos digitales (cm)  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000"/>
+		<prop name="MAP_CAN_ALT_RASANTE_EQ_STAR" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="60%" height="15p" align="left" lines="1" newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000"/>
+
+		<prop name="MAP_TL_CAN_ALT_RASANTE_MAN_CEL" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="40%" height="15p" title="  Altura cota 0 instalación a mando/control celdas (cm)  " align="center" bgcolor="#ffffff" lines="1" font-size="9" text-border-color="#000000"/>
+		<prop name="MAP_CAN_ALT_RASANTE_MAN_CEL" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="60%" height="15p" align="left" lines="1" newline="false" bgcolor="#ffffff" font-size="9" text-border-color="#000000"/>
+
+		<prop name="MAP_TL_CAN_ALT_RASANTE_CBT" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="40%" height="15p" title="  Altura cota 0 instalación a cuadro BT (cm)  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000"/>
+		<prop name="MAP_CAN_ALT_RASANTE_CBT" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="60%" height="15p" align="left" lines="1" newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000"/>
+
+	</coll>
+</xml>
