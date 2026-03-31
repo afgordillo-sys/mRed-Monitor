@@ -1,0 +1,248 @@
+{  
+    "checkings": [
+        {
+            "name": "CREAR-PDF",
+            "cron-expression": "0 */5 * * * *",
+            "enable": true,
+            "type": "groupby",
+            "sql": {
+                "value_old": "select @i := CONCAT('Resumen_OT_',O.NUMEROORDEN,'_',DATE_FORMAT(SYSDATE(), '%Y%m%d'),'.pdf') AS MAP_NOMBRE_FICHERO,O.ID,IFNULL(O.PDF_CREADO,0) AS PDF_CREADO,'##GP_MONITORPATH##TemplateAp.xml' AS TEMPLATE, concat('##GP_REPLICAFILES##',@i) AS FILEDDEST from gen_ot_cabecera O INNER JOIN (select MAX(ID) AS ID,TASK_ID from gen_ot_estados GROUP BY TASK_ID) E ON E.TASK_ID = O.TASK_ID INNER JOIN gen_ot_estados ER ON ER.ID = E.ID WHERE ER.ESTADO IN (5) AND AREA_EMPRESA LIKE 'L%' AND IFNULL(O.PDF_CREADO,0) = 0",
+                "value": "select @i := CONCAT('Resumen_OT_',O.NUMEROORDEN,'_',DATE_FORMAT(SYSDATE(), '%Y%m%d'),'.pdf') AS MAP_NOMBRE_FICHERO,O.ID,O.NUMEROORDEN,O.PUESTO_TRABAJO AS COD_BRIGADA,uuid() AS NEW_ROWID,IFNULL(O.PDF_CREADO,0) AS PDF_CREADO,concat('##GP_MONITORPATH##',m.PDF_PLANTILLA) AS TEMPLATE,concat('##GP_REPLICAFILES##',@i) AS FILEDDEST from gen_ot_cabecera O INNER JOIN (select MAX(ID) AS ID,TASK_ID from gen_ot_estados GROUP BY TASK_ID) E ON E.TASK_ID = O.TASK_ID INNER JOIN gen_ot_estados ER ON ER.ID = E.ID left join monitor_ot_pdf_generate m on IFNULL(O.AREA_EMPRESA,'') like concat(m.AREA_EMPRESA,'%') and ifnull(m.CLASE_ACTIVIDAD,O.CLASE_ACTIVIDAD) like concat('%',O.CLASE_ACTIVIDAD,'%') and ifnull(m.CLASE_ORDEN,O.CLASE_ORDEN) = O.CLASE_ORDEN and ifnull(m.NO_CLASE_ACTIVIDAD,'') not like concat('%',O.CLASE_ACTIVIDAD,'%') and ifnull(m.NO_CLASE_ORDEN,'') not like concat('%',O.CLASE_ORDEN,'%') WHERE ER.ESTADO IN (5)  and m.ID is not null and m.PDF_PLANTILLA is not null AND IFNULL(O.PDF_CREADO,0) = 0 and m.PDF_PLANTILLA='TemplateCt.xml'",
+                "groupby": "ID"
+            },
+            "errormessage": {
+                "subject": "",
+                "body": "",
+                "header": ""
+            },
+            "email": {
+                "to": "",
+                "cc": "",
+                "bcc": ""
+            },
+            "actions": {
+                "actions": [
+                {
+                    "name": "create-pdf-file",
+                    "template": "##ROW_TEMPLATE##",
+                    "path": "##ROW_FILEDDEST##",
+                    "continue-if-error": "true",
+                    "after-action": [
+                    {
+                        "name": "executequery",
+                        "value": "UPDATE gen_ot_cabecera SET PDF_CREADO=1,NOMBRE_FICHERO_PDF='##ROW_MAP_NOMBRE_FICHERO##' WHERE ID=##ROW_ID##"
+                    },
+                    {
+                        "name": "executequery",
+                        "execute-if-error": false,
+                        "value": "INSERT INTO gen_ot_fotos (NUMEROORDEN,NOMBRE_FICHERO,DESCRIPCION,BAJA,PROCESADO,ORIGEN,ROWID,COD_BRIGADA,FILE_SIZE) SELECT '##ROW_NUMEROORDEN##','##ROW_MAP_NOMBRE_FICHERO##','Resumen de la Ot',0,0,'M','##ROW_NEW_ROWID##','##ROW_COD_BRIGADA##',##PDF_SIZE_KB## FROM dual WHERE NOT EXISTS (SELECT 1 FROM gen_ot_fotos WHERE NUMEROORDEN='##ROW_NUMEROORDEN##' AND NOMBRE_FICHERO='##ROW_MAP_NOMBRE_FICHERO##')"
+                    },
+                    {
+                        "name": "executequery",
+                        "execute-if-error": false,
+                        "value": "INSERT INTO master_replica_queue (ROWID,MID,DMID,CGSSQL,OPER,TBL,OPERID,TIMESTAMP) VALUES ('##ROW_NEW_ROWID##',9999,0,'INSERT INTO gen_ot_fotos (NUMEROORDEN,NOMBRE_FICHERO,DESCRIPCION,BAJA,PROCESADO,ORIGEN,ROWID,COD_BRIGADA,FILE_SIZE) VALUES (''##ROW_NUMEROORDEN##'',''##ROW_MAP_NOMBRE_FICHERO##'',''Resumen de la Ot'',0,0,''M'',''##ROW_NEW_ROWID##'',''##ROW_COD_BRIGADA##'',##PDF_SIZE_KB##)',1,'gen_ot_fotos',uuid(),SYSDATE())"
+                    }
+                    ]
+                },
+                {
+                    "name": "executequery",
+                    "execute-if-error": false,
+                    "execute-always": true,
+                    "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Ok' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+                },
+                {
+                    "name": "executequery",
+                    "execute-if-error": true,
+                    "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Error - ##EXCEPTION##' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+                }
+                ]
+            }
+        },
+		{
+            "name": "CREAR-PDF_2",
+            "cron-expression": "0 */5 * * * *",
+            "enable": true,
+            "type": "groupby",
+            "sql": {
+                "value_old": "select @i := CONCAT('Resumen_OT_',O.NUMEROORDEN,'_',DATE_FORMAT(SYSDATE(), '%Y%m%d'),'.pdf') AS MAP_NOMBRE_FICHERO,O.ID,IFNULL(O.PDF_CREADO,0) AS PDF_CREADO,'##GP_MONITORPATH##TemplateAp.xml' AS TEMPLATE, concat('##GP_REPLICAFILES##',@i) AS FILEDDEST from gen_ot_cabecera O INNER JOIN (select MAX(ID) AS ID,TASK_ID from gen_ot_estados GROUP BY TASK_ID) E ON E.TASK_ID = O.TASK_ID INNER JOIN gen_ot_estados ER ON ER.ID = E.ID WHERE ER.ESTADO IN (5) AND AREA_EMPRESA LIKE 'L%' AND IFNULL(O.PDF_CREADO,0) = 0",
+                "value": "select @i := CONCAT('Resumen_OT_',O.NUMEROORDEN,'_',DATE_FORMAT(SYSDATE(), '%Y%m%d'),'.pdf') AS MAP_NOMBRE_FICHERO,O.ID,O.NUMEROORDEN,O.PUESTO_TRABAJO AS COD_BRIGADA,uuid() AS NEW_ROWID,IFNULL(O.PDF_CREADO,0) AS PDF_CREADO,concat('##GP_MONITORPATH##',m.PDF_PLANTILLA) AS TEMPLATE,concat('##GP_REPLICAFILES##',@i) AS FILEDDEST from gen_ot_cabecera O INNER JOIN (select MAX(ID) AS ID,TASK_ID from gen_ot_estados GROUP BY TASK_ID) E ON E.TASK_ID = O.TASK_ID INNER JOIN gen_ot_estados ER ON ER.ID = E.ID left join monitor_ot_pdf_generate m on IFNULL(O.AREA_EMPRESA,'') like concat(m.AREA_EMPRESA,'%') and ifnull(m.CLASE_ACTIVIDAD,O.CLASE_ACTIVIDAD) like concat('%',O.CLASE_ACTIVIDAD,'%') and ifnull(m.CLASE_ORDEN,O.CLASE_ORDEN) = O.CLASE_ORDEN and ifnull(m.NO_CLASE_ACTIVIDAD,'') not like concat('%',O.CLASE_ACTIVIDAD,'%') and ifnull(m.NO_CLASE_ORDEN,'') not like concat('%',O.CLASE_ORDEN,'%') WHERE ER.ESTADO IN (5)  and m.ID is not null and m.PDF_PLANTILLA is not null AND IFNULL(O.PDF_CREADO,0) = 0 and m.PDF_PLANTILLA<>'TemplateCt.xml'",
+                "groupby": "ID"
+            },
+            "errormessage": {
+                "subject": "",
+                "body": "",
+                "header": ""
+            },
+            "email": {
+                "to": "",
+                "cc": "",
+                "bcc": ""
+            },
+            "actions": {
+                "actions": [
+                {
+                    "name": "create-pdf-file",
+                    "template": "##ROW_TEMPLATE##",
+                    "path": "##ROW_FILEDDEST##",
+                    "continue-if-error": "true",
+                    "after-action": [
+                    {
+                        "name": "executequery",
+                        "value": "UPDATE gen_ot_cabecera SET PDF_CREADO=1,NOMBRE_FICHERO_PDF='##ROW_MAP_NOMBRE_FICHERO##' WHERE ID=##ROW_ID##"
+                    },
+                    {
+                        "name": "executequery",
+                        "execute-if-error": false,
+                        "value": "INSERT INTO gen_ot_fotos (NUMEROORDEN,NOMBRE_FICHERO,DESCRIPCION,BAJA,PROCESADO,ORIGEN,ROWID,COD_BRIGADA,FILE_SIZE) SELECT '##ROW_NUMEROORDEN##','##ROW_MAP_NOMBRE_FICHERO##','Resumen de la Ot',0,0,'M','##ROW_NEW_ROWID##','##ROW_COD_BRIGADA##',##PDF_SIZE_KB## FROM dual WHERE NOT EXISTS (SELECT 1 FROM gen_ot_fotos WHERE NUMEROORDEN='##ROW_NUMEROORDEN##' AND NOMBRE_FICHERO='##ROW_MAP_NOMBRE_FICHERO##')"
+                    },
+                    {
+                        "name": "executequery",
+                        "execute-if-error": false,
+                        "value": "INSERT INTO master_replica_queue (ROWID,MID,DMID,CGSSQL,OPER,TBL,OPERID,TIMESTAMP) VALUES ('##ROW_NEW_ROWID##',9999,0,'INSERT INTO gen_ot_fotos (NUMEROORDEN,NOMBRE_FICHERO,DESCRIPCION,BAJA,PROCESADO,ORIGEN,ROWID,COD_BRIGADA,FILE_SIZE) VALUES (''##ROW_NUMEROORDEN##'',''##ROW_MAP_NOMBRE_FICHERO##'',''Resumen de la Ot'',0,0,''M'',''##ROW_NEW_ROWID##'',''##ROW_COD_BRIGADA##'',##PDF_SIZE_KB##)',1,'gen_ot_fotos',uuid(),SYSDATE())"
+                    }
+                    ]
+                },
+                {
+                    "name": "executequery",
+                    "execute-if-error": false,
+                    "execute-always": true,
+                    "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Ok' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+                },
+                {
+                    "name": "executequery",
+                    "execute-if-error": true,
+                    "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Error - ##EXCEPTION##' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+                }
+                ]
+            }
+        },
+        {
+            "name": "CREAR-PDF-CT",
+            "cron-expression": "0 */5 * * * *",
+            "enable": false,
+            "type": "groupby",
+            "sql": {
+                "value": "select @i := CONCAT('Resumen_OT_',O.NUMEROORDEN,'_',DATE_FORMAT(SYSDATE(), '%Y%m%d'),'.pdf') AS MAP_NOMBRE_FICHERO,O.ID,IFNULL(O.PDF_CREADO,0) AS PDF_CREADO,'##GP_MONITORPATH##TemplateCt.xml' AS TEMPLATE, concat('##GP_REPLICAFILES##',@i) AS FILEDDEST from gen_ot_cabecera O INNER JOIN (select MAX(ID) AS ID,TASK_ID from gen_ot_estados GROUP BY TASK_ID) E ON E.TASK_ID = O.TASK_ID INNER JOIN gen_ot_estados ER ON ER.ID = E.ID left outer join gen_ct ct on ct.g3e_fid = O.codigo_ubicacion left outer join gen_ctc ctc on ctc.g3e_fid = O.codigo_ubicacion WHERE ER.ESTADO IN (5) AND AREA_EMPRESA LIKE 'C%' and (ct.ID is not null or ctc.ID is not NULL) AND IFNULL(O.PDF_CREADO,0) = 0",
+                "groupby": "ID"
+            },
+            "errormessage": {
+                "subject": "",
+                "body": "",
+                "header": ""
+            },
+            "email": {
+                "to": "",
+                "cc": "",
+                "bcc": ""
+            },
+            "actions": {
+                "actions": [
+                {
+                    "name": "create-pdf-file",
+                    "template": "##ROW_TEMPLATE##",
+                    "path": "##ROW_FILEDDEST##",
+                    "after-action": [
+                    {
+                        "name": "executequery",
+                        "value": "UPDATE gen_ot_cabecera SET PDF_CREADO=1,NOMBRE_FICHERO_PDF='##ROW_MAP_NOMBRE_FICHERO##' WHERE ID=##ROW_ID##"
+                    }
+                    ]
+                },
+                {
+                    "name": "executequery",
+                    "execute-if-error": false,
+                    "execute-always": true,
+                    "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Ok' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+                },
+                {
+                    "name": "executequery",
+                    "execute-if-error": true,
+                    "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Error - ##EXCEPTION##' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+                }
+                ]
+            }
+        },
+		{
+		  "name": "CREAR-PDF-CARTA",
+		  "cron-expression": "0 */5 * * * *",
+		  "enable": true,
+		  "type": "groupby",
+		  "sql": {
+			"value": "select @i := CONCAT('carta_OT_',o2.NUMEROORDEN,'_',DATE_FORMAT(SYSDATE(), '%Y%m%d'),'.pdf') AS MAP_NOMBRE_FICHERO, o2.ID,'##GP_MONITORPATH##TemplateCarta.xml' AS TEMPLATE, concat('##GP_REPLICAFILES##',@i) AS FILEDDEST from (SELECT o1.NUMEROORDEN,MAX(o1.ID) AS ID from gen_ot_cabecera o1 inner join gen_ot_estados es on es.NUMEROORDEN=o1.NUMEROORDEN and es.task_id = o1.task_id and es.ESTADO=4 where CLASE_ORDEN IN ('DPRP','DPRN') AND CLASE_ACTIVIDAD ='DR7' AND UBICACION_TECNICA LIKE 'C%' AND AREA_EMPRESA = 'CCM' GROUP BY NUMEROORDEN) o INNER JOIN gen_ot_cabecera o2 on o2.ID=o.ID AND o2.CREACION_PDF_CARTA IN (0,-2)",
+			"groupby": "ID"
+		  },
+		  "errormessage": {
+			"subject": "",
+			"body": "",
+			"header": ""
+		  },
+		  "email": {
+			"to": "",
+			"cc": "",
+			"bcc": ""
+		  },
+		  "actions": {
+			"actions": [
+			  {
+				"name": "create-pdf-file",
+				"template": "##ROW_TEMPLATE##",
+				"path": "##ROW_FILEDDEST##",
+				  "continue-if-error": "true",
+				  "after-action": [
+					  {
+						  "name": "executequery",
+						  "value": "UPDATE gen_ot_cabecera SET CREACION_PDF_CARTA=1,NOMBRE_FICHERO_PDF_CARTA='##ROW_MAP_NOMBRE_FICHERO##',FECHA_CREACION_PDF_CARTA=SYSDATE() WHERE ID=##ROW_ID##"
+					  } 
+                    ]      
+			  }
+			]
+		  }
+		},
+        {
+            "name": "INSERTAR-PDF",
+            "cron-expression": "0 */1 * * * *",
+            "enable": false,
+            "type": "groupby",
+            "sql": {
+                "value": "SELECT O.ID,O.NUMEROORDEN,O.NOMBRE_FICHERO_PDF AS NOMBRE_FICHERO,O.PUESTO_TRABAJO AS COD_BRIGADA,uuid() as NEW_ROWID FROM gen_ot_cabecera O WHERE O.PDF_CREADO=1 AND O.NOMBRE_FICHERO_PDF IS NOT NULL AND NOT EXISTS (SELECT 1 FROM gen_ot_fotos WHERE NUMEROORDEN=O.NUMEROORDEN AND NOMBRE_FICHERO=O.NOMBRE_FICHERO_PDF)",
+                "groupby": "ID"
+            },
+            "errormessage": {
+                "subject": "",
+                "body": "",
+                "header": ""
+            },
+            "email": {
+                "to": "",
+                "cc": "",
+                "bcc": ""
+            },
+            "actions": {
+                "actions": [
+                {
+                    "name": "executequery",
+                    "for-each-row": true,
+                    "value": "INSERT INTO gen_ot_fotos (NUMEROORDEN,NOMBRE_FICHERO,DESCRIPCION,BAJA,PROCESADO,ORIGEN,ROWID,COD_BRIGADA) VALUES ('##ROW_NUMEROORDEN##','##ROW_NOMBRE_FICHERO##','Resumen de la Ot',0,0,'M','##ROW_NEW_ROWID##','##ROW_COD_BRIGADA##')"
+                },
+                {
+                    "name": "executequery",
+                    "for-each-row": true,
+                    "value": "INSERT INTO master_replica_queue (ROWID,MID,DMID,CGSSQL,OPER,TBL,OPERID,TIMESTAMP) VALUES ('##ROW_NEW_ROWID##',9999,0,'INSERT INTO gen_ot_fotos (NUMEROORDEN,NOMBRE_FICHERO,DESCRIPCION,BAJA,PROCESADO,ORIGEN,ROWID) VALUES (''##ROW_NUMEROORDEN##'',''##ROW_NOMBRE_FICHERO##'',''Resumen de la Ot'',0,0,''M'',''##ROW_NEW_ROWID##'')',1,'gen_ot_fotos',uuid(),SYSDATE())"
+                },
+                {
+                    "name": "executequery",
+                    "execute-if-error": false,
+                    "execute-always": true,
+                    "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Ok' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+                },
+                {
+                    "name": "executequery",
+                    "execute-if-error": true,
+                    "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Error - ##EXCEPTION##' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+                }
+                ]
+            }
+        }
+    ],
+    "maintenances": []
+}
