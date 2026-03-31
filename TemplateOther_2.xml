@@ -125,31 +125,31 @@
 		LEFT JOIN gen_maestrovetipriesgoinundvl mrv ON mrv.COD_TIP_RIESGO_INUND = ct.COD_TIP_RIESGO_INUND"
 					lmargin="10p" rmargin="10p" tmargin="10p" filter="" show-header="false">
 
-		<prop name="MAP_TL_B_INUNDABILIDAD" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="40%" height="15p" title="  Inundabilidad  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000"/>
+		<prop name="MAP_TL_B_INUNDABILIDAD" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="40%" height="15p" title="  Inundabilidad  " align="left" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000"/>
 		<prop name="MAP_B_INUNDABILIDAD" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="60%" height="15p" align="left" lines="1" newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000"/>
 
-		<prop name="MAP_TL_CAN_ALT_INUND" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="40%" height="15p" title="  Altura inundación ZI100 instalación (cm)  " align="center" bgcolor="#ffffff" lines="1" font-size="9" text-border-color="#000000"/>
+		<prop name="MAP_TL_CAN_ALT_INUND" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="40%" height="15p" title="  Altura inundación ZI100 instalación (cm)  " align="left" bgcolor="#ffffff" lines="1" font-size="9" text-border-color="#000000"/>
 		<prop name="MAP_CAN_ALT_INUND" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="60%" height="15p" align="left" lines="1" newline="false" bgcolor="#ffffff" font-size="9" text-border-color="#000000"/>
 
-		<prop name="MAP_TL_B_INUNDADO" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="40%" height="15p" title="  Inundado previamente  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000"/>
+		<prop name="MAP_TL_B_INUNDADO" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="40%" height="15p" title="  Inundado previamente  " align="left" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000"/>
 		<prop name="MAP_B_INUNDADO" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="60%" height="15p" align="left" lines="1" newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000"/>
 
-		<prop name="MAP_TL_CAN_ALT_RASANTE_SUELO" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="40%" height="15p" title="  Altura rasante a cota 0 instalación (cm)  " align="center" bgcolor="#ffffff" lines="1" font-size="9" text-border-color="#000000"/>
+		<prop name="MAP_TL_CAN_ALT_RASANTE_SUELO" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="40%" height="15p" title="  Altura rasante a cota 0 instalación (cm)  " align="left" bgcolor="#ffffff" lines="1" font-size="9" text-border-color="#000000"/>
 		<prop name="MAP_CAN_ALT_RASANTE_SUELO" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="60%" height="15p" align="left" lines="1" newline="false" bgcolor="#ffffff" font-size="9" text-border-color="#000000"/>
 
-		<prop name="MAP_TL_CAN_ALT_RASANTE_AGUA" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="40%" height="15p" title="  Altura cota 0 instalación a marca agua (cm)  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000"/>
+		<prop name="MAP_TL_CAN_ALT_RASANTE_AGUA" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="40%" height="15p" title="  Altura cota 0 instalación a marca agua (cm)  " align="left" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000"/>
 		<prop name="MAP_CAN_ALT_RASANTE_AGUA" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="60%" height="15p" align="left" lines="1" newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000"/>
 
-		<prop name="MAP_TL_RIESGO_INUND" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="40%" height="15p" title="  Riesgo de inundabilidad  " align="center" bgcolor="#ffffff" lines="1" font-size="9" text-border-color="#000000"/>
+		<prop name="MAP_TL_RIESGO_INUND" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="40%" height="15p" title="  Riesgo de inundabilidad  " align="left" bgcolor="#ffffff" lines="1" font-size="9" text-border-color="#000000"/>
 		<prop name="MAP_RIESGO_INUND" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="60%" height="15p" align="left" lines="1" newline="false" bgcolor="#ffffff" font-size="9" text-border-color="#000000"/>
 
-		<prop name="MAP_TL_CAN_ALT_RASANTE_EQ_STAR" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="40%" height="15p" title="  Altura cota 0 instalación a equipos digitales (cm)  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000"/>
+		<prop name="MAP_TL_CAN_ALT_RASANTE_EQ_STAR" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="40%" height="15p" title="  Altura cota 0 instalación a equipos digitales (cm)  " align="left" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000"/>
 		<prop name="MAP_CAN_ALT_RASANTE_EQ_STAR" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="60%" height="15p" align="left" lines="1" newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000"/>
 
-		<prop name="MAP_TL_CAN_ALT_RASANTE_MAN_CEL" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="40%" height="15p" title="  Altura cota 0 instalación a mando/control celdas (cm)  " align="center" bgcolor="#ffffff" lines="1" font-size="9" text-border-color="#000000"/>
+		<prop name="MAP_TL_CAN_ALT_RASANTE_MAN_CEL" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="40%" height="30p" title="  Altura cota 0 instalación a mando/control celdas (cm)  " align="left" bgcolor="#ffffff" lines="2" font-size="9" text-border-color="#000000"/>
 		<prop name="MAP_CAN_ALT_RASANTE_MAN_CEL" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="60%" height="15p" align="left" lines="1" newline="false" bgcolor="#ffffff" font-size="9" text-border-color="#000000"/>
 
-		<prop name="MAP_TL_CAN_ALT_RASANTE_CBT" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="40%" height="15p" title="  Altura cota 0 instalación a cuadro BT (cm)  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000"/>
+		<prop name="MAP_TL_CAN_ALT_RASANTE_CBT" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="40%" height="15p" title="  Altura cota 0 instalación a cuadro BT (cm)  " align="left" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000"/>
 		<prop name="MAP_CAN_ALT_RASANTE_CBT" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="60%" height="15p" align="left" lines="1" newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000"/>
 
 	</coll>
