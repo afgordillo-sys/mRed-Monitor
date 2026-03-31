@@ -335,7 +335,7 @@
 		<prop name="MAP_CAN_ALT_RASANTE_EQ_STAR" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="60%" height="15p" align="left" lines="1" newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000"/>
 
 		<prop name="MAP_TL_CAN_ALT_RASANTE_MAN_CEL" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="40%" height="30p" title="  Altura cota 0 instalación a mando/control celdas (cm)  " align="left" bgcolor="#ffffff" lines="2" font-size="9" text-border-color="#000000"/>
-		<prop name="MAP_CAN_ALT_RASANTE_MAN_CEL" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="60%" height="15p" align="left" lines="1" newline="false" bgcolor="#ffffff" font-size="9" text-border-color="#000000"/>
+		<prop name="MAP_CAN_ALT_RASANTE_MAN_CEL" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="60%" height="30p" align="left" lines="1" newline="false" bgcolor="#ffffff" font-size="9" text-border-color="#000000"/>
 
 		<prop name="MAP_TL_CAN_ALT_RASANTE_CBT" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="40%" height="15p" title="  Altura cota 0 instalación a cuadro BT (cm)  " align="left" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000"/>
 		<prop name="MAP_CAN_ALT_RASANTE_CBT" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="60%" height="15p" align="left" lines="1" newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000"/>
