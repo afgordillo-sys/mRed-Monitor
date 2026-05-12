@@ -168,7 +168,7 @@
 		  "enable": true,
 		  "type": "groupby",
 		  "sql": {
-			"value": "select @i := CONCAT('carta_OT_',o2.NUMEROORDEN,'_',DATE_FORMAT(SYSDATE(), '%Y%m%d'),'.pdf') AS MAP_NOMBRE_FICHERO, o2.ID,'##GP_MONITORPATH##TemplateCarta.xml' AS TEMPLATE, concat('##GP_REPLICAFILES##',@i) AS FILEDDEST from (SELECT o1.NUMEROORDEN,MAX(o1.ID) AS ID from gen_ot_cabecera o1 inner join gen_ot_estados es on es.NUMEROORDEN=o1.NUMEROORDEN and es.task_id = o1.task_id and es.ESTADO=4 where CLASE_ORDEN IN ('DPRP','DPRN') AND CLASE_ACTIVIDAD ='DR7' AND UBICACION_TECNICA LIKE 'C%' AND AREA_EMPRESA = 'CCM' GROUP BY NUMEROORDEN) o INNER JOIN gen_ot_cabecera o2 on o2.ID=o.ID AND o2.CREACION_PDF_CARTA IN (0,-2)",
+			"value": "select @i := CONCAT('carta_OT_',o2.NUMEROORDEN,'_',DATE_FORMAT(SYSDATE(), '%Y%m%d'),'.pdf') AS MAP_NOMBRE_FICHERO, o2.ID,'##GP_MONITORPATH##TemplateCarta.xml' AS TEMPLATE, concat('##GP_REPLICAFILES##',@i) AS FILEDDEST from (SELECT o1.NUMEROORDEN,MAX(o1.ID) AS ID from gen_ot_cabecera o1 inner join gen_ot_estados es on es.NUMEROORDEN=o1.NUMEROORDEN and es.task_id = o1.task_id and es.ESTADO=4 where CLASE_ORDEN IN ('DPRP','DPRN') AND CLASE_ACTIVIDAD ='DR7' AND UBICACION_TECNICA LIKE 'C%' AND AREA_EMPRESA = 'CCM' GROUP BY NUMEROORDEN) o INNER JOIN gen_ot_cabecera o2 on o2.ID=o.ID AND ifnull(o2.CREACION_PDF_CARTA,0) IN (0,-2)",
 			"groupby": "ID"
 		  },
 		  "errormessage": {

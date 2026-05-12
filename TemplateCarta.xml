@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xml>
+	<!-- CABECERA -->
+	<coll name="coll1" sql="select o.ID,o.NUMEROORDEN,
+		  '/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/carta_firma_mred.png' as MAP_IMAGEN_FONDO_PAGE,
+		  '/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/carta_img1.png' as MAP_IMG1,
+		  '/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/carta_img2.png' as MAP_IMG2,
+CONCAT('Nos ponemos en contacto con usted en referencia a las instalaciones de ',
+ctc.COD_MUNICIPIO,
+' ',
+ctc.TXT_DIRECCION,
+' ',
+ctc.NUM_POSTAL,
+', en concreto al centro de seccionamiento ',
+ctc.SAP_TPLNR,
+' ',
+ctc.NOM_NOMBRE,
+' de su titularidad.'
+'\r\nComo sabe, el centro de seccionamiento incorpora elementos de maniobra de la red de distribución.'
+) AS MAP_TITLE,
+ifnull(me.EMAIL_APOYO_ZONA,'Sin correo definido') as EMAIL_APOYO_ZONA,
+CONCAT(
+  DATE_FORMAT(CURDATE(), '%d'),
+  ' de ',
+  ELT(MONTH(CURDATE()),
+      'Enero','Febrero','Marzo','Abril','Mayo','Junio',
+      'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'),
+  ' del ',
+  DATE_FORMAT(CURDATE(), '%Y')
+) AS MAP_FECHA,
+ifnull(me.DIRECCION_ZONA,'Sin dirección definida') as DIRECCION_ZONA
+from gen_ot_cabecera o 
+inner join gen_maestrovbbrigadavl me on (o.puesto_trabajo=me.cod_brigada_usu or o.puesto_trabajo2=me.COD_BRIGADA_USU)
+inner join gen_ctc ctc on ctc.G3E_FID = o.CODIGO_UBICACION" lmargin="15%" rmargin="15%" tmargin="6%" bmargin="16%"
+		  filter="o.CLASE_ORDEN IN ('DPRP','DPRN') AND o.CLASE_ACTIVIDAD ='DR7' AND o.UBICACION_TECNICA LIKE 'C%' AND o.AREA_EMPRESA = 'CCM' and o.ID=##ID## order by o.ID DESC" 
+		  entry-point="true" show-header="false" background-image="##FLD_MAP_IMAGEN_FONDO_PAGE##" repeat-background="false">
+
+		<prop name="MAP_NUMERO_REFERENCIA" title="N.º de referencia:" width="15%" tmargin="7%" font-size="9" lines="1" type="TL"></prop>
+		<divider width="30%" newline="false" tmargin="9%" ></divider>
+		
+		<prop name="MAP_NUMERO_REFERENCIA" title="Remite: " width="12%" tmargin="7%" font-size="9" lines="1" type="TL" newline="false" fontbold="true"></prop>
+		<prop name="MAP_NUMERO_REFERENCIA" title="Apartado de Correos 180 - 48008 BILBAO" width="43%" tmargin="7%" font-size="9" lines="1" type="TL" newline="false"></prop>
+
+		<divider width="50%" lmargin="50%" tmargin="5%" newline="true"></divider>
+		<divider width="50%" lmargin="50%" tmargin="2%" newline="true"></divider>
+		
+		<prop name="MAP_FECHA" width="50%" tmargin="2%" font-size="9" lines="1" type="T"></prop>
+		
+		<divider width="50%" tmargin="2%" newline="false"></divider>
+
+		<prop name="MAP_ESTIMADO_CLIENTE" title="Estimado cliente:" width="50%" tmargin="5%" font-size="9" lines="1" type="TL"></prop>
+		<prop name="MAP_TITLE" title="Estimado cliente:" width="100%" tmargin="2%" font-size="9" height="-1" lines="-1" type="T"></prop>
+		
+		<prop name="MAP_OBLIGAVIONES_QUEST" title="¿Cuáles son sus obligaciones?" forecolor="#00a443" width="100%" tmargin="2%" font-size="9" fontbold="true" lines="1" type="TL"></prop>
+		<prop name="MAP_OBLIGAVIONES_QUEST_0" title="Como titular de estas instalaciones, conforme a lo establecido en la regulación vigente , tiene las siguientes obligaciones:" width="100%" tmargin="2%" height="-1" lines="-1" font-size="9" type="TL"></prop>
+		<prop name="MAP_OBLIGAVIONES_QUEST_1" lmargin="2%" title="1.	Debe responsabilizarse del mantenimiento y verificación periódica de las mismas, así como de la corrección de los defectos que pudieran identificarse." width="100%" tmargin="2%" font-size="9" height="-1" lines="-1" type="TL"></prop>
+		<prop name="MAP_OBLIGAVIONES_QUEST_2" lmargin="2%" title="2.	Debe establecer las medidas necesarias para evitar la manipulación por su parte, como propietario, de los elementos de maniobra de la red de distribución que forman parte de la instalación titularidad de Vd." width="100%" tmargin="2%" font-size="9" height="-1" lines="-1" type="TL"></prop>
+		<prop name="MAP_OBLIGAVIONES_QUEST_3" lmargin="2%" title="3.	Debe posibilitar el acceso inmediato por parte del personal de distribución a dichos elementos, para poder realizar las maniobras pertinentes en la red." width="100%" tmargin="2%" font-size="9" height="-1" lines="-1" type="TL"></prop>
+		<prop name="MAP_OBLIGAVIONES_QUEST_4" lmargin="2%" title="4.	Debe corregir los posibles defectos que se detecten por nuestra parte en las revisiones periódicas de la red de distribución, en las que se comprueba la efectiva compatibilidad y coordinación entre la instalación privada y los elementos de la red de distribución. En el caso de localizarse algún defecto en dichas revisiones se le notificará para su resolución." width="100%" tmargin="2%" font-size="9" height="-1" lines="-1" type="TL"></prop>
+
+
+		<prop name="MAP_DEFECTOS" title="Defectos identificados:" forecolor="#00a443" width="100%" tmargin="3%" font-size="9" lines="1" fontbold="true" type="TL"></prop>
+		<prop name="MAP_DEFECTOS_0" title="Durante una visita a estas instalaciones hemos detectado la existencia de varios defectos, identificados como graves en el vigente Reglamento de Instalaciones Eléctricas de Alta " width="100%" tmargin="2%" height="-1" lines="-1" font-size="9" type="TL"></prop>
+		<!-- <divider width="50%" tmargin="1%" newline="true"></divider> -->
+		<!--<prop name="MAP_DEFECTOS_1" title="Las instalaciones de alta tensión son objeto de regulación en el Real Decreto 337/2014, de 9 de mayo, por el que se aprueban el Reglamento sobre condiciones técnicas y garantías de seguridad en instalaciones eléctricas y sus Instrucciones Técnicas Complementarias ITC-RAT 01 a 23. Concretamente, la ITC-RAT 19 establece las exigencias que deben cumplir las Instalaciones privadas para ser compatibles y estar coordinadas con la red de distribución." width="100%" tmargin="2%" height="-1" lines="-1" font-size="5" type="TL"></prop>-->
+		<prop name="MAP_DEFECTOS_2" title="Tensión (Real Decreto 337/2014), lo que le comunicamos para que proceda a la corrección de los mismos, según lo indicado en el apartado 4 anterior. " width="100%" tmargin="2%" height="-1" lines="-1" font-size="9" type="TL"></prop>
+		<prop name="MAP_DEFECTOS_3" title="En el Anexo puede encontrar el detalle de los defectos identificados." width="100%" tmargin="2%" height="-1" lines="-1" font-size="9" type="TL"></prop>
+
+
+		<frame name="frmImg1" width="50%"  heigth="10%">
+			<prop name="MAP_IMG1" width="20%" height="95%" keep-aspect-ratio="true" type="IMG"></prop>
+			<prop name="EMAIL_APOYO_ZONA" width="80%" tmargin="2%" font-size="9" lines="1" type="T" newline="false"></prop>
+		</frame>
+		<frame name="frmImg2" width="50%" heigth="10%" newline="false">
+			<prop name="MAP_IMG2" width="20%" height="100%" keep-aspect-ratio="true" type="IMG"></prop>
+			<frame name="frmImg2" width="80%" heigth="100%" newline="false">
+				<prop name="MAP_IDE_DIRECCION" title="i-DE Grupo Iberdrola" forecolor="#00a443" width="100%" tmargin="3%" font-size="7" lines="1" fontbold="true" type="TL"></prop>
+				<prop name="DIRECCION_ZONA" width="100%" tmargin="2%" font-size="9" lines="1" type="T" ></prop>
+			</frame>
+		</frame>
+		
+		<prop name="MAP_ATENTAMENTE" title="Atentamente," width="100%" tmargin="5%" font-size="9" lines="1" type="TL"></prop>
+		<divider width="100%" tmargin="10%" newline="true"></divider>
+		
+		<prop name="MAP_JEFE_ZONA" title="Jefe de Zona" forecolor="#00a443" width="100%" tmargin="5%" font-size="9" lines="1" type="TL" fontbold="true"></prop>
+		<prop name="MAP_IDE" title="i-DE Redes Eléctricas Inteligentes" forecolor="#00a443" width="100%" tmargin="5%" font-size="9" lines="1" type="TL" fontbold="true"></prop>
+		<prop name="MAP_ANEXO" title="ANEXO: relación de defectos identificados:" forecolor="#00a443" width="100%" tmargin="5%" font-size="9" lines="1" type="TL" fontbold="true"></prop>
+
+		<prop name="MAP_ANOMALIAS_DETALLE" content="@AnomaliasDetalle"  type="Z"/>
+		<content name="@AnomaliasDetalle" src="AnomaliasDetalle" filter="gaa.ORDEN_ORIGEN='##FLD_NUMEROORDEN##'"/>
+	</coll>
+
+	<coll name="AnomaliasDetalle"
+		sql="select 
+			 gaa.ID,gaa.COD_AN_ANOMALIA,gaa.CODIGO_AVISO_GAMAD,
+		CONCAT('  ',gata.DESC_TIPO_ANOM) AS DESC_TIPO_ANOM,
+		CONCAT('  ',ifnull(case when length(gaa.OBSERVACIONES)=0 then null else gaa.OBSERVACIONES end,'Sin observaciones')) AS OBSERVACIONES
+			 from gen_an_anomalia gaa
+			inner join gen_an_tipo_anomalia gata on gata.ID_TIPO_ANOM=gaa.COD_AN_TIP_ANOMALIA"
+								lmargin="10p" rmargin="10p" tmargin="10p" filter="" show-header="false">
+
+		<frame name="frmAvisos" width="100%" tmargin="15p">
+			<frame name="frmAVISOS" border="true" border-left="true" border-bottom="true" border-right="true" border-top="true" border-color="#000000" width="100%" bgcolor="#7b9c66">
+				<prop name="MAP_TITLE_AVISOS" type="T" width="98%" height="15p" align="center"
+					  bgcolor="#00000000" font-size="10" lines="1" fontbold="true" forecolor="#ffffff" border-color="#000000" lmargin="1%"/>
+			</frame>
+		</frame>
+
+		<!--<prop name="MAP_TL_CODIGO_ANOMALIA" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Código anomalía  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000" />
+			<prop name="MAP_CODIGO_ANOMALIA" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000" />-->
+
+		<prop name="MAP_TL_DESC_TIPO_ANOM" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Descripción  " align="left" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000" />
+		<prop name="DESC_TIPO_ANOM" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000" />
+
+		<prop name="MAP_TL_OBSERVACIONES" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Observaciones  " align="left" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000" />
+		<prop name="OBSERVACIONES" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000" />
+		
+		<prop name="MAP_FOTO_ANOMALIAS" grid-column="4" viewmode="grid" content="@FotosAnomalias"  type="Z"/>
+		<content name="@FotosAnomalias" src="FotosAnomalias" filter="(CASE WHEN IFNULL(F.COD_AN_ANOMALIA,'-') = '' THEN '-' ELSE  IFNULL(F.COD_AN_ANOMALIA,'-') END ='##FLD_COD_AN_ANOMALIA##' OR CASE WHEN IFNULL(F.CODIGO_AVISO_GAMAD,'-') = '' THEN '-' ELSE  IFNULL(F.CODIGO_AVISO_GAMAD,'-') END = '##FLD_CODIGO_AVISO_GAMAD##') and IFNULL(F.BAJA,0)=0 and substring_index(lower(F.NOMBRE_FICHERO),'.',-1) in ('png','jpg','jpeg')"/>
+
+	</coll>
+	
+	<coll name="FotosAnomalias" sql="SELECT concat('/var/www/vhosts/xoneideintcore.com/xonerepository/ReplicaFiles/1KEGG99N/',NOMBRE_FICHERO) as MAP_TER_IMG FROM gen_an_foto F"
+						lmargin="10p" rmargin="10p" tmargin="10p" filter="" entrypoint="true" show-header="false">
+
+		<frame name="frmIMAGEN" width="100%"  height="100p" align="center" border="true" border-left="true" border-bottom="true" border-right="true" border-top="true" border-color="#000000" bgcolor="#e3eadf">
+			<prop name="MAP_TER_IMG" type="IMG" width="98%" height="96p" keep-aspect-ratio="true" must-exist="true"/>
+		</frame>
+	</coll>
+
+</xml>
