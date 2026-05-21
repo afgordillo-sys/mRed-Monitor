@@ -87,7 +87,7 @@ inner join gen_ctc ctc on ctc.G3E_FID = o.CODIGO_UBICACION" lmargin="15%" rmargi
 		<prop name="MAP_ANEXO" title="ANEXO: relación de defectos identificados:" forecolor="#00a443" width="100%" tmargin="5%" font-size="9" lines="1" type="TL" fontbold="true"></prop>
 
 		<prop name="MAP_ANOMALIAS_DETALLE" content="@AnomaliasDetalle"  type="Z"/>
-		<content name="@AnomaliasDetalle" src="AnomaliasDetalle" filter="gaa.ORDEN_ORIGEN='##FLD_NUMEROORDEN##'"/>
+		<content name="@AnomaliasDetalle" src="AnomaliasDetalle" filter="gaa.ORDEN_ORIGEN='##FLD_NUMEROORDEN##' AND IFNULL(gaa.BAJA,0)=0"/>
 	</coll>
 
 	<coll name="AnomaliasDetalle"

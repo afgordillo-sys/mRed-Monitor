@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xml>
+	<!-- CABECERA -->				
+	<coll name="coll1" sql="SELECT DISTINCT 
+CONCAT('  ',O.COD_REC_OT_CABECERA) AS MAP_NUMEROORDEN,
+CONCAT('  ',O.OBSERVACIONES) AS MAP_OBSERVACIONES,
+IFNULL(IFNULL(ct.G3E_FID,ctc.G3E_FID),0) AS MAP_G3E_FID,
+IFNULL(IFNULL(ct.G3E_FNO,ctc.G3E_FNO),0) AS MAP_G3E_FNO,
+CASE WHEN substr(O.BRIGADA,4,1) = 'E' THEN 1 ELSE 0 END AS MAP_EXTERNO,
+CONCAT('Revisión Inventario - OBLIGATORIA') as MAP_TITLE_REVINV,
+(select count(*) from gen_cambiosinventario cin WHERE cin.TIPO IS NULL and cin.COD_REC_OT_CABECERA=O.COD_REC_OT_CABECERA AND cin.G3E_FID=IFNULL(ct.G3E_FID,ctc.G3E_FID) AND cin.G3E_FNO=IFNULL(ct.G3E_FNO,ctc.G3E_FNO)) AS MAP_CAMBIO_INV,
+CID.VALOR,IFNULL(ct.ID_CHIP_NFC,ctc.ID_CHIP_NFC),
+CASE 
+	WHEN CID.VALOR IS NULL 
+		THEN 
+			CASE 
+			WHEN IFNULL(ct.ID_CHIP_NFC,ctc.ID_CHIP_NFC) IS NULL 
+				THEN '/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/Apoyo_Etiquetado_Blanco.png'
+			WHEN IFNULL(ct.ID_CHIP_NFC,ctc.ID_CHIP_NFC) = '11:11:11:11:11' 
+				THEN '/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/Apoyo_Etiquetado_Azul.png'
+		ELSE 
+			'/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/Apoyo_Etiquetado_Verde.png' 
+		END			
+	WHEN CID.VALOR = '11:11:11:11:11' 
+		THEN '/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/Apoyo_Etiquetado_Azul.png'
+	ELSE '/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/Apoyo_Etiquetado_Verde.png'
+END AS MAP_ICONO_ETIQUETADO,
+CASE 
+	WHEN CID.VALOR IS NULL THEN 
+		CASE WHEN IFNULL(ct.ID_CHIP_NFC,ctc.ID_CHIP_NFC) IS NULL THEN 0
+				WHEN IFNULL(ct.ID_CHIP_NFC,ctc.ID_CHIP_NFC) = '11:11:11:11:11' THEN 1
+				ELSE 0 END	
+	WHEN CID.VALOR = '11:11:11:11:11' THEN 1 
+	ELSE 0 
+END AS MAP_VER_NO_ACCESIBLE,
+IFNULL(ct.ID_CHIP_NFC,ctc.ID_CHIP_NFC),
+CONCAT('&lt;b&gt; CT ',ct.SAP_TPLNR,'&lt;/b&gt; - ', CASE 
+	WHEN CID.VALOR IS NULL THEN 
+		CASE WHEN IFNULL(ct.ID_CHIP_NFC,ctc.ID_CHIP_NFC) IS NULL THEN ' CT Sin etiquetar'
+				WHEN IFNULL(ct.ID_CHIP_NFC,ctc.ID_CHIP_NFC) = '11:11:11:11:11' THEN ' CT no Accesible'
+				ELSE ' CT Accesible' END	
+	WHEN CID.VALOR = '11:11:11:11:11' THEN ' CT No Accesible' 
+	ELSE ' CT Etiquetado' END) AS MAP_DESCRIPCION_CT,
+'/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/qr_iberdrola.png' AS MAP_QR,
+concat('RESUMEN OT - ',O.COD_REC_OT_CABECERA ) AS MAP_TITULO,
+'/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/ide_iberdrola.png' AS MAP_LOGO,
+O.ID as ID,
+O.COD_REC_OT_CABECERA,
+concat('  ',CASE WHEN O.UBICACION_TECNICA IS NOT NULL THEN concat(O.UBICACION_TECNICA,' - ') ELSE '' END,O.NOMBRE_UBICACION) AS MAP_INSTALACION,
+'Revisión de inventario' as MAP_TITLE_ELMCTI,
+(SELECT count(*) FROM gen_ri_ot_elementos_rev er WHERE er.COD_REC_OT_CABECERA = O.COD_REC_OT_CABECERA  ) as MAP_VER_ELMCTI,
+'Estudio de Inundabilidad' AS MAP_TITLE_INUNDABILIDAD,
+(SELECT COUNT(1) FROM gen_inundabilidad_rec_bloques_rev ir
+ WHERE ir.COD_REC_OT_CABECERA = O.COD_REC_OT_CABECERA AND ir.revisado = 1) AS MAP_VER_INUNDABILIDAD,
+O.UBICACION_TECNICA AS MAP_UBICACION_TECNICA
+from gen_rec_ot_cabecera O
+left outer join gen_ct ct on ct.g3e_fid = O.FID_UT
+left outer join gen_ctc ctc on ctc.g3e_fid = O.FID_UT
+left join gen_maestroveclactmvl gm on gm.COD_CLA_CTM = IFNULL(ct.COD_CLA_CT,ctc.COD_CLA_CTC)
+LEFT OUTER JOIN (select MAX(ID) AS ID,G3E_FID,G3E_FNO,ATTR from gen_cambiosinventario WHERE TIPO='CT_ETQ' AND ATTR='ID_CHIP_NFC'
+group by G3E_FID,G3E_FNO,ATTR) CI ON CI.G3E_FID=IFNULL(ct.G3E_FID,ctc.G3E_FID) AND CI.G3E_FNO=IFNULL(ct.G3E_FNO,ctc.G3E_FNO)
+LEFT OUTER JOIN gen_cambiosinventario CID ON CID.ID=CI.ID AND CID.COD_REC_OT_CABECERA=O.COD_REC_OT_CABECERA " lmargin="5%" rmargin="5%" tmargin="5%" bmargin="5%" 
+		  filter="O.ID=##ID## and (ct.ID is not null or ctc.ID is not NULL) order by O.ID DESC" entry-point="true" show-header="false" show-pagination="true" show-file-date-creation="true"> 
+						
+				<footer height="30p">
+					<prop name="MAP_TITLE_FOOTER" type="TL" width="98%" height="15p" title="La revisión se ha realizado según lo indicado en el manual técnico MT 2.04.02" align="center" font-size="10" lines="1" forecolor="#000000" lmargin="1%"/>
+				</footer>
+
+				<prop name="MAP_TITULO" type="T" lmargin="8%" tmargin="5p" width="64%" align="center" fontbold="true" font-size="18" copy-to-all-pages="true"/>
+				<prop name="MAP_LOGO" 	type="IMG" 	lmargin="19%" width="9%" align="right"  copy-to-all-pages="true" newline="false" keep-aspect-ratio="true"/>
+			
+				<frame name="frmDatosIdentificativos" width="100%" border-color="#000000" tmargin="15p">
+
+					<frame name="frmTITLE_DATOS_IDENTIFICACION" border="true" border-left="true" border-bottom="true" border-right="true" border-top="true" border-color="#000000" width="100%" bgcolor="#7b9c66">
+						<prop name="MAP_TITLE_DATOS_IDENTIFICACION" type="TL" width="98%" height="15p" title="Datos identificativos" align="center" 
+							  bgcolor="#00000000" font-size="10" lines="1" fontbold="true" border-color="#000000" forecolor="#ffffff" lmargin="1%"/>
+					</frame>
+					
+					<prop name="MAP_TL_NUMEROORDEN" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Numero de OT:  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000" />
+					<prop name="MAP_NUMEROORDEN" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000" />
+			
+					<prop name="MAP_TL_INSTALACION" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Instalacion: " align="center" bgcolor="#ffffff" lines="1" font-size="9" text-border-color="#000000"/>
+					<prop name="MAP_INSTALACION" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1" newline="false" bgcolor="#ffffff" font-size="9" text-border-color="#000000"/>
+				
+					<prop name="MAP_TL_OBSERVACIONES" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Observaciones: " align="center" bgcolor="#ffffff" lines="2" font-size="9" text-border-color="#000000"/>
+					<prop name="MAP_OBSERVACIONES" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1" newline="false" bgcolor="#ffffff" font-size="9" text-border-color="#000000"/>
+					
+				</frame>
+
+				<break-page />
+
+				<frame name="frmREVINV" width="100%" tmargin="15p" disablevisible="MAP_CAMBIO_INV&gt;0">
+					<frame name="frmTITLE_REVINV" disablevisible="MAP_CAMBIO_INV&gt;0" border="true" border-left="true" border-bottom="true" border-right="true" border-top="true" border-color="#000000" width="100%" bgcolor="#7b9c66">
+						<prop name="MAP_TITLE_REVINV" disablevisible="MAP_CAMBIO_INV&gt;0" type="T" width="98%" height="15p" align="center"
+							  bgcolor="#00000000" font-size="10" lines="1" fontbold="true" forecolor="#ffffff" border-color="#000000" lmargin="1%"/>
+					</frame>
+				</frame>
+
+				<prop name="MAP_LITERAL_REVINV" disablevisible="MAP_CAMBIO_INV&gt;0" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="TL" title="  Sin cambios" width="100%" height="15p"	align="left" lines="1" bgcolor="#e3eadf" font-size="9" text-border-color="#000000" />
+
+				<prop name="MAP_INVENTARIO" content="@Inventario"  type="Z" disablevisible="MAP_CAMBIO_INV&gt;0"/>
+				<content name="@Inventario" src="Inventario" filter="cin.COD_REC_OT_CABECERA='##FLD_COD_REC_OT_CABECERA##' AND cin.G3E_FID=##FLD_MAP_G3E_FID## AND cin.G3E_FNO=##FLD_MAP_G3E_FNO##"/>
+
+				<break-page />
+
+				<frame name="frmInundabilidad" disablevisible="MAP_VER_INUNDABILIDAD=0" width="100%" tmargin="15p">
+					<frame name="frmInundabilidad_2" border="true" border-left="true" border-bottom="true" border-right="true" border-top="true" border-color="#000000" width="100%" bgcolor="#7b9c66">
+						<prop name="MAP_TITLE_INUNDABILIDAD" type="T" width="98%" height="15p" align="center"
+							  bgcolor="#00000000" font-size="10" lines="1" fontbold="true" forecolor="#ffffff" border-color="#000000" lmargin="1%"/>
+					</frame>
+				</frame>
+
+				<prop name="MAP_INUNDABILIDAD" content="@Inundabilidad" disablevisible="MAP_VER_INUNDABILIDAD=0" type="Z"/>
+				<content name="@Inundabilidad" src="Inundabilidad" filter="rev.COD_REC_OT_CABECERA='##FLD_COD_REC_OT_CABECERA##'"/>
+
+	</coll>		
+	
+	<coll name="Inventario" sql="SELECT 
+								CONCAT('  ',ATTR) AS ATTR,
+								CONCAT('  ',VALOR) AS VALOR,
+								CONCAT('  ',VALOR_ANT) AS VALOR_ANT,
+								CONCAT('Revisión Inventario') as MAP_TITLE_REVINV
+								from gen_cambiosinventario cin								"
+							lmargin="10p" rmargin="10p" tmargin="10p" filter="" entrypoint="true" show-header="false">
+
+		<frame name="frmREVINV" width="100%" tmargin="15p">
+			<frame name="frmTITLE_REVINV" border="true" border-left="true" border-bottom="true" border-right="true" border-top="true" border-color="#000000" width="100%" bgcolor="#7b9c66">
+				<prop name="MAP_TITLE_REVINV" type="T" width="98%" height="15p" align="center"
+					  bgcolor="#00000000" font-size="10" lines="1" fontbold="true" forecolor="#ffffff" border-color="#000000" lmargin="1%"/>
+			</frame>
+		</frame>
+
+		<prop name="MAP_TL_ATTR" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Nombre del campo  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000" />
+		<prop name="ATTR" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000" />
+
+		<prop name="MAP_TL_VALOR_ANT" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Valor Anterior  " align="center" bgcolor="#ffffff" lines="1" font-size="9" text-border-color="#000000" />
+		<prop name="VALOR_ANT" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#ffffff" font-size="9" text-border-color="#000000" />
+
+		<prop name="MAP_TL_VALOR" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Nuevo Valor  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000" />
+		<prop name="VALOR" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000" />
+
+	</coll>
+		
+	<!-- Estudio de Inundabilidad -->
+	<coll name="Inundabilidad" sql="SELECT
+		CONCAT('  ', CASE WHEN ct.B_INUNDABILIDAD = 1 THEN 'SI' WHEN ct.B_INUNDABILIDAD = 0 THEN 'NO' ELSE '' END) AS MAP_B_INUNDABILIDAD,
+		CONCAT('  ', IFNULL(ct.CAN_ALT_INUND, '')) AS MAP_CAN_ALT_INUND,
+		CONCAT('  ', CASE WHEN ct.B_INUNDADO = 1 THEN 'SI' WHEN ct.B_INUNDADO = 0 THEN 'NO' ELSE '' END) AS MAP_B_INUNDADO,
+		CONCAT('  ', IFNULL(ct.CAN_ALT_RASANTE_SUELO, '')) AS MAP_CAN_ALT_RASANTE_SUELO,
+		CONCAT('  ', IFNULL(ct.CAN_ALT_RASANTE_AGUA, '')) AS MAP_CAN_ALT_RASANTE_AGUA,
+		CONCAT('  ', IFNULL(mrv.DES_DESCRIPCION, '')) AS MAP_RIESGO_INUND,
+		CONCAT('  ', IFNULL(ct.CAN_ALT_RASANTE_EQ_STAR, '')) AS MAP_CAN_ALT_RASANTE_EQ_STAR,
+		CONCAT('  ', IFNULL(ct.CAN_ALT_RASANTE_MAN_CEL, '')) AS MAP_CAN_ALT_RASANTE_MAN_CEL,
+		CONCAT('  ', IFNULL(ct.CAN_ALT_RASANTE_CBT, '')) AS MAP_CAN_ALT_RASANTE_CBT
+		FROM gen_ct ct
+		LEFT JOIN gen_inundabilidad_rec_bloques_rev rev ON rev.G3E_FID = ct.G3E_FID AND rev.G3E_FNO = ct.G3E_FNO
+		LEFT JOIN gen_maestrovetipriesgoinundvl mrv ON mrv.COD_TIP_RIESGO_INUND = ct.COD_TIP_RIESGO_INUND"
+					lmargin="10p" rmargin="10p" tmargin="10p" filter="" show-header="false">
+
+		<prop name="MAP_TL_B_INUNDABILIDAD" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="40%" height="15p" title="  Inundabilidad  " align="left" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000"/>
+		<prop name="MAP_B_INUNDABILIDAD" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="60%" height="15p" align="left" lines="1" newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000"/>
+
+		<prop name="MAP_TL_CAN_ALT_INUND" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="40%" height="15p" title="  Altura inundación ZI100 instalación (cm)  " align="left" bgcolor="#ffffff" lines="1" font-size="9" text-border-color="#000000"/>
+		<prop name="MAP_CAN_ALT_INUND" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="60%" height="15p" align="left" lines="1" newline="false" bgcolor="#ffffff" font-size="9" text-border-color="#000000"/>
+
+		<prop name="MAP_TL_B_INUNDADO" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="40%" height="15p" title="  Inundado previamente  " align="left" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000"/>
+		<prop name="MAP_B_INUNDADO" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="60%" height="15p" align="left" lines="1" newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000"/>
+
+		<prop name="MAP_TL_CAN_ALT_RASANTE_SUELO" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="40%" height="15p" title="  Altura rasante a cota 0 instalación (cm)  " align="left" bgcolor="#ffffff" lines="1" font-size="9" text-border-color="#000000"/>
+		<prop name="MAP_CAN_ALT_RASANTE_SUELO" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="60%" height="15p" align="left" lines="1" newline="false" bgcolor="#ffffff" font-size="9" text-border-color="#000000"/>
+
+		<prop name="MAP_TL_CAN_ALT_RASANTE_AGUA" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="40%" height="15p" title="  Altura cota 0 instalación a marca agua (cm)  " align="left" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000"/>
+		<prop name="MAP_CAN_ALT_RASANTE_AGUA" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="60%" height="15p" align="left" lines="1" newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000"/>
+
+		<prop name="MAP_TL_RIESGO_INUND" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="40%" height="15p" title="  Riesgo de inundabilidad  " align="left" bgcolor="#ffffff" lines="1" font-size="9" text-border-color="#000000"/>
+		<prop name="MAP_RIESGO_INUND" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="60%" height="15p" align="left" lines="1" newline="false" bgcolor="#ffffff" font-size="9" text-border-color="#000000"/>
+
+		<prop name="MAP_TL_CAN_ALT_RASANTE_EQ_STAR" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="40%" height="15p" title="  Altura cota 0 instalación a equipos digitales (cm)  " align="left" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000"/>
+		<prop name="MAP_CAN_ALT_RASANTE_EQ_STAR" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="60%" height="15p" align="left" lines="1" newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000"/>
+
+		<prop name="MAP_TL_CAN_ALT_RASANTE_MAN_CEL" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="40%" height="30p" title="  Altura cota 0 instalación a mando/control celdas (cm)  " align="left" bgcolor="#ffffff" lines="2" font-size="9" text-border-color="#000000"/>
+		<prop name="MAP_CAN_ALT_RASANTE_MAN_CEL" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="60%" height="30p" align="left" lines="1" newline="false" bgcolor="#ffffff" font-size="9" text-border-color="#000000"/>
+
+		<prop name="MAP_TL_CAN_ALT_RASANTE_CBT" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="40%" height="15p" title="  Altura cota 0 instalación a cuadro BT (cm)  " align="left" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000"/>
+		<prop name="MAP_CAN_ALT_RASANTE_CBT" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="60%" height="15p" align="left" lines="1" newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000"/>
+
+	</coll>
+</xml>
