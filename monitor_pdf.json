@@ -245,6 +245,42 @@
 			]
 		  }
 		},
+		{
+		  "name": "CREAR-PDF-OBRAS",
+		  "cron-expression": "0 */5 * * * *",
+		  "enable": true,
+		  "type": "groupby",
+		  "sql": {
+			"value": "select ID,ROWID, uuid() as NEW_ROWID,CONCAT(NUMERO_OBRA,'_',COD_PPI_CABECERA,'.pdf') AS MAP_NOMBRE_FICHERO FROM gen_obra_ppi_cabecera cab where cab.ESTADO = 3 and ifnull(cab.CREACION_PDF,0)=0",
+			"groupby": "ID"
+		  },
+		  "errormessage": {
+			"subject": "",
+			"body": "",
+			"header": ""
+		  },
+		  "email": {
+			"to": "",
+			"cc": "",
+			"bcc": ""
+		  },
+		  "actions": {
+			"actions": [
+			  {
+				"name": "create-pdf-file",
+				"template": "##GP_MONITORPATH##plantillaObra.xml",
+				"path": "##GP_REPLICAFILES####ROW_MAP_NOMBRE_FICHERO##",
+				  "continue-if-error": "true",
+				  "after-action": [
+					  {
+						  "name": "executequery",
+						  "value": "UPDATE gen_obra_ppi_cabecera SET CREACION_PDF=1,NOMBRE_FICHERO_PDF='##ROW_MAP_NOMBRE_FICHERO##',FECHA_CREACION_PDF=SYSDATE() WHERE ID=##ROW_ID##"
+					  } 
+                    ]      
+			  }
+			]
+		  }
+		},
         {
             "name": "INSERTAR-PDF",
             "cron-expression": "0 */1 * * * *",

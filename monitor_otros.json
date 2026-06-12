@@ -1,0 +1,859 @@
+{  
+    "checkings": [
+        {
+      "name": "RevisarDispositivoSinReplicar",
+      "cron-expression": "0 */1 7-21 * * *",
+      "enable": false,
+      "type": "groupby",
+      "sql": {
+        "value": "select t.tot,d.MID,d.PID,d.ANDROIDID from (select count(ID) as TOT,mid from master_replica_squeue group by mid) t inner join dispositivos_activos d on d.MID=t.MID left outer join (select max(FECHA) as FECHA,MID from mred_infolog.monitor_envio_push group by mid) p on p.MID=t.MID where (p.FECHA is null or p.FECHA < date_sub(sysdate(),INTERVAL 10 minute)) and t.TOT > 0 and d.PID is not null order by t.tot desc",
+        "groupby": "MID"
+      },
+      "errormessage": {
+        "subject": "",
+        "body": "",
+        "header": ""
+      },
+      "email": {
+        "to": "",
+        "cc": "",
+        "bcc": ""
+      },
+      "actions": {
+        "actions": [
+          {
+            "name": "send-push",
+            "version": "2",
+            "google-file-private-key": "##GP_MONITORPATH##iberdrola-grupoproyectos2-firebase-adminsdk-5jqua-88750c025e.json",
+            "google-auth-key": "-",
+            "pid": "##ROW_PID##",
+            "device-type": "0",
+            "mute": "true",
+            "priority": "high",
+            "notification-type": "0",
+            "collapse-key": "9998",
+            "after-action": [
+              {
+                "name": "executequery",
+                "value": "insert into mred_infolog.monitor_envio_push (DISPOSITIVO,MID,ESTADO,RESULT,EXCEPTION,TIPO) values ('##ROW_ANDROIDID##','##ROW_MID##',0,'##RESULT##','##EXCEPTION##','Replica')"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "I_FORZAR_XONELIVE_MRED",
+      "cron-expression": "0 45 4/6 * * *",
+      "enable": true,
+      "type": "groupby",
+      "sql": {
+        "value": "SELECT * FROM ck_i_forzar_xonelive_mred",
+        "groupby": "ID"
+      },
+      "errormessage": {
+        "subject": "Error generando PUSH XONELIVE (##GP_ENV##)",
+        "body": "",
+        "header": ""
+      },
+      "email": {
+        "to": "afgordillo@xone.es",
+        "cc": "",
+        "bcc": ""
+      },
+      "actions": {
+        "actions": [
+          {
+            "name": "send-push",
+            "version": "2",
+            "google-file-private-key": "##GP_MONITORPATH##iberdrola-grupoproyectos2-firebase-adminsdk-5jqua-88750c025e.json",
+            "google-auth-key": "-",
+            "pid": "##ROW_PID##",
+            "device-type": "0",
+            "mute": "true",
+            "priority": "high",
+            "notification-type": "1",
+            "collapse-key": "9998",
+            "after-action": [
+              {
+                "name": "executequery",
+                "value": "insert into mred_infolog.monitor_envio_push (DISPOSITIVO,MID,ESTADO,RESULT,EXCEPTION,TIPO) values ('##ROW_IMEI##','##ROW_MID##',0,'##RESULT##','##EXCEPTION##','Live')"
+              }
+            ]
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": false,
+            "execute-always": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Ok' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Error - ##EXCEPTION##' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          }
+        ]
+      }
+    },
+    {
+      "name": "I_FORZAR_REPLICA_MRED",
+      "cron-expression": "0 0 5/6 * * *",
+      "enable": true,
+      "type": "groupby",
+      "sql": {
+        "value": "SELECT * FROM ck_i_forzar_replica_mred",
+        "groupby": "ID"
+      },
+      "errormessage": {
+        "subject": "Error generando PUSH REPLICA (##GP_ENV##)",
+        "body": "",
+        "header": ""
+      },
+      "email": {
+        "to": "afgordillo@xone.es",
+        "cc": "",
+        "bcc": ""
+      },
+      "actions": {
+        "actions": [
+          {
+            "name": "send-push",
+            "version": "2",
+            "google-file-private-key": "##GP_MONITORPATH##iberdrola-grupoproyectos2-firebase-adminsdk-5jqua-88750c025e.json",
+            "google-auth-key": "-",
+            "pid": "##ROW_PID##",
+            "device-type": "0",
+            "mute": "true",
+            "priority": "high",
+            "notification-type": "0",
+            "collapse-key": "9997",
+            "after-action": [
+              {
+                "name": "executequery",
+                "value": "insert into mred_infolog.monitor_envio_push (DISPOSITIVO,MID,ESTADO,RESULT,EXCEPTION,TIPO) values ('##ROW_IMEI##','##ROW_MID##',0,'##RESULT##','##EXCEPTION##','Replica')"
+              }
+            ]
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": false,
+            "execute-always": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Ok' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Error - ##EXCEPTION##' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          }
+        ]
+      }
+    },
+    {
+      "name": "I_FORZAR_REPLICA_ACTICVOS_MRED",
+      "cron-expression": "0 */5 * * * *",
+      "enable": true,
+      "type": "groupby",
+      "sql": {
+        "value": "SELECT * FROM ck_i_forzar_replica_acticvos_mred",
+        "groupby": "ID"
+      },
+      "errormessage": {
+        "subject": "Error generando PUSH REPLICA (##GP_ENV##)",
+        "body": "",
+        "header": ""
+      },
+      "email": {
+        "to": "afgordillo@xone.es",
+        "cc": "",
+        "bcc": ""
+      },
+      "actions": {
+        "actions": [
+          {
+            "name": "send-push",
+            "version": "2",
+            "google-file-private-key": "##GP_MONITORPATH##iberdrola-grupoproyectos2-firebase-adminsdk-5jqua-88750c025e.json",
+            "google-auth-key": "-",
+            "pid": "##ROW_PID##",
+            "device-type": "0",
+            "mute": "true",
+            "priority": "high",
+            "notification-type": "0",
+            "collapse-key": "9997",
+            "after-action": [
+              {
+                "name": "executequery",
+                "value": "insert into mred_infolog.monitor_envio_push (DISPOSITIVO,MID,ESTADO,RESULT,EXCEPTION,TIPO) values ('##ROW_ANDROIDID##','##ROW_MID##',0,'##RESULT##','##EXCEPTION##','Replica Activos')"
+              }
+            ]
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": false,
+            "execute-always": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Ok' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Error - ##EXCEPTION##' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          }
+        ]
+      }
+    },
+    {
+      "name": "I_FORZAR_XONELIVE_MRED_PORTABLAS",
+      "cron-expression": "0 */5 * * * *",
+      "enable": true,
+      "type": "groupby",
+      "sql": {
+        "value": "SELECT * FROM ck_i_forzar_xonelive_mred_portablas",
+        "groupby": "ID"
+      },
+      "errormessage": {
+        "subject": "Error generando PUSH XONELIVE (##GP_ENV##)",
+        "body": "",
+        "header": ""
+      },
+      "email": {
+        "to": "afgordillo@xone.es",
+        "cc": "",
+        "bcc": ""
+      },
+      "actions": {
+        "actions": [
+          {
+            "name": "send-push",
+            "version": "2",
+            "google-file-private-key": "##GP_MONITORPATH##iberdrola-grupoproyectos2-firebase-adminsdk-5jqua-88750c025e.json",
+            "google-auth-key": "-",
+            "pid": "##ROW_PID##",
+            "device-type": "0",
+            "mute": "true",
+            "priority": "high",
+            "notification-type": "1",
+            "collapse-key": "9998",
+            "after-action": [
+              {
+                "name": "executequery",
+                "value": "insert into mred_infolog.monitor_envio_push (DISPOSITIVO,MID,ESTADO,RESULT,EXCEPTION,TIPO) values ('##ROW_IMEI##','##ROW_MID##',0,'##RESULT##','##EXCEPTION##','Live Por Tablas')"
+              }
+            ]
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": false,
+            "execute-always": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Ok' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Error - ##EXCEPTION##' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          }
+        ]
+      }
+    },
+    {
+      "name": "I_FORZAR_REPLICA_MRED_PORTABLAS",
+      "cron-expression": "0 */5 * * * *",
+      "enable": true,
+      "type": "groupby",
+      "sql": {
+        "value": "SELECT * FROM ck_i_forzar_replica_mred_portablas",
+        "groupby": "ID"
+      },
+      "errormessage": {
+        "subject": "Error generando PUSH REPLICA (##GP_ENV##)",
+        "body": "",
+        "header": ""
+      },
+      "email": {
+        "to": "afgordillo@xone.es",
+        "cc": "",
+        "bcc": ""
+      },
+      "actions": {
+        "actions": [
+          {
+            "name": "send-push",
+            "version": "2",
+            "google-file-private-key": "##GP_MONITORPATH##iberdrola-grupoproyectos2-firebase-adminsdk-5jqua-88750c025e.json",
+            "google-auth-key": "-",
+            "pid": "##ROW_PID##",
+            "device-type": "0",
+            "mute": "true",
+            "priority": "high",
+            "notification-type": "0",
+            "collapse-key": "9997",
+            "after-action": [
+              {
+                "name": "executequery",
+                "value": "insert into mred_infolog.monitor_envio_push (DISPOSITIVO,MID,ESTADO,RESULT,EXCEPTION,TIPO) values ('##ROW_IMEI##','##ROW_MID##',0,'##RESULT##','##EXCEPTION##','Réplica Por Tablas')"
+              }
+            ]
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": false,
+            "execute-always": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Ok' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Error - ##EXCEPTION##' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          }
+        ]
+      }
+    },
+    {
+      "name": "I_FIN_JORNADA_AUTOMATICA",
+      "cron-expression": "0 */5 * * * *",
+      "enable": true,
+      "type": "groupby",
+      "sql": {
+        "value": "SELECT * FROM ck_i_fin_jornada_automatica_push",
+        "groupby": "ID"
+      },
+      "errormessage": {
+        "subject": "Error enviando push de fin jornada automatica",
+        "body": "",
+        "header": ""
+      },
+      "email": {
+        "to": "afgordillo@xone.es",
+        "cc": "",
+        "bcc": ""
+      },
+      "actions": {
+        "actions": [
+          {
+            "name": "send-push",
+            "version": "2",
+            "google-file-private-key": "##GP_MONITORPATH##iberdrola-grupoproyectos2-firebase-adminsdk-5jqua-88750c025e.json",
+            "google-auth-key": "-",
+            "pid": "##ROW_PID##",
+            "device-type": "0",
+            "mute": "true",
+            "priority": "high",
+            "notification-type": "0",
+            "collapse-key": "9996",
+            "extra-params":"{'action':'RevisarJornadaAutomatica'}",
+            "after-action": [
+              {
+                "name": "executequery",
+                "value": "insert into mred_infolog.monitor_envio_push (DISPOSITIVO,MID,ESTADO,RESULT,EXCEPTION,TIPO) values ('##ROW_IMEI##','##ROW_MID##',0,'##RESULT##','##EXCEPTION##','FIN_JORNADA')"
+              }
+            ]
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": false,
+            "execute-always": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Ok' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Error - ##EXCEPTION##' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          }
+        ]
+      }
+    },
+    {
+      "name": "I_CLOSE_SESSION_ERROR",
+      "cron-expression": "0 */5 * * * *",
+      "enable": true,
+      "type": "groupby",
+      "sql": {
+        "value": "SELECT * FROM ck_i_check_close_session_error",
+        "groupby": "ID"
+      },
+      "errormessage": {
+        "subject": "Error cerrando sesion en IFS",
+        "body": "",
+        "header": ""
+      },
+      "email": {
+        "to": "afgordillo@xone.es",
+        "cc": "",
+        "bcc": ""
+      },
+      "actions": {
+        "actions": [
+          {
+            "name": "http-request",
+            "method": "POST",
+            "url": "https://##GP_URLIFS##/MetrixIntegrationService/M5WebService.asmx/ProcessXML",
+            "queryParams": "",
+            "headers": "Content-Type=application/xml;Accept=*/*",
+            "body": "<perform_batch>    <authentication>        <logon_info>            <person_id>##GP_IFSUSER##</person_id>            <password>##GP_IFSPASS##</password>        </logon_info>    </authentication>    <hierarchy_select>        <attrs>            <attr>person.person_id</attr>        </attrs>        <primary_table>person</primary_table>        <from>            <table>person</table>        </from>        <where>            <data_constraint>                <constraint>                    <left_operand>person.person_id</left_operand>                    <operator>eq</operator>                    <right_operand>##ROW_DISPOSITIVO##</right_operand>                </constraint>            </data_constraint>        </where>    </hierarchy_select>    <update_person>        <person>            <insert_update/>            <person_id xpath_node=\" //person_hierarchy_select_result/person/person_id\"/>            <work_status>##ROW_MAP_WORK_STATUS##</work_status> <user_def19>OUT</user_def19>##ROW_MAP_DATE## ##ROW_MAP_DATE_2##        </person>    </update_person></perform_batch>",
+            "after-action": [
+              {
+                "name": "executequery",
+                "value": "update gen_usuarios_accesos set CLOSE_IFS=1 WHERE ID=##ROW_ID##"
+              }
+            ]
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": false,
+            "execute-always": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Ok' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Error - ##EXCEPTION##' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          }
+        ]
+      }
+    },
+    {
+      "name": "I_REVISAR_DISPOSITIVOS_DESACTIVAR",
+      "cron-expression": "0 */5 * * * *",
+      "Xcron-expression": "0 0 22 * * *",
+      "enable": false,
+      "type": "groupby",
+      "sql": {
+        "value": "SELECT * FROM ck_dispositivos_para_desactivar",
+        "groupby": "MID"
+      },
+      "errormessage": {
+        "subject": " ",
+        "body": " ",
+        "header": " "
+      },
+      "email": {
+        "to": "afgordillo@xone.es",
+        "cc": "",
+        "bcc": ""
+      },
+      "actions": {
+        "actions": [
+          {
+            "name": "executequery",
+			"for-each-row":true,
+            "value": "UPDATE master_replica_slave SET PENDIENTE=1,ISDISABLED=1 WHERE MID=##ROW_MID##"
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": false,
+            "execute-always": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Ok' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Error - ##EXCEPTION##' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          }
+        ]
+      }
+    },    
+    {
+      "name": "I_PDF_SIN_GENERAR_60_MIN",
+      "cron-expression": "0 0 20 * * *",
+      "enable": true,
+      "type": "groupby",
+      "sql": {
+        "value": "select O.NUMEROORDEN        from gen_ot_cabecera O INNER JOIN (select MAX(ID) AS ID,TASK_ID from gen_ot_estados         GROUP BY TASK_ID) E ON E.TASK_ID = O.TASK_ID         INNER JOIN gen_ot_estados ER ON ER.ID = E.ID         left join monitor_ot_pdf_generate m on IFNULL(O.AREA_EMPRESA,'') like concat(m.AREA_EMPRESA,'%')         and ifnull(m.CLASE_ACTIVIDAD,O.CLASE_ACTIVIDAD) like concat('%',O.CLASE_ACTIVIDAD,'%')         and ifnull(m.CLASE_ORDEN,O.CLASE_ORDEN) = O.CLASE_ORDEN         and ifnull(m.NO_CLASE_ACTIVIDAD,'')         not like concat('%',O.CLASE_ACTIVIDAD,'%')         and ifnull(m.NO_CLASE_ORDEN,'')         not like concat('%',O.CLASE_ORDEN,'%') WHERE ER.ESTADO IN (5)  and m.ID is not null         and m.PDF_PLANTILLA is not null and IFNULL(O.PDF_CREADO,0) = 0         and TIMESTAMPDIFF(minute,ER.FECHA,NOW()) >= 60",
+        "groupby": "NUMEROORDEN"
+      },
+      "errormessage": {
+        "subject": "(INFO) (##GP_ENV##): Pdfs sin generar",
+        "body": "##ROW_MAP_TOTAL## Pdf sin generar (+60 min)",
+        "header": ""
+      },
+      "email": {
+        "to": "(SELECT EMAIL FROM adm_monitor_email WHERE PROCESS IN ('ALL','##CHKNAME##') AND DISABLED=0 AND EMAIL IS NOT NULL)",
+        "cc": "",
+        "bcc": ""
+      },
+      "actions": {
+        "actions": [
+          {
+            "name": "executequery",
+            "for-each-row": true,
+            "value": "UPDATE gen_an_anomalia SET FICHEROS_DESCARGADOS=0 WHERE CODIGO_AVISO_GAMAD in (select ifnull(gaa.CODIGO_AVISO_GAMAD,gaa.COD_AN_ANOMALIA) from gen_an_anomalia gaa inner join gen_an_tipo_anomalia gata on gaa.COD_AN_TIP_ANOMALIA = gata.ID_TIPO_ANOM inner join gen_an_tipo_solucion SOL on SOL.ID_TIPO_SOL = gaa.COD_AN_TIP_SOLUCION_GRUPO AND SOL.CONT_TIPO_SOL = gaa.COD_AN_TIP_SOLUCION_CONTADOR where ( gaa.ORDEN_ORIGEN in ('##ROW_NUMEROORDEN##') OR gaa.NUMEROORDEN in ('##ROW_NUMEROORDEN##') OR gaa.ORDEN_ACTUALIZACION in ('##ROW_NUMEROORDEN##')))"
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": false,
+            "execute-always": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Ok' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Error - ##EXCEPTION##' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          }
+        ]
+      }
+    },    
+    {
+      "name": "I_BORRADO_FICHEROS_OT_FOTOS",
+      "cron-expression": "0 0 20 * * *",
+      "enable": true,
+      "type": "groupby",
+      "sql": {
+        "value": "select * from mred_data_history.gen_ot_fotos where BORRADO=0",
+        "groupby": "ID"
+      },
+      "errormessage": {
+        "subject": "",
+        "body": "",
+        "header": ""
+      },
+      "email": {
+        "to": "(SELECT EMAIL FROM adm_monitor_email WHERE PROCESS IN ('ALL','##CHKNAME##') AND DISABLED=0 AND EMAIL IS NOT NULL)",
+        "cc": "",
+        "bcc": ""
+      },
+      "actions": {
+        "actions": [
+          {
+            "name": "create-text-file",
+            "path": "/var/www/vhosts/xoneideintcore.com/xonerepository/borrado_ficheros/para_borrar/listado_ot_fotos_ficheros_marcados_para_borrar.txt",
+            "value": "##ROW_NOMBRE_FICHERO##"
+          },
+          {
+            "name": "executequery",
+            "for-each-row": true,
+            "execute-if-error": false,
+            "value": "UPDATE mred_data_history.gen_ot_fotos SET BORRADO=1 WHERE BORRADO=0 AND ID=##ROW_ID##"
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": false,
+            "execute-always": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Ok' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Error - ##EXCEPTION##' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          }
+        ]
+      }
+    },    
+    {
+      "name": "I_BORRADO_FICHEROS_OT_RI_FOTOS",
+      "cron-expression": "0 0 20 * * *",
+      "enable": true,
+      "type": "groupby",
+      "sql": {
+        "value": "select * from mred_data_history.gen_ri_ot_fotos where BORRADO=0",
+        "groupby": "ID"
+      },
+      "errormessage": {
+        "subject": "",
+        "body": "",
+        "header": ""
+      },
+      "email": {
+        "to": "(SELECT EMAIL FROM adm_monitor_email WHERE PROCESS IN ('ALL','##CHKNAME##') AND DISABLED=0 AND EMAIL IS NOT NULL)",
+        "cc": "",
+        "bcc": ""
+      },
+      "actions": {
+        "actions": [
+          {
+            "name": "create-text-file",
+            "path": "/var/www/vhosts/xoneideintcore.com/xonerepository/borrado_ficheros/para_borrar/listado_ri_ot_fotos_ficheros_marcados_para_borrar.txt",
+            "value": "##ROW_NOMBRE_FICHERO##"
+          },
+          {
+            "name": "executequery",
+            "for-each-row": true,
+            "execute-if-error": false,
+            "value": "UPDATE mred_data_history.gen_ri_ot_fotos SET BORRADO=1 WHERE BORRADO=0 AND ID=##ROW_ID##"
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": false,
+            "execute-always": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Ok' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Error - ##EXCEPTION##' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          }
+        ]
+      }
+    },
+    {
+      "name": "MANAGE-TRANSFORM-MADRUGADA",
+      "cron-expression": "0 */5 * * * *",
+      "type": "groupby",
+      "enable": true,
+      "sql": {
+        "value": "SELECT ID, CASE WHEN BAJA = 0 THEN '-a' WHEN BAJA = 1 THEN '-d' END AS ACTION, NOMBRE_TRANSFORM FROM itf_carga_transform_madrugada WHERE PROCESADO = 0 AND BAJA IS NOT NULL AND BAJA IN (0, 1)",
+        "groupby": "ID"
+      },
+      "errormessage": {
+        "subject": "Error en ##CHKNAME##",
+        "body": "##EXCEPTION##",
+        "header": ""
+      },
+      "email": {
+        "to": "",
+        "cc": "",
+        "bcc": ""
+      },
+      "actions": {
+        "execute-actions-for-row": true,
+        "actions": [
+          {
+            "name": "send-command",
+            "value": "/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/comands/manage_transform.sh ##ROW_ACTION## -t ##ROW_NOMBRE_TRANSFORM##",
+            "sleep": "10000"
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": false,
+            "value": "UPDATE itf_carga_transform_madrugada SET PROCESADO = 1, FECHA_PROCESO = NOW() WHERE ID = ##ROW_ID##"
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": true,
+            "value": "UPDATE itf_carga_transform_madrugada SET PROCESADO = -1, FECHA_PROCESO = NOW(), ERROR_MSG = '##EXCEPTION##' WHERE ID = ##ROW_ID##"
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": false,
+            "execute-always": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Ok' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Error - ##EXCEPTION##' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          }
+        ]
+      }
+    }   
+  ],
+    "maintenances": [
+    {
+      "name": "RevisionNombresManager",
+      "cron-expression": "0 */30 * * * *",
+      "enable": true,
+      "errormessage": {
+        "subject": "",
+        "body": "",
+        "header": ""
+      },
+      "email": {
+        "to": "x@x.com",
+        "cc": "",
+        "bcc": ""
+      },
+      "actions": {
+        "actions": [
+          {
+            "name": "executequery",
+            "value": "UPDATE adm_devices ad SET ad.OWNER=IFNULL((SELECT MAX(CONCAT(g.DESCRIPCION,' - ',IFNULL(g.TELEFONO1,' *** SIN TELEFONO ***'),' - [',IFNULL(g.APPVERSION,'V:-'),']')) as X FROM gen_device g LEFT OUTER JOIN  master_replica_slave s ON s.MID=g.MID LEFT OUTER JOIN  adm_devices_application ada ON ada.LIC=s.SERIAL WHERE ad.ID=ada.IDDEVICE AND g.IMEI NOT LIKE 'VOID%') ,ad.OWNER)"
+          },
+		  {
+            "name": "executequery",
+            "value": "update master_replica_iqueue set mid=-mid where mid in (select s.MID as MID from master_replica_slave s where s.pendiente=1  and exists (select 1 from master_replica_iqueue where mid=s.mid))"
+          }
+        ]
+      }
+    },
+    {
+      "name": "LimpiezaActualizaciones",
+      "cron-expression": "0 30 22 * * *",
+      "enable": true,
+      "errormessage": {
+        "subject": "",
+        "body": "",
+        "header": ""
+      },
+      "email": {
+        "to": "x@x.com",
+        "cc": "",
+        "bcc": ""
+      },
+      "actions": {
+        "actions": [
+          {
+            "name": "cleanupdates",
+            "path": "##GP_CLEANUPDATEPATHAPP##",
+            "version-folder": "Actualizaciones",
+            "licenses-folder": "Licencias",
+            "last-version-file": "lastversion",
+            "clean-version-folder": true,
+            "delete-time": "1D"
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": false,
+            "execute-always": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Ok' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Error - ##EXCEPTION##' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          }
+        ]
+      }
+    },
+    {
+      "name": "borradoProvisioning",
+      "cron-expression": "0 0 22 * * *",
+      "enable": true,
+      "errormessage": {
+        "subject": "",
+        "body": "",
+        "header": ""
+      },
+      "email": {
+        "to": "x@x.com",
+        "cc": "",
+        "bcc": ""
+      },
+      "actions": {
+        "actions": [
+          {
+            "name": "delete-folder",
+            "value": "##GP_PROVISIONINGPATH##",
+            "delete-subfolders": true,            
+            "delete-time": "1D",
+            "exclude-folders":"iPhone,Android"
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": false,
+            "execute-always": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Ok' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Error - ##EXCEPTION##' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          }
+        ]
+      }
+    },
+    {
+      "name": "BORRADOLOGS",
+      "cron-expression": "0 35 22 * * *",
+      "enable": true,
+      "errormessage": {
+        "subject": "",
+        "body": "",
+        "header": ""
+      },
+      "email": {
+        "to": "x@x.com",
+        "cc": "",
+        "bcc": ""
+      },
+      "actions": {
+        "actions": [
+          {
+            "name": "delete-file",
+            "value": "##GP_LOGSMONITORPATH##",
+            "scan-directory": true,  
+            "filter": "*.log",
+            "delete-time": "7D"
+          },
+          {
+            "name": "delete-file",
+            "value": "##GP_LOGSAPIPATH##",   
+            "scan-directory": true,  
+            "filter": "*.log",
+            "delete-time": "7D"
+          },
+          {
+            "name": "delete-file",
+            "value": "##GP_LOGSMANAGERPATH##",   
+            "scan-directory": true,  
+            "filter": "*.log",
+            "delete-time": "7D"
+          },
+          {
+            "name": "delete-file",
+            "value": "##GP_LOGSITFPATH##",   
+            "scan-directory": true,  
+            "filter": "*.log",
+            "delete-time": "7D"
+          },
+          {
+            "name": "delete-file",
+            "value": "##GP_LOGSITF2PATH##",   
+            "scan-directory": true,  
+            "filter": "*.log",
+            "delete-time": "7D"
+          },
+          {
+            "name": "delete-file",
+            "value": "##GP_LOGSLIVEPATH##",   
+            "scan-directory": true,  
+            "filter": "*.log",
+            "delete-time": "7D"
+          },
+          {
+            "name": "delete-file",
+            "value": "##GP_LOGSWEBCOREPATH##",   
+            "scan-directory": true,  
+            "filter": "*.log",
+            "delete-time": "7D"
+          },
+          {
+            "name": "delete-file",
+            "value": "##GP_LOGSIDSPATH##",   
+            "scan-directory": true,  
+            "filter": "*.log",
+            "delete-time": "7D"
+          },
+          {
+            "name": "delete-file",
+            "value": "##GP_LOGSPROVISIONINGPATH##",   
+            "scan-directory": true,  
+            "filter": "*.log",
+            "delete-time": "7D"
+          },
+          {
+            "name": "delete-file",
+            "value": "##GP_LOGSREPLICASELECTPATH##",   
+            "scan-directory": true,  
+            "filter": "*.log",
+            "delete-time": "7D"
+          },
+          {
+            "name": "delete-file",
+            "value": "##GP_LOGSREPLICAPATH##",   
+            "scan-directory": true,  
+            "filter": "*.log",
+            "delete-time": "7D"
+          },
+          {
+            "name": "delete-file",
+            "value": "##GP_LOGSGEOMAPDEALERPATH##",   
+            "scan-directory": true,  
+            "filter": "*.log",
+            "delete-time": "7D"
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": false,
+            "execute-always": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Ok' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Error - ##EXCEPTION##' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          }
+        ]
+      }
+    }
+  
+  
+  ]
+}

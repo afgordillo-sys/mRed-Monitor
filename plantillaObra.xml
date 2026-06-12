@@ -1,0 +1,377 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xml>
+	<!--  ════════════════════════════════════════════════════════════════
+         COLECCIÓN PRINCIPAL — entry-point
+         [Esc.1] Cabecera + pie  |  [Esc.2] Tabla datos PPI
+         ════════════════════════════════════════════════════════════════  -->
+	<coll name="collPPI" sql="SELECT
+        cab.NUMERO_OBRA, -- Numero de la obra
+        gut.UBICACION_PADRE, -- Ubicacion padre de la ST
+        gut.DESC_UBICACION, -- Descripcion de la  ubicación
+        gut.DESC_UBICACION AS DENOM_UBICACION_VALOR, -- Descripcion de la  ubicación
+        CONCAT(mcab.COD_DOCUMENTO,' ',mcab.DESCRIPCION) as PIE_IZQUIERDA,
+        CONCAT(mcab.COD_DOCUMENTO,' ',mcab.DESCRIPCION) as COD_DOCUMENTO,
+        CONCAT(
+        CASE WHEN cab.FECHA_INICIO IS NOT NULL THEN
+            DATE_FORMAT(cab.FECHA_INICIO, '%d-%m-%y')
+            ELSE '-'
+                END,
+            ' / ',
+            CASE WHEN cab.FECHA_FIN IS NOT NULL THEN
+                DATE_FORMAT(cab.FECHA_FIN,'%d-%m-%Y')
+                ELSE '-'
+                END) as FECHAS,			  
+        '/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/ide_iberdrola.png' AS MAP_LOGO,
+        mcab.ACTIVIDAD AS ACTIVIDAD_VALOR, -- Actividad
+        mcab.DESCRIPCION AS DESCRIPCION_VALOR, -- Descripcion
+        utseq.COD_UBICACION_SAP  AS SISTEMA_VALOR,
+        utseq.DESC_EQUIPO        AS DESCRIPCION_UB,  -- Denominación de ubicacion
+        utseq.TIPO               AS DENOM_TIPO_VALOR, -- Denominación tipo
+        utseq.ANYO_CONSTRUCCION  AS ANIO_FABRICACION_VALOR, -- Año fabricación
+        mcab.COD_TIPO_PPI_CABECERA,
+        CONCAT(CASE mcab.TIPO
+            WHEN 'M' THEN 'Montaje'
+            WHEN 'O' THEN 'Obra Civil'
+            ELSE mcab.TIPO
+        END,' / ',SUBSTRING_INDEX(utseq.COD_UBICACION_SAP, '-', 1),' / ',utseq.COD_UBICACION_SAP,' / ',utseq.DESC_EQUIPO) AS JERARQUIA_N1,
+        -- Campos de la Query 2 (Datos generales)
+        cab.COD_PPI_CABECERA     
+    FROM gen_obra_ppi_cabecera cab
+    INNER JOIN gen_uts_ubicaciontecnica gut
+        ON gut.COD_UBICACION = cab.COD_UBICACION
+    INNER JOIN gen_maestro_obra_tipo_ppi_cabecera mcab
+        ON mcab.COD_TIPO_PPI_CABECERA = cab.COD_TIPO_PPI_CABECERA  
+    LEFT JOIN gen_uts_equipo utseq
+        ON utseq.COD_EQUIPO = cab.COD_EQUIPO"            
+            filter="cab.id=##ID##" entry-point="true" show-header="false" lmargin="5%" rmargin="5%" tmargin="3%" bmargin="5%">
+		<!--  ── CABECERA (se repite en todas las páginas) ───────────────  -->
+		<frame name="frmCabecera" width="100%" height="68p" copy-to-all-pages="true">
+			<!--  Borde izquierdo verde  -->
+			<frame name="frmBordeVerde" width="1%" height="68p" bgcolor="#4a7c2f">
+			</frame>
+			<!--  RESUMEN DE LA OBRA + número  -->
+			<frame name="frmDatosHeader" newline="false" height="56p" width="96%" lmargin="3%">
+				<frame name="frmDatosObra" width="36%" height="40p" newline="false">
+					<prop name="DESCRIPCION_TL" type="TL" title="RESUMEN DE LA OBRA" width="100%" font-size="10" lines="1" forecolor="#777777"/>
+					<prop name="NUMERO_OBRA" type="T" width="100%" font-size="16" fontbold="true" lines="1"/>
+				</frame>
+				<!--  Ubicación técnica + fechas  -->
+				<frame name="frmUbicacion" width="38%" height="40p" newline="false">
+					<prop name="DESC_UBICACION" type="T" width="100%" font-size="16" fontbold="true" lines="1"/>
+					<prop name="FECHAS" type="T" width="100%" font-size="10" forecolor="#555555" lines="1"/>
+				</frame>
+				<!--  Logo i-DE  -->
+				<frame name="frmLogo" width="23%" height="40p" newline="false" align="right">
+					<prop name="MAP_LOGO" type="IMG" width="95%" height="58p" keep-aspect-ratio="true" align="right"/>
+				</frame>
+				<!--  Línea + jerarquía  -->
+				<divider width="100%" tmargin="2p"/>
+				<frame name="frmJerarquia" width="100%" height="16p" tmargin="10p">
+					<prop name="JERARQUIA_N1" type="T" width="100%" font-size="10" forecolor="#444444" fontbold="true" lines="1"/>
+				</frame>
+			</frame>			
+		</frame>
+
+		<!--  ── TABLA DATOS GENERALES DEL PPI ───────────────────────────  -->
+		<!--  Cabecera verde con nombre del PPI  -->
+		<frame name="frmPPITitulo" width="100%" height="28p" tmargin="16p" bgcolor="#bdd5b1">
+			<prop name="COD_DOCUMENTO" type="T" width="92%" height="28p" font-size="13" fontbold="true" lines="1" lmargin="4%" align="center|left"/>
+		</frame>
+		<!--  Filas etiqueta / valor, fondo alternado  -->
+		<frame name="frmRowActividad" width="100%" height="28p">
+			<prop name="ACTIVIDAD" type="TL" title="Actividad" width="49%" height="28p" font-size="10" lines="1" lmargin="1%" align="center|left"/>
+			<prop name="ACTIVIDAD_VALOR" type="T" title="Actividad" width="49%" height="28p" font-size="10" lines="1" lmargin="1%" newline="false" align="center|left"/>
+		</frame>
+		<frame name="frmRowDescripcion" width="100%" height="28p" bgcolor="#f5f8f3" >
+			<prop name="DESCRIPCION" type="TL" title="Descripción" width="49%" height="28p" font-size="10" lines="1" lmargin="1%" align="center|left"/>
+			<prop name="DESCRIPCION_VALOR" type="T" title="Descripción" width="49%" height="28p" font-size="10" lines="1" lmargin="1%" newline="false" align="center|left"/>
+		</frame>
+		<frame name="frmRowSistema" width="100%" height="28p" >
+			<prop name="SISTEMA" type="TL" title="Sistema" width="49%" height="28p" font-size="10" lines="1" lmargin="1%" align="center|left"/>
+			<prop name="SISTEMA_VALOR" type="T" title="Sistema" width="49%" height="28p" font-size="10" lines="1" lmargin="1%" newline="false" align="center|left"/>
+		</frame>
+		<frame name="frmRowDenomUbic" width="100%" height="28p" bgcolor="#f5f8f3" >
+			<prop name="DENOM_UBICACION" type="TL" title="Denominación ubicación" height="28p" width="49%" font-size="10" lines="1" lmargin="1%" align="center|left"/>
+			<prop name="DENOM_UBICACION_VALOR" type="T" title="Denominación ubicación" height="28p" width="49%" font-size="10" lines="1" lmargin="1%" newline="false" align="center|left"/>
+		</frame>
+		<frame name="frmRowDenomTipo" width="100%" height="28p" >
+			<prop name="DENOM_TIPO" type="TL" title="Denominación tipo" width="49%" height="28p" font-size="10" lines="1" lmargin="1%" align="center|left"/>
+			<prop name="DENOM_TIPO_VALOR" type="T" title="Denominación tipo" width="49%" height="28p" font-size="10" lines="1" lmargin="1%" newline="false" align="center|left"/>
+		</frame>
+		<frame name="frmRowAnio" width="100%" height="28p" bgcolor="#f5f8f3" >
+			<prop name="ANIO_FABRICACION" type="TL" title="Año fabricación" width="49%" height="28p" font-size="10" lines="1" lmargin="1%" align="center|left"/>
+			<prop name="ANIO_FABRICACION_VALOR" type="T" title="Año fabricación" width="49%" height="28p" font-size="10" lines="1" lmargin="1%" newline="false" align="center|left"/>
+		</frame>
+		<!--  ── OBSERVACIONES GENERALES ─────────────────────────────────  -->
+		<frame name="frmObsTitulo" width="100%" height="22p" tmargin="20p">
+			<frame name="frmBordeVerde" width="1%" height="22p" bgcolor="#A0BF8B">
+			</frame>
+			<prop name="LBL_OBS" type="TL" title="Observaciones generales" width="96%" height="22p" font-size="10" fontbold="true" lines="1" lmargin="3%" newline="false" align="center|left"/>
+		</frame>
+		<!--  Lista de observaciones (verificador / contratista)  -->
+		<prop name="@Observaciones" content="contentObs" type="Z" tmargin="10p"/>
+		<content name="contentObs" src="collObservaciones" filter="OPO.COD_PPI_CABECERA = '##FLD_COD_PPI_CABECERA##' ORDER BY OPO.FECHA_CARGA ASC"/>
+
+		<break-page></break-page>
+
+        <prop name="@items" content="items" type="Z" tmargin="10p"/>
+		<content name="items" src="items" filter="gopc.COD_PPI_CABECERA='##FLD_COD_PPI_CABECERA##' ORDER BY cast(ppi.COD_TIPO_PPI_ITEM as SIGNED) ASC"/>
+		
+
+		<!--  ── PIE DE PÁGINA (se repite en todas las páginas) ──────────  -->
+		<!--  floating + top son atributos de <prop> (pie anclado al fondo)  -->
+		
+		<footer height="28p">
+			<divider width="100%"/>
+			<prop name="PIE_IZQUIERDA" type="T" width="80%" font-size="10"  lines="1"  tmargin="10p" fontbold="true"/>
+			<prop name="PAGE" type="TL" title="PÁG. ##PAGE## / ##TOTAL_PAGES##" width="20%" font-size="10" fontbold="true" align="right" lines="1" newline="false"  tmargin="10p"/>
+		</footer>	
+		
+	</coll>
+
+    <coll name="items" sql="
+        SELECT 
+            CAST(CONCAT(
+                DENSE_RANK() OVER (ORDER BY gopc.ID),
+                '. Item ', 
+                DENSE_RANK() OVER (PARTITION BY gopc.ID ORDER BY m.id)
+            ) AS VARCHAR(255)) AS TITULO_ITEM, 
+            m.ESPECIFICACION AS ESP_PRO_VALOR,                                           -- Especificación procedimiento
+            m.TIPO_INSPECCION AS INS_TIPO_VALOR,                                          -- Inspección tipo
+			CASE WHEN COALESCE(foto.CANTIDAD_FOTOS, 0) > 0 THEN 'Adjuntos en las siguientes páginas' ELSE '-' END AS CONT_DOCUMENTOS_VALOR, -- cantidad fotos por item
+    		CASE WHEN COALESCE(eqi.CANTIDAD_EQUIPOS, 0) > 0 THEN COALESCE(eqi.CANTIDAD_EQUIPOS, 0) ELSE '-' END AS CONT_EQUIPOS_VALOR, -- cantidad equipos agregados por item
+			' - ' as VER_DOCUMENTOS_VALOR,
+			' - ' as VER_EQUIPOS_VALOR,
+			' - ' as CONT_PROTOCOLOS_VALOR,
+			' - ' as VER_PROTOCOLOS_VALOR,
+			CONCAT(m.PORCENTAJE_CON, '%')  AS CONT_PORCENTAJE_VALOR,       -- Porcentaje contratista
+            CONCAT(m.PORCENTAJE_VER, '%')  AS VER_PORCENTAJE_VALOR,       -- Porcentaje verificador
+            m.COD_CI_CON AS CONT_CLAVE_VALOR,                                               -- Claves inspección contratista
+            m.COD_CI_VER AS VER_CLAVE_VALOR,                                               -- Claves inspección verificador  
+            ppi.ESTADO_CON                 AS CONT_ESTADO_VALOR,           -- estado contratista
+            ppi.ESTADO_VER                 AS VER_ESTADO_VALOR,           -- estado verificador
+            ppi.FECHA_CON                  AS CONT_FECHA_VALOR,            -- fecha contratista
+            ppi.FECHA_VER                  AS VER_FECHA_VALOR,            -- fecha verificador
+            ppi.OBSERVACIONES_CON          AS CONT_OBS_VALOR,    -- observaciones contratista
+            ppi.OBSERVACIONES_VER          AS VER_OBS_VALOR,    -- observaciones verificador
+            ppi.COD_TIPO_PPI_ITEM,
+            ppi.COD_PPI_ITEM, 
+            ppi.ESTADO_ITEM                AS MAP_ESTADO_ITEM,
+            ppi.ID                         AS PPI_ID
+            -- Identificar el item en el titulo
+        FROM gen_obra_ppi_cabecera gopc
+        INNER JOIN gen_maestro_obra_tipo_ppi_item m 
+            ON m.COD_TIPO_PPI_CABECERA = gopc.COD_TIPO_PPI_CABECERA
+        INNER JOIN gen_obra_ppi_item ppi 
+            ON ppi.COD_PPI_CABECERA = gopc.COD_PPI_CABECERA  
+            AND ppi.COD_TIPO_PPI_ITEM = m.COD_TIPO_PPI_ITEM
+		LEFT JOIN (
+			SELECT
+				COD_PPI_ITEM,
+				COUNT(*) AS CANTIDAD_FOTOS
+			FROM gen_obra_ppi_item_foto
+			GROUP BY COD_PPI_ITEM
+		) foto
+			ON foto.COD_PPI_ITEM = ppi.COD_PPI_ITEM
+		LEFT JOIN (
+			SELECT
+				COD_PPI_ITEM,
+				COUNT(*) AS CANTIDAD_EQUIPOS
+			FROM gen_obra_ppi_equipos_inspeccion
+			GROUP BY COD_PPI_ITEM
+		) eqi
+			ON eqi.COD_PPI_ITEM = ppi.COD_PPI_ITEM
+			"
+		  show-header="false" >
+
+
+		<frame name="frmObsTitulo" width="100%" height="22p" tmargin="20p">
+			<frame name="frmBordeVerde" width="1%" height="22p" bgcolor="#A0BF8B">
+			</frame>
+			<prop name="TITULO_ITEM" type="T" width="96%" height="22p" font-size="10" fontbold="true" lines="1" lmargin="3%" newline="false" align="center|left"/>
+		</frame>
+
+		<frame name="frmRowActividad" width="100%" height="28p">
+			<prop name="ESP_PRO_TL" type="TL" title="Especificación de procedimiento" width="49%" height="28p" font-size="10" lines="1" lmargin="1%" align="center|left"/>
+			<prop name="ESP_PRO_VALOR" type="T" title="" width="49%" height="28p" font-size="10" lines="1" lmargin="1%" newline="false" align="center|left"/>
+		</frame>
+		<frame name="frmRowDescripcion" width="100%" height="28p" bgcolor="#f5f8f3" >
+			<prop name="INS_TIPO_TL" type="TL" title="Inspección tipo" width="49%" height="28p" font-size="10" lines="1" lmargin="1%" align="center|left"/>
+			<prop name="INS_TIPO_VALOR" type="T" title="" width="49%" height="28p" font-size="10" lines="1" lmargin="1%" newline="false" align="center|left"/>
+		</frame>
+
+		<prop name="TITULO_ITEM" type="TL" title="&#183; Puntos de inspección" width="96%" height="22p" font-size="10" fontbold="true" tmargin="20p" lines="1" lmargin="3%" align="center|left"/>					
+		<!--  ── CABECERA COLUMNAS CONTRATISTA / VERIFICADOR ─────────────  -->
+		<frame name="frmPICols" width="100%" height="24p" bgcolor="#bdd5b1">
+			<!--  columna etiqueta vacía  -->
+			<prop name="LBL_CONTRATISTA" type="TL" title="Contratista" lmargin="34%" width="33%" height="24p" font-size="10" fontbold="true" lines="1" align="center|left" newline="false"/>
+			<prop name="LBL_VERIFICADOR" type="TL" title="Verificador" width="33%" font-size="10" height="24p" fontbold="true" lines="1" align="center|left" newline="false"/>
+		</frame>
+		<!--  ── FILAS DE PUNTOS DE INSPECCIÓN ───────────────────────────  -->
+		<!--  Porcentaje  -->
+		<frame name="frmPI_Porc" width="100%" height="15p">
+			<prop name="CONT_PORCENTAJE_TL" title="Porcentaje" height="24p" type="TL" width="33%" font-size="10" lines="1" lmargin="1%" forecolor="#555555" align="center|left"/>
+			<prop name="CONT_PORCENTAJE_VALOR" height="24p" type="T" width="33%" font-size="10" lines="1" newline="false" align="center|left"/>
+			<prop name="VER_PORCENTAJE_VALOR" height="24p" type="T" width="33%" font-size="10" lines="1" newline="false" align="center|left"/>
+		</frame>
+		<!--  Claves inspección  -->
+		<frame name="frmPI_Clave" width="100%" height="15p" bgcolor="#f5f8f3" >
+			<prop name="CONT_CLAVE_TL" title="Claves inspección" type="TL" width="33%" font-size="10" lines="1" lmargin="1%" forecolor="#555555" align="center|left"/>
+			<prop name="CONT_CLAVE_VALOR" type="T" width="33%" font-size="10" lines="1" align="center|left" newline="false"/>
+			<prop name="VER_CLAVE_VALOR" type="T" width="33%" font-size="10" lines="1" align="center|left" newline="false"/>
+		</frame>
+		<!--  Estado  -->
+		<frame name="frmPI_Estado" width="100%" height="15p" >
+			<prop name="CONT_ESTADO_TL" title="Estado" type="TL" width="33%" font-size="10" lines="1" lmargin="1%" forecolor="#555555"/>
+			<prop name="CONT_ESTADO_VALOR" type="T" width="33%" font-size="10" lines="1" align="center|left" newline="false"/>
+			<prop name="VER_ESTADO_VALOR" type="T" width="33%" font-size="10" lines="1" align="center|left" newline="false"/>
+		</frame>
+		<!--  Fecha  -->
+		<frame name="frmPI_Fecha" width="100%" height="15p" bgcolor="#f5f8f3" >
+			<prop name="CONT_FECHA_TL" type="TL" title="Fecha" width="33%" font-size="10" lines="1" lmargin="1%" forecolor="#555555"/>
+			<prop name="CONT_FECHA_VALOR" type="T" width="33%" font-size="10" lines="1" align="center|left" newline="false"/>
+			<prop name="VER_FECHA_VALOR" type="T" width="33%" font-size="10" lines="1" align="center|left" newline="false"/>
+		</frame>
+		<!--  Documentos  -->
+		<frame name="frmPI_Docs" width="100%" height="15p" >
+			<prop name="CONT_DOCUMENTOS_TL" title="Documentos" type="TL" width="33%" font-size="10" lines="1" lmargin="1%" forecolor="#555555"/>
+			<prop name="CONT_DOCUMENTOS_VALOR" type="T" width="33%" font-size="10" lines="2" allow-line-breaks="true" align="center|left" newline="false"/>
+			<prop name="VER_DOCUMENTOS_VALOR" type="T" width="33%" font-size="10" lines="1" align="center|left" newline="false"/>
+		</frame>
+		<!--  Equipos de medida  -->
+		<frame name="frmPI_Equipos" width="100%" height="15p" bgcolor="#f5f8f3">
+			<prop name="CONT_EQUIPOS_TL" title="Equipos de medida" type="TL" width="33%" font-size="10" lines="1" lmargin="1%" forecolor="#555555"/>
+			<prop name="CONT_EQUIPOS_VALOR" type="T" width="33%" font-size="10" lines="1" align="center|left" newline="false"/>
+			<prop name="VER_EQUIPOS_VALOR" type="T" width="33%" font-size="10" lines="1" align="center|left" newline="false"/>
+		</frame>
+		<!--  Protocolos  -->
+		<frame name="frmPI_Prot" width="100%" height="15p">
+			<prop name="CONT_PROTOCOLOS_TL" title="Protocolos" type="TL" width="33%" font-size="10" lines="1" lmargin="1%" forecolor="#555555"/>
+			<prop name="CONT_PROTOCOLOS_VALOR" type="T" width="33%" font-size="10" lines="1" align="center|left" newline="false"/>
+			<prop name="VER_PROTOCOLOS_VALOR" type="T" width="33%" font-size="10" lines="2" allow-line-breaks="true" align="center|left" newline="false"/>
+		</frame>
+		<!--  Observaciones (altura dinámica)  -->
+		<frame name="frmPI_Obs" width="100%" bgcolor="#f5f8f3">
+			<prop name="CONT_OBS_TL" type="TL" title="Observaciones" width="33%" font-size="10" lines="1" lmargin="1%" forecolor="#555555"/>
+			<prop name="CONT_OBS_VALOR" type="T" width="33%" font-size="10" lines="-1" allow-line-breaks="true" newline="false"/>
+			<prop name="VER_OBS_VALOR" type="T" width="33%" font-size="10" lines="-1" allow-line-breaks="true" newline="false"/>
+		</frame>
+		
+		<break-page></break-page>
+
+        <prop name="@Documentos" content="Documentos" type="Z" />
+		<content name="Documentos" src="Documentos" filter="COD_PPI_ITEM = '##FLD_COD_PPI_ITEM##' AND BAJA = 0 GROUP BY COD_PPI_ITEM"/>
+		
+        <break-page></break-page>
+
+        <prop name="@EqInspecciones" content="EqInspecciones" type="Z" tmargin="10p"/>
+		<content name="EqInspecciones" src="EqInspecciones" filter="OEI.COD_PPI_ITEM = '##FLD_COD_PPI_ITEM##' GROUP BY OEI.COD_PPI_ITEM"/>
+		        
+		<!--  Salto de página entre ítems  -->
+		<break-page></break-page>
+		
+	</coll>
+
+    <coll name="Documentos" sql="SELECT
+		COD_PPI_ITEM,
+		CAST(CONCAT('Item ', ROW_NUMBER() OVER (ORDER BY COD_PPI_ITEM)) AS VARCHAR(255)) AS TITULO_ITEM    
+			FROM gen_obra_ppi_item_foto" show-header="false" >
+
+		<frame name="frmObsTitulo" width="100%" height="22p" tmargin="20p">
+			<frame name="frmBordeVerde" width="1%" height="22p" bgcolor="#A0BF8B">
+			</frame>
+			<prop name="TITULO_ITEM" type="T" width="96%" height="22p" font-size="10" fontbold="true" lines="1" lmargin="3%" newline="false" align="center|left"/>
+		</frame>
+
+		<prop name="TITULO_ITEM_TL" type="TL" title="&#183; Documentos" width="96%" height="22p" font-size="10" fontbold="true" lines="1" lmargin="3%" align="center|left"/>
+
+		<!--  ── GRID 2 COLUMNAS DE DOCUMENTOS ───────────────────────────  -->
+		<prop name="@Documentos" content="contentDocs" type="Z" viewmode="grid" grid-column="2"/>
+		<content name="contentDocs" src="collDocumentos" filter="COD_PPI_ITEM='##FLD_COD_PPI_ITEM##' AND BAJA = 0"/>	
+		
+		<!--  Salto de página entre ítems  -->
+		<break-page></break-page>
+		
+	</coll>
+
+    <coll name="EqInspecciones" sql="SELECT
+        COD_PPI_ITEM,
+        CAST(CONCAT('Item ', ROW_NUMBER() OVER (ORDER BY COD_PPI_ITEM)) AS VARCHAR(255))  AS TITULO_ITEM
+    FROM gen_obra_ppi_equipos_inspeccion OEI" show-header="false" >
+
+
+		<frame name="frmObsTitulo" width="100%" height="22p" tmargin="20p">
+			<frame name="frmBordeVerde" width="1%" height="22p" bgcolor="#A0BF8B">
+			</frame>
+			<prop name="TITULO_ITEM" type="T" width="96%" height="22p" font-size="10" fontbold="true" lines="1" lmargin="3%" newline="false" align="center|left"/>
+		</frame>
+
+		<prop name="TITULO_ITEM" type="TL" title="&#183; Equipos de medida" width="96%" height="22p" font-size="10" fontbold="true" lines="1" lmargin="3%" align="center|left"/>					
+		<!--  ── CABECERA COLUMNAS CONTRATISTA / VERIFICADOR ─────────────  -->
+		<frame name="frmPICols" width="100%" height="24p" bgcolor="#bdd5b1" tmargin="10p">
+			<!--  columna etiqueta vacía  -->
+			<prop name="LBL_TIPO_EQUIPO" type="TL" title="Tipo de equipo" width="32%" height="24p" font-size="10" fontbold="true" lmargin="2%" lines="1" align="center|left" newline="false"/>
+			<prop name="LBL_FAB_MOD" type="TL" title="Fabricante/Modelo" width="33%" font-size="10" height="24p" fontbold="true" lines="1" align="center|left" newline="false"/>
+			<prop name="LBL_NUM_SERIE" type="TL" title="Núm. serie" width="33%" font-size="10" height="24p" fontbold="true" lines="1" align="center|left" newline="false"/>
+		</frame>
+
+		<!--  Lista de observaciones (verificador / contratista)  -->
+		<prop name="@equipos" content="equipos" type="Z" />
+		<content name="equipos" src="equipos" filter="OEI.COD_PPI_ITEM = '##FLD_COD_PPI_ITEM##' ORDER BY OEI.FECHA_CARGA ASC"/>		
+		
+		<!--  Salto de página entre ítems  -->
+		<break-page></break-page>
+		
+	</coll>
+
+    <coll name="equipos" sql="SELECT   
+        COD_PPI_ITEM,
+        OEI.DEN_TIPO AS TIPO_EQ,              
+        CONCAT(OEI.FABRICANTE,'/',OEI.MODELO) AS FAB_MOD,
+    OEI.NUM_SERIE AS NUM_SE
+    FROM gen_obra_ppi_equipos_inspeccion OEI"
+		  xxxfilter="o.REVISION_ID=##FLD_ID##" show-header="false" cell-odd-bgcolor="#f5f8f3">
+		<frame name="frmGeneral" width="96%" tmargin="1%" bmargin="1%" lmargin="2%" rmargin="2%" >
+			<prop name="TIPO_EQ" type="T" width="34%" font-size="10" lines="1" forecolor="#555555"/>
+			<prop name="FAB_MOD" type="T" width="33%" font-size="10" lines="-1" allow-line-breaks="true" newline="false"/>
+			<prop name="NUM_SE" type="T" width="33%" font-size="10" lines="-1" allow-line-breaks="true" newline="false"/>
+		</frame>
+	</coll>
+
+	<coll name="collDocumentos" sql="SELECT NOM_FICHERO AS NUMERO_DOC, concat('/var/www/vhosts/xoneideintcore.com/xonerepository/ReplicaFiles/1KEGG99N/',NOM_FICHERO) AS MAP_IMAGEN_DOC FROM gen_obra_ppi_item_foto" show-header="false">
+		<frame name="frmDocCard" width="100%" height="256p" border="true">
+			<!--  Etiqueta "Documento N"  -->
+			<prop name="NUMERO_DOC" type="T" width="100%" font-size="10" height="16p" tmargin="10p" lines="1" align="left" lmargin="2%"/>
+			<!--  Imagen del documento  -->
+			<frame name="frmImage" width="96%" height="230p" bgcolor="#f5f8f3">
+				<prop name="MAP_IMAGEN_DOC" type="IMG" width="100%" height="230p" keep-aspect-ratio="true" align="center" must-exist="false"/>
+			</frame>
+		</frame>
+	</coll>
+
+
+	<!--  ════════════════════════════════════════════════════════════════
+         COLECCIÓN OBSERVACIONES — hija de collPPI
+         ════════════════════════════════════════════════════════════════  -->
+	<coll name="collObservaciones" sql="SELECT 
+			CONCAT(
+			CASE 
+				WHEN OD.COD_ROL = 'PRY' THEN 'Verificador'
+				ELSE 'Contratista'
+			END,
+			' ',
+			DATE_FORMAT(OPO.FECHA_CARGA,'%h:%i - %d/%m/%Y')
+			) AS ACTOR,       
+			OPO.TEXTO AS TEXTO_OBS
+			FROM gen_obra_ppi_observaciones OPO
+			LEFT JOIN gen_obra_dispositivo OD on OD.BUZON = OPO.BUZON
+		  " 
+		  show-header="false" cell-odd-bgcolor="#f5f8f3">
+		<frame name="frmGeneral" width="96%" tmargin="1%" bmargin="1%" lmargin="2%" rmargin="2%" >
+			<prop name="ACTOR" type="T" width="20%" font-size="10" fontbold="true" lines="1" />
+			<prop name="TEXTO_OBS" type="T" width="100%" font-size="10" lines="-1" allow-line-breaks="true" />
+		</frame>
+	</coll>
+
+
+</xml>

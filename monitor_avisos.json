@@ -1,0 +1,715 @@
+
+{  
+    "checkings": [    
+    {  
+      "name": "I_IQUEUE_STOP_NOPRIORITY",
+      "cron-expression": "0 */5 6-20 * * MON-FRI",
+      "enable": true,
+      "type": "count",
+      "sql": {
+        "value": "select * from ck_i_iqueue_stop_nopriority",
+        "count": 0,
+        "groupby": ""
+      },
+      "errormessage": {
+        "subject": "(ALERTA) (##GP_ENV##): Operaciones sin procesar en master_replica_iqueue",
+        "body": "Operaciones paradas en iqueue, POSIBLE PROBLEMA EN EL SERVICIO <br> Revisar iqueue y errorlog",
+        "header": ""
+      },
+      "email": {
+        "to": "(SELECT EMAIL FROM adm_monitor_email WHERE PROCESS IN ('ALL','##CHKNAME##') AND DISABLED=0 AND EMAIL IS NOT NULL)",
+		"cc": "",
+        "bcc": ""
+      },
+      "actions": {
+        "actions": [
+          {
+            "name": "send-mail"
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": false,
+            "execute-always": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Ok' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Error - ##EXCEPTION##' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          }
+        ]
+      }
+    },
+    {
+      "name": "I_CAMBIO_IMEI_ANDROID12",
+      "cron-expression": "0 5 7 * * MON-FRI",
+      "enable": false,
+      "type": "groupby",
+      "sql": {
+        "value": "SELECT '1' AS GRUPO,ad.PIN AS IDENTIFICADOR, gc.IMEI,gc.IMEI2 AS IMEI2,ad.OWNER AS PROPIETARIO, s.MID,gc.TELEFONO1 AS TELEFONO,s.OSVERSION AS OSVERSIONSLAVE,gc.OSVERSION AS OSVERSIONDEVICE FROM adm_devices_application ada INNER JOIN adm_devices ad on ad.ID=ada.IDDEVICE INNER JOIN adm_devices_model adm on adm.ID=ad.IDMODEL INNER JOIN master_replica_slave s on  s.SERIAL=ada.LIC AND s.MID>0 AND adm.IDPLATAFORM<>3 AND s.PENDIENTE=0 LEFT OUTER JOIN gen_device gc ON s.MID=gc.MID WHERE ad.PIN<>gc.IMEI AND IF( instr( ifnull(s.OSVERSION,''),'.') = 0 ,CAST( ifnull(s.OSVERSION,0) AS SIGNED),CAST(substr(s.OSVERSION,0,LENGTH(s.OSVERSION)-instr(s.OSVERSION,'.')-2) AS SIGNED))>=12 ORDER BY gc.CODBRIGADA ASC, s.MID",
+        "groupby": "GRUPO"
+      },
+      "errormessage": {
+        "subject": "(INFO) (##GP_ENV##): - Cambio de IMEI por Android 12",
+        "body": "<br>UPDATE ADM_DEVICES SET PIN2=PIN, PIN='##ROW_IMEI##' WHERE PIN LIKE '##ROW_IDENTIFICADOR##';  --##ROW_PROPIETARIO##<br>        <br>UPDATE GEN_DEVICE SET IMEI2=IMEI, IMEI='##ROW_IMEI##' WHERE IMEI LIKE '##ROW_IDENTIFICADOR##';  --##ROW_PROPIETARIO##<br>        <br>UPDATE MDM_DEVICES SET IMEI2=IMEI1, IMEI1='##ROW_IMEI##' WHERE IMEI1 LIKE '##ROW_IDENTIFICADOR##';  --##ROW_PROPIETARIO##<br>",
+        "header": "Móviles que han cambiado su IMEI por actualización a Android superior a 12, ejecutar las consultas en las aplicaciones correspondientes, ejecutar MDM_DEVICES en BD XOneManager<br>"
+      },
+      "email": {
+        "to": "(SELECT EMAIL FROM adm_monitor_email WHERE PROCESS IN ('ALL','##CHKNAME##') AND DISABLED=0 AND EMAIL IS NOT NULL)",
+        "cc": "",
+        "bcc": ""
+      },
+      "actions": {
+        "actions": [
+          {
+            "name": "send-mail"
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": false,
+            "execute-always": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Ok' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Error - ##EXCEPTION##' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          }
+        ]
+      }
+    },
+    {
+      "name": "I_ERRORES_REPLICA_MRED",
+      "cron-expression": "5 58 7 * * MON-FRI",
+      "enable": false,
+      "type": "groupby",
+      "sql": {
+        "value": "SELECT * FROM ck_i_errores_replica_mred",
+        "groupby": "GRUPO"
+      },
+      "errormessage": {
+        "subject": "(INFO_NIVEL_2) (##GP_ENV##): Revision Errorlog",
+        "body": " <br> ******************************************************************** <br> ##ROW_TIMESTAMP## <br> MID: ##ROW_MID## <br> ##ROW_DESCRIPTION## <br> ##ROW_CGSSQL## <br> ",
+        "header": "Listado de errores de réplica producidos ayer en la aplicación/región<br> "
+      },
+      "email": {
+        "to": "(SELECT EMAIL FROM adm_monitor_email WHERE PROCESS IN ('ALL','##CHKNAME##') AND DISABLED=0 AND EMAIL IS NOT NULL)",
+        "cc": "",
+        "bcc": ""
+      },
+      "actions": {
+        "actions": [
+          {
+            "name": "send-mail",
+            "after-action": [
+              {
+                "name": "executequery",
+                "value": "TRUNCATE TABLE master_replica_errorlog"
+              }
+            ]
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": false,
+            "execute-always": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Ok' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Error - ##EXCEPTION##' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          }
+        ]
+      }
+    },
+    {
+      "name": "I_ERRORES_LIVE_MRED",
+      "cron-expression": "5 55 7 * * MON-FRI",
+      "enable": false,
+      "type": "groupby",
+      "sql": {
+        "value": "SELECT * FROM ck_i_errores_live_mred",
+        "groupby": "GRUPO"
+      },
+      "errormessage": {
+        "subject": "(INFO_NIVEL_2) (##GP_ENV##): Revision XOneLive Errorlog",
+        "body": " <br> ******************************************************************** <br> ##ROW_TIMESTAMP## <br> VERSION: ##ROW_VERSIONUPDATE## <br> ERRORDESC: ##ROW_ERRORDESC## <br> MID: ##ROW_MID## <br> ",
+        "header": "Listado de errores XOneLive producidos ayer en la aplicación/región<br> "
+      },
+      "email": {
+        "to": "(SELECT EMAIL FROM adm_monitor_email WHERE PROCESS IN ('ALL','##CHKNAME##') AND DISABLED=0 AND EMAIL IS NOT NULL)",
+        "cc": "",
+        "bcc": ""
+      },
+      "actions": {
+        "actions": [
+          {
+            "name": "send-mail",
+            "after-action": [
+              {
+                "name": "executequery",
+                "value": "TRUNCATE TABLE adm_xonelive_errorlog"
+              }
+            ]
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": false,
+            "execute-always": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Ok' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Error - ##EXCEPTION##' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          }
+        ]
+      }
+    },
+    {
+      "name": "I_REVISAR_ESTADO_SERVIDOR",
+      "cron-expression": "0 */5 * * * 1-5",
+      "enable": true,
+      "type": "healthCheck",
+      "endpoints": {
+        "endpoints": [
+          {
+            "name": "MRED-APi",
+            "url": "http://localhost:6060/healthz"
+          }
+        ]
+      },
+      "errormessage": {
+        "subject": "(ALERTA) (##GP_ENV##): Revision Errorlog - Problema en los siguientes accesos",
+        "body": "<br> ******************************************************************** <br> ##ROW_ENTRY## - Estado: ##ROW_STATUS## - Descripción: ##ROW_DESCRIPTION## <br>",
+        "header": "Listado de errores de accesos."
+      },
+      "email": {
+        "to": "(SELECT EMAIL FROM adm_monitor_email WHERE PROCESS IN ('ALL','##CHKNAME##') AND DISABLED=0 AND EMAIL IS NOT NULL)",
+        "cc": "",
+        "bcc": ""
+      },
+      "actions": {
+        "actions": [
+          {
+            "name": "send-mail"
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": false,
+            "execute-always": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Ok' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Error - ##EXCEPTION##' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          }
+        ]
+      }
+    },
+    {
+      "name": "I_REVISAR_ERRORES_API",
+      "cron-expression": "0 0 6,12,18 * * MON-FRI",
+      "enable": false,
+      "type": "groupby",
+      "sql": {
+        "value": "SELECT * FROM ck_posibles_errores",
+        "groupby": "ID"
+      },
+      "errormessage": {
+        "subject": "(ALERTA) (##GP_ENV##): Revision Errorlog - Posibles errores",
+        "body": "<br> ******************************************************************** <br> ##ROW_NUMEROORDEN## - Posible error: ##ROW_MAP_POSIBLE_ERROR## - Posible error: ##ROW_MAP_POSIBLE_SOLUCION## <br>",
+        "header": "Listado de errores."
+      },
+      "email": {
+        "to": "afgordillo@xone.es",
+        "cc": "",
+        "bcc": ""
+      },
+      "actions": {
+        "actions": [
+          {
+            "name": "send-mail"
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": false,
+            "execute-always": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Ok' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Error - ##EXCEPTION##' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          }
+        ]
+      }
+    },      
+    {
+      "name": "I_DISP_10KOP_PENDIENTES",
+      "cron-expression": "0 */5 * * * MON-FRI",
+      "enable": false,
+      "type": "groupby",
+      "sql": {
+        "value": "WITH  max_id_cte AS ( SELECT MAX(id) AS max_id FROM master_replica_queue    ),    sdata AS (        SELECT s.mid, s.lastcid        FROM master_replica_slave s        WHERE s.CONDITIONAL = 1 AND s.pendiente = 0 AND s.lastcid <> 500000000    ),    qcounts AS (        SELECT s.mid, s.lastcid, COUNT(*) AS cnt        FROM master_replica_queue q        JOIN master_replica_slave s ON q.id > s.lastcid AND q.mid = 0         WHERE s.CONDITIONAL = 1 AND s.pendiente = 0 AND s.lastcid <> 500000000 GROUP BY s.mid),oper_cte AS (SELECT SUM((m.max_id - s.lastcid - IFNULL(q.cnt, 0))) AS total_oper FROM sdata s JOIN max_id_cte m LEFT JOIN qcounts q ON s.mid = q.mid) SELECT FORMAT(total_oper, 0, 'locale') AS total_oper FROM oper_cte WHERE total_oper > 2000000",
+        "groupby": "total_oper"
+      },
+      "errormessage": {
+        "subject": "(INFO_NIVEL_2) (##GP_ENV##): Más de 2.000.000 de oper por analizar",
+        "body": "##ROW_total_oper## operaciones sin analizar: (##GP_ENV##), revisar sistema.",
+        "header": ""
+      },
+      "email": {
+        "to": "(SELECT EMAIL FROM adm_monitor_email WHERE PROCESS IN ('ALL','##CHKNAME##') AND DISABLED=0 AND EMAIL IS NOT NULL)",
+        "cc": "",
+        "bcc": ""
+      },
+      "actions": {
+        "actions": [
+          {
+            "name": "send-mail"
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": false,
+            "execute-always": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Ok' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Error - ##EXCEPTION##' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          }
+        ]
+      }
+    },
+    {
+      "name": "I_CARGA_100KOP_INVENTARIO",
+      "cron-expression": "0 0 8 * * MON-FRI",
+      "enable": false,
+      "type": "groupby",
+      "sql": {
+        "value": "SELECT 1 AS ID,MAP_TOTAL_OPERACIONES FROM (select COUNT(ID) AS MAP_TOTAL_OPERACIONES from master_replica_queue WHERE FECHA_HORA >= DATE_FORMAT(CURDATE(),'%Y-%m-%d 00:00:00') and FECHA_HORA <= DATE_FORMAT(CURDATE(),'%Y-%m-%d 07:59:59')) p WHERE p.MAP_TOTAL_OPERACIONES > 100000",
+        "groupby": "ID"
+      },
+      "errormessage": {
+        "subject": "(INFO) (##GP_ENV##): Carga de datos de inventario ",
+        "body": "##ROW_MAP_TOTAL_OPERACIONES## operaciones cargadas: revisar sistema.",
+        "header": ""
+      },
+      "email": {
+        "to": "(SELECT EMAIL FROM adm_monitor_email WHERE PROCESS IN ('ALL','##CHKNAME##') AND DISABLED=0 AND EMAIL IS NOT NULL)",
+        "cc": "",
+        "bcc": ""
+      },
+      "actions": {
+        "actions": [
+          {
+            "name": "send-mail"
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": false,
+            "execute-always": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Ok' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Error - ##EXCEPTION##' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          }
+        ]
+      }
+    },
+    {
+      "name": "I_RESUMEN_DIARIO",
+      "cron-expression": "0 0 8,16 * * MON-FRI",
+      "enable": false,
+      "type": "groupby",
+      "sql": {
+        "value": "select * from view_resumen_diario vrd INNER JOIN monitor_alerts_configuration mac on mac.CODE = vrd.CODE ORDER BY mac.PRIORITY DESC",
+        "groupby": "ID"
+      },
+      "errormessage": {
+        "subject": "(INFO) (##GP_ENV##): Resumen diario",
+        "body": "<br> * ##ROW_MAP_TITLE## <span style='margin-left: 1rem;'><span style='background: #00000000;font-weight: bold;padding: 0.2rem 0.5rem;border-radius: 1rem;color:#000000;'>##ROW_MAP_CANT##</span></span>",
+        "header": "Resumen diario"
+      },
+      "email": {
+        "to": "(SELECT EMAIL FROM adm_monitor_email WHERE PROCESS IN ('ALL','##CHKNAME##') AND DISABLED=0 AND EMAIL IS NOT NULL)",
+        "cc": "",
+        "bcc": ""
+      },
+      "actions": {
+        "actions": [
+          {
+            "name": "send-mail",
+			"use-template": true,
+			"path-template": "/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/Resumen_diario_plantilla.html"
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": false,
+            "execute-always": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Ok' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Error - ##EXCEPTION##' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          }
+        ]
+      }
+    },    
+    {
+      "name": "I_AVISO_OTS_SIN_ACEPTAR_15",
+      "cron-expression": "0 */15 4-12 * * MON-FRI",
+      "enable": false,
+      "type": "groupby",
+      "sql": {
+        "value": "SELECT 1 AS ID,count(ID) as MAP_TOTAL_OPERACIONES from ck_aviso_ots_sin_aceptar_hoy where FECHA < date_sub(sysdate(),INTERVAL 10 MINUTE) having count(ID) > 200",
+        "groupby": "ID"
+      },
+      "errormessage": {
+        "subject": "(ALERTA) (##GP_ENV##): Ots sin aceptar",
+        "body": "##ROW_MAP_TOTAL_OPERACIONES## Ots de hoy, sin aceptar (+10 minutos)",
+        "header": ""
+      },
+      "email": {
+        "to": "(SELECT EMAIL FROM adm_monitor_email WHERE PROCESS IN ('ALL','##CHKNAME##') AND DISABLED=0 AND EMAIL IS NOT NULL)",
+        "cc": "",
+        "bcc": ""
+      },
+      "actions": {
+        "actions": [
+          {
+            "name": "send-mail"
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": false,
+            "execute-always": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Ok' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Error - ##EXCEPTION##' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          }
+        ]
+      }
+    },    
+    {
+      "name": "I_AVISO_OTS_SIN_ACEPTAR_30",
+      "cron-expression": "0 */15 6-20 * * MON-FRI",
+      "enable": false,
+      "type": "groupby",
+      "sql": {
+        "value": "SELECT 1 AS ID,count(ID) as MAP_TOTAL_OPERACIONES from ck_aviso_ots_sin_aceptar_hoy where FECHA < date_sub(sysdate(),INTERVAL 30 MINUTE) having count(ID) > 200",
+        "groupby": "ID"
+      },
+      "errormessage": {
+        "subject": "(ALERTA) (##GP_ENV##): Ots sin aceptar",
+        "body": "##ROW_MAP_TOTAL_OPERACIONES## Ots de hoy, sin aceptar (+30 minutos)",
+        "header": ""
+      },
+      "email": {
+        "to": "(SELECT EMAIL FROM adm_monitor_email WHERE PROCESS IN ('ALL','##CHKNAME##') AND DISABLED=0 AND EMAIL IS NOT NULL)",
+        "cc": "",
+        "bcc": ""
+      },
+      "actions": {
+        "actions": [
+          {
+            "name": "send-mail"
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": false,
+            "execute-always": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Ok' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Error - ##EXCEPTION##' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          }
+        ]
+      }
+    },     
+    {
+      "name": "I_AVISO_OTS_SIN_LLAMAR_GAMAD_20",
+      "cron-expression": "0 */5 * * * MON-FRI",
+      "enable": false,
+      "type": "groupby",
+      "sql": {
+        "value": "select 1 AS ID,count(ID) as MAP_TOTAL_OPERACIONES from gen_ot_cabecera where carga_completa=0 HAVING COUNT(1) >= 100",
+        "groupby": "ID"
+      },
+      "errormessage": {
+        "subject": "(ALERTA) (##GP_ENV##): Ots sin obtener datos de GAMAD",
+        "body": "##ROW_MAP_TOTAL_OPERACIONES## Ots, que estan pendientes de llamar a GAMD (CARGA_COMPLETA=0)",
+        "header": ""
+      },
+      "email": {
+        "to": "(SELECT EMAIL FROM adm_monitor_email WHERE PROCESS IN ('ALL','##CHKNAME##') AND DISABLED=0 AND EMAIL IS NOT NULL)",
+        "cc": "",
+        "bcc": ""
+      },
+      "actions": {
+        "actions": [
+          {
+            "name": "send-mail"
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": false,
+            "execute-always": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Ok' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Error - ##EXCEPTION##' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          }
+        ]
+      }
+    },    
+    {
+      "name": "I_AVISO_OTS_SIN_LLAMAR_GAMAD_POR_TIEMPO_MAS_7_MIN",
+      "cron-expression": "0 */5 * * * MON-FRI",
+      "enable": false,
+      "type": "groupby",
+      "sql": {
+        "value": "WITH filtro AS (  SELECT ID  FROM gen_ot_cabecera  WHERE carga_completa = 0    AND ES_COLABORACION = 0    AND SISTEMA = 2    AND FECHA_RECIBIDO_CARGA_COMPLETA <= NOW() - INTERVAL 7 MINUTE),tot AS (  SELECT COUNT(*) AS MAP_TOTAL_OPERACIONES  FROM filtro) SELECT f.ID, t.MAP_TOTAL_OPERACIONES FROM filtro f CROSS JOIN tot t WHERE t.MAP_TOTAL_OPERACIONES > 10 LIMIT 1",
+        "groupby": "ID"
+      },
+      "errormessage": {
+        "subject": "(ALERTA) (##GP_ENV##): Ots sin obtener datos de GAMAD",
+        "body": "##ROW_MAP_TOTAL_OPERACIONES## Ots, que estan pendientes de llamar a GAMD (CARGA_COMPLETA=0)",
+        "header": ""
+      },
+      "email": {
+        "to": "(SELECT EMAIL FROM adm_monitor_email WHERE PROCESS IN ('ALL','##CHKNAME##') AND DISABLED=0 AND EMAIL IS NOT NULL)",
+        "cc": "",
+        "bcc": ""
+      },
+      "actions": {
+        "actions": [
+          {
+            "name": "send-mail"
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": false,
+            "execute-always": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Ok' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Error - ##EXCEPTION##' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          }
+        ]
+      }
+    }, 
+    {
+      "name": "I_PDF_SIN_GENERAR_24_HORAS",
+      "cron-expression": "0 0 17 * * MON-FRI",
+      "enable": false,
+      "type": "groupby",
+      "sql": {
+        "value": "select 1 AS ID,COUNT(O.ID) AS MAP_TOTAL from gen_ot_cabecera O INNER JOIN (select MAX(ID) AS ID,TASK_ID from gen_ot_estados  GROUP BY TASK_ID) E ON E.TASK_ID = O.TASK_ID  INNER JOIN gen_ot_estados ER ON ER.ID = E.ID left join monitor_ot_pdf_generate m on IFNULL(O.AREA_EMPRESA,'') like concat(m.AREA_EMPRESA,'%')  and ifnull(m.CLASE_ACTIVIDAD,O.CLASE_ACTIVIDAD) like concat('%',O.CLASE_ACTIVIDAD,'%') and ifnull(m.CLASE_ORDEN,O.CLASE_ORDEN) = O.CLASE_ORDEN  and ifnull(m.NO_CLASE_ACTIVIDAD,'')  not like concat('%',O.CLASE_ACTIVIDAD,'%')  and ifnull(m.NO_CLASE_ORDEN,'')  not like concat('%',O.CLASE_ORDEN,'%') WHERE ER.ESTADO IN (5)  and m.ID is not null  and m.PDF_PLANTILLA is not null and IFNULL(O.PDF_CREADO,0) = 0  and TIMESTAMPDIFF(HOUR,ER.FECHA,NOW()) >= 24 HAVING COUNT(O.ID) > 0",
+        "groupby": "ID"
+      },
+      "errormessage": {
+        "subject": "(INFO) (##GP_ENV##): Pdfs sin generar",
+        "body": "##ROW_MAP_TOTAL## Pdf sin generar (+24 horas)",
+        "header": ""
+      },
+      "email": {
+        "to": "(SELECT EMAIL FROM adm_monitor_email WHERE PROCESS IN ('ALL','##CHKNAME##') AND DISABLED=0 AND EMAIL IS NOT NULL)",
+        "cc": "",
+        "bcc": ""
+      },
+      "actions": {
+        "actions": [
+          {
+            "name": "send-mail"
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": false,
+            "execute-always": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Ok' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Error - ##EXCEPTION##' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          }
+        ]
+      }
+    }, 
+    {
+      "name": "I_ESTAD0S_SIN_PROCESAR_MAS10MIN",
+      "cron-expression": "0 0,30 * * * MON-FRI",
+      "enable": false,
+      "type": "groupby",
+      "sql": {
+        "value": "select 1 AS ID,COUNT(ID) AS MAP_TOTAL from gen_ot_estados where procesado=0 AND FECHA < (NOW() - INTERVAL 10 MINUTE) HAVING COUNT(ID) > 1",
+        "groupby": "ID"
+      },
+      "errormessage": {
+        "subject": "(INFO) (##GP_ENV##): Ots sin procesar envio i-Agenda (+10 minutos)",
+        "body": "##ROW_MAP_TOTAL## Ots sin procesar envio i-Agenda (+10 minutos)",
+        "header": ""
+      },
+      "email": {
+        "to": "(SELECT EMAIL FROM adm_monitor_email WHERE PROCESS IN ('ALL','##CHKNAME##') AND DISABLED=0 AND EMAIL IS NOT NULL)",
+        "cc": "",
+        "bcc": ""
+      },
+      "actions": {
+        "actions": [
+          {
+            "name": "send-mail"
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": false,
+            "execute-always": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Ok' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Error - ##EXCEPTION##' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          }
+        ]
+      }
+    }, 
+	{
+      "name": "I_ESTAD0S_SIN_PROCESAR_MAS10MIN_SIN_TASK_ID",
+      "cron-expression": "0 0,30 * * * MON-FRI",
+      "enable": false,
+      "type": "groupby",
+      "sql": {
+        "value": "select 1 AS ID,COUNT(ID) AS MAP_TOTAL from gen_ot_estados where procesado=0 AND FECHA < (NOW() - INTERVAL 10 MINUTE) AND TASK_ID IS NULL HAVING COUNT(ID) > 1",
+        "groupby": "ID"
+      },
+      "errormessage": {
+        "subject": "(INFO) (##GP_ENV##): Ots sin procesar envio i-Agenda (+10 minutos), con TASK_ID a null",
+        "body": "##ROW_MAP_TOTAL## Ots sin procesar envio i-Agenda (+10 minutos), con TASK_ID a null",
+        "header": ""
+      },
+      "email": {
+        "to": "(SELECT EMAIL FROM adm_monitor_email WHERE PROCESS IN ('ALL','##CHKNAME##') AND DISABLED=0 AND EMAIL IS NOT NULL)",
+        "cc": "",
+        "bcc": ""
+      },
+      "actions": {
+        "actions": [
+          {
+            "name": "send-mail",
+            "after-action": [
+              {
+                "name": "executequery",
+                "value": "UPDATE gen_ot_estados SET MONITOR_NO_AVISO=1 WHERE ID IN (select ID from gen_ot_estados goe where procesado=0 and goe.TASK_ID is null and goe.MONITOR_NO_AVISO=0 AND goe.FECHA < (NOW() - INTERVAL 60 MINUTE))"
+              }
+            ]
+          },          
+          {
+            "name": "executequery",
+            "execute-if-error": false,
+            "execute-always": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Ok' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Error - ##EXCEPTION##' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          }
+        ]
+      }
+    },
+    {
+      "name": "I_PROCESADO99_MAS1HORA_HOY",
+      "cron-expression": "0 */60 * * * MON-FRI",
+      "enable": false,
+      "type": "groupby",
+      "sql": {
+        "value": "select 1 AS ID,COUNT(ID) AS MAP_TOTAL from gen_ot_estados where procesado=-99 AND FECHA < (NOW() - INTERVAL 60 MINUTE) and fecha > CURDATE() HAVING COUNT(ID) > 0",
+        "groupby": "ID"
+      },
+      "errormessage": {
+        "subject": "(INFO) (##GP_ENV##): Ots con procesado -99 (+1 hora) en el dia de hoy",
+        "body": "##ROW_MAP_TOTAL## Ots con procesado -99 (+1 hora) en el dia de hoy",
+        "header": ""
+      },
+      "email": {
+        "to": "(SELECT EMAIL FROM adm_monitor_email WHERE PROCESS IN ('ALL','##CHKNAME##') AND DISABLED=0 AND EMAIL IS NOT NULL)",
+        "cc": "",
+        "bcc": ""
+      },
+      "actions": {
+        "actions": [
+          {
+            "name": "send-mail"
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": false,
+            "execute-always": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Ok' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Error - ##EXCEPTION##' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          }
+        ]
+      }
+    },
+    {
+      "name": "I_ERROR_API_URGENTE_1",
+      "cron-expression": "0 */15 * * * MON-FRI",
+      "enable": false,
+      "type": "groupby",
+      "sql": {
+        "value": "Select 1 as ID, PROCESO, COUNT(1) AS MAP_TOTAL, MAX(ID) AS MAP_ID_ULTIMO_ERROR from mred_infolog.adm_mredapi_log where MENSAJE LIKE '%Unable to cast object of type%' GROUP BY PROCESO having count(1) > 0",
+        "groupby": "ID"
+      },
+      "errormessage": {
+        "subject": "(ALERTA) (##GP_ENV##): Hay un error de tipos que puede tener bloqueada la integración",
+        "body": "##ROW_MAP_TOTAL## mensajes tipo 'Unable to cast object of type', <br> El ##ROW_MAP_ID_ULTIMO_ERROR## es el ultimo error dado en adm_mredapi_log <br> Revisar proceso ##ROW_PROCESO##",
+        "header": ""
+      },
+      "email": {
+        "to": "(SELECT EMAIL FROM adm_monitor_email WHERE PROCESS IN ('ALL','##CHKNAME##') AND DISABLED=0 AND EMAIL IS NOT NULL)",
+        "cc": "",
+        "bcc": ""
+      },
+      "actions": {
+        "actions": [
+          {
+            "name": "send-mail"
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": false,
+            "execute-always": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Ok' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Error - ##EXCEPTION##' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          }
+        ]
+      }
+    }
+	],
+    "maintenances": []
+}
