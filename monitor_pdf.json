@@ -251,7 +251,7 @@
 		  "enable": true,
 		  "type": "groupby",
 		  "sql": {
-			"value": "select ID,ROWID, uuid() as NEW_ROWID,CONCAT(NUMERO_OBRA,'_',COD_PPI_CABECERA,'.pdf') AS MAP_NOMBRE_FICHERO FROM gen_obra_ppi_cabecera cab where cab.ESTADO = 3 and ifnull(cab.CREACION_PDF,0)=0",
+			"value": "select ID,ROWID, uuid() as NEW_ROWID,CONCAT(NUMERO_OBRA,'_',COD_PPI_CABECERA,'_',DATE_FORMAT(SYSDATE(), '%Y%m%d'),'.pdf') AS MAP_NOMBRE_FICHERO FROM gen_obra_ppi_cabecera cab where cab.ESTADO = 3 and ifnull(cab.CREACION_PDF,0)=0",
 			"groupby": "ID"
 		  },
 		  "errormessage": {
