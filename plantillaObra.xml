@@ -13,7 +13,7 @@
         CONCAT(mcab.COD_DOCUMENTO,' ',mcab.DESCRIPCION) as COD_DOCUMENTO,
         CONCAT(
         CASE WHEN cab.FECHA_INICIO IS NOT NULL THEN
-            DATE_FORMAT(cab.FECHA_INICIO, '%d-%m-%y')
+            DATE_FORMAT(cab.FECHA_INICIO, '%d-%m-%Y')
             ELSE '-'
                 END,
             ' / ',
@@ -45,31 +45,31 @@
         ON utseq.COD_EQUIPO = cab.COD_EQUIPO"            
             filter="cab.id=##ID##" entry-point="true" show-header="false" lmargin="5%" rmargin="5%" tmargin="3%" bmargin="5%">
 		<!--  ── CABECERA (se repite en todas las páginas) ───────────────  -->
-		<frame name="frmCabecera" width="100%" height="68p" copy-to-all-pages="true">
+		<frame name="frmCabecera" width="100%" height="84p" copy-to-all-pages="true">
 			<!--  Borde izquierdo verde  -->
-			<frame name="frmBordeVerde" width="1%" height="68p" bgcolor="#4a7c2f">
+			<frame name="frmBordeVerde" width="1%" height="78p" bgcolor="#4a7c2f">
 			</frame>
 			<!--  RESUMEN DE LA OBRA + número  -->
-			<frame name="frmDatosHeader" newline="false" height="56p" width="96%" lmargin="3%">
-				<frame name="frmDatosObra" width="36%" height="40p" newline="false">
-					<prop name="DESCRIPCION_TL" type="TL" title="RESUMEN DE LA OBRA" width="100%" font-size="10" lines="1" forecolor="#777777"/>
+			<frame name="frmDatosHeader" newline="false" height="76p" width="96%" lmargin="3%">
+				<frame name="frmDatosObra" width="26%" height="40p" newline="false">
+					<prop name="DESCRIPCION_TL" type="TL" title="RESUMEN DE LA OBRA" width="100%" font-size="10" lines="1" forecolor="#000000"/>
 					<prop name="NUMERO_OBRA" type="T" width="100%" font-size="16" fontbold="true" lines="1"/>
 				</frame>
 				<!--  Ubicación técnica + fechas  -->
-				<frame name="frmUbicacion" width="38%" height="40p" newline="false">
-					<prop name="DESC_UBICACION" type="T" width="100%" font-size="16" fontbold="true" lines="1"/>
-					<prop name="FECHAS" type="T" width="100%" font-size="10" forecolor="#555555" lines="1"/>
+				<frame name="frmUbicacion" width="50%" height="40p" newline="false">
+					<prop name="DESC_UBICACION" type="T" width="100%" font-size="13" fontbold="true" lines="1"/>
+					<prop name="FECHAS" type="T" width="100%" font-size="10" forecolor="#000000" lines="1"/>
 				</frame>
 				<!--  Logo i-DE  -->
-				<frame name="frmLogo" width="23%" height="40p" newline="false" align="right">
-					<prop name="MAP_LOGO" type="IMG" width="95%" height="58p" keep-aspect-ratio="true" align="right"/>
+				<frame name="frmLogo" width="24%" height="40p" newline="false" align="right">
+					<prop name="MAP_LOGO" type="IMG" width="100%" height="38p" keep-aspect-ratio="true" align="right"/>
 				</frame>
 				<!--  Línea + jerarquía  -->
 				<divider width="100%" tmargin="2p"/>
 				<frame name="frmJerarquia" width="100%" height="16p" tmargin="10p">
-					<prop name="JERARQUIA_N1" type="T" width="100%" font-size="10" forecolor="#444444" fontbold="true" lines="1"/>
+					<prop name="JERARQUIA_N1" type="T" width="100%" font-size="10" forecolor="#000000" fontbold="true" lines="1"/>
 				</frame>
-			</frame>			
+			</frame>
 		</frame>
 
 		<!--  ── TABLA DATOS GENERALES DEL PPI ───────────────────────────  -->
@@ -200,7 +200,7 @@
 			<prop name="INS_TIPO_VALOR" type="T" title="" width="49%" height="28p" font-size="10" lines="1" lmargin="1%" newline="false" align="center|left"/>
 		</frame>
 
-		<prop name="TITULO_ITEM" type="TL" title="&#183; Puntos de inspección" width="96%" height="22p" font-size="10" fontbold="true" tmargin="20p" lines="1" lmargin="3%" align="center|left"/>					
+		<prop name="TITULO_ITEM" type="TL" title="&#183; Puntos de inspección" width="96%" height="22p" font-size="12" fontbold="true" tmargin="20p" lines="1" lmargin="3%" align="center|left"/>					
 		<!--  ── CABECERA COLUMNAS CONTRATISTA / VERIFICADOR ─────────────  -->
 		<frame name="frmPICols" width="100%" height="24p" bgcolor="#bdd5b1">
 			<!--  columna etiqueta vacía  -->
@@ -274,7 +274,7 @@
 
     <coll name="Documentos" sql="SELECT
 		COD_PPI_ITEM,
-		CAST(CONCAT('Item ', ROW_NUMBER() OVER (ORDER BY COD_PPI_ITEM)) AS VARCHAR(255)) AS TITULO_ITEM    
+		CAST(CONCAT(ROW_NUMBER() OVER (ORDER BY COD_PPI_ITEM), '. Item ', ROW_NUMBER() OVER (ORDER BY COD_PPI_ITEM)) AS VARCHAR(255)) AS TITULO_ITEM
 			FROM gen_obra_ppi_item_foto" show-header="false" >
 
 		<frame name="frmObsTitulo" width="100%" height="22p" tmargin="20p">
@@ -283,7 +283,7 @@
 			<prop name="TITULO_ITEM" type="T" width="96%" height="22p" font-size="10" fontbold="true" lines="1" lmargin="3%" newline="false" align="center|left"/>
 		</frame>
 
-		<prop name="TITULO_ITEM_TL" type="TL" title="&#183; Documentos" width="96%" height="22p" font-size="10" fontbold="true" lines="1" lmargin="3%" align="center|left"/>
+		<prop name="TITULO_ITEM_TL" type="TL" title="&#183; Documentos" width="96%" height="22p" font-size="12" fontbold="true" lines="1" lmargin="3%" align="center|left"/>
 
 		<!--  ── GRID 2 COLUMNAS DE DOCUMENTOS ───────────────────────────  -->
 		<prop name="@Documentos" content="contentDocs" type="Z" viewmode="grid" grid-column="2"/>
@@ -296,7 +296,7 @@
 
     <coll name="EqInspecciones" sql="SELECT
         COD_PPI_ITEM,
-        CAST(CONCAT('Item ', ROW_NUMBER() OVER (ORDER BY COD_PPI_ITEM)) AS VARCHAR(255))  AS TITULO_ITEM
+        CAST(CONCAT(ROW_NUMBER() OVER (ORDER BY COD_PPI_ITEM), '. Item ', ROW_NUMBER() OVER (ORDER BY COD_PPI_ITEM)) AS VARCHAR(255))  AS TITULO_ITEM
     FROM gen_obra_ppi_equipos_inspeccion OEI" show-header="false" >
 
 
@@ -306,7 +306,7 @@
 			<prop name="TITULO_ITEM" type="T" width="96%" height="22p" font-size="10" fontbold="true" lines="1" lmargin="3%" newline="false" align="center|left"/>
 		</frame>
 
-		<prop name="TITULO_ITEM" type="TL" title="&#183; Equipos de medida" width="96%" height="22p" font-size="10" fontbold="true" lines="1" lmargin="3%" align="center|left"/>					
+		<prop name="TITULO_ITEM" type="TL" title="&#183; Equipos de medida" width="96%" height="22p" font-size="12" fontbold="true" lines="1" lmargin="3%" align="center|left"/>					
 		<!--  ── CABECERA COLUMNAS CONTRATISTA / VERIFICADOR ─────────────  -->
 		<frame name="frmPICols" width="100%" height="24p" bgcolor="#bdd5b1" tmargin="10p">
 			<!--  columna etiqueta vacía  -->

@@ -62,10 +62,6 @@ group by G3E_FID,G3E_FNO,ATTR) CI ON CI.G3E_FID=IFNULL(ct.G3E_FID,ctc.G3E_FID) A
 LEFT OUTER JOIN gen_cambiosinventario CID ON CID.ID=CI.ID AND CID.COD_REC_OT_CABECERA=O.COD_REC_OT_CABECERA " lmargin="5%" rmargin="5%" tmargin="5%" bmargin="5%" 
 		  filter="O.ID=##ID## and (ct.ID is not null or ctc.ID is not NULL) order by O.ID DESC" entry-point="true" show-header="false" show-pagination="true" show-file-date-creation="true"> 
 						
-				<footer height="30p">
-					<prop name="MAP_TITLE_FOOTER" type="TL" width="98%" height="15p" title="La revisión se ha realizado según lo indicado en el manual técnico MT 2.04.02" align="center" font-size="10" lines="1" forecolor="#000000" lmargin="1%"/>
-				</footer>
-
 				<prop name="MAP_TITULO" type="T" lmargin="8%" tmargin="5p" width="64%" align="center" fontbold="true" font-size="18" copy-to-all-pages="true"/>
 				<prop name="MAP_LOGO" 	type="IMG" 	lmargin="19%" width="9%" align="right"  copy-to-all-pages="true" newline="false" keep-aspect-ratio="true"/>
 			
@@ -89,14 +85,18 @@ LEFT OUTER JOIN gen_cambiosinventario CID ON CID.ID=CI.ID AND CID.COD_REC_OT_CAB
 
 				<break-page />
 
-				<frame name="frmREVINV" width="100%" tmargin="15p" disablevisible="MAP_CAMBIO_INV&gt;0">
-					<frame name="frmTITLE_REVINV" disablevisible="MAP_CAMBIO_INV&gt;0" border="true" border-left="true" border-bottom="true" border-right="true" border-top="true" border-color="#000000" width="100%" bgcolor="#7b9c66">
-						<prop name="MAP_TITLE_REVINV" disablevisible="MAP_CAMBIO_INV&gt;0" type="T" width="98%" height="15p" align="center"
+				<frame name="frmREVINV" width="100%" tmargin="15p">
+					<frame name="frmTITLE_REVINV" border="true" border-left="true" border-bottom="true" border-right="true" border-top="true" border-color="#000000" width="100%" bgcolor="#7b9c66">
+						<prop name="MAP_TITLE_REVINV" type="T" width="98%" height="15p" align="center"
 							  bgcolor="#00000000" font-size="10" lines="1" fontbold="true" forecolor="#ffffff" border-color="#000000" lmargin="1%"/>
 					</frame>
 				</frame>
 
 				<prop name="MAP_LITERAL_REVINV" disablevisible="MAP_CAMBIO_INV&gt;0" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="TL" title="  Sin cambios" width="100%" height="15p"	align="left" lines="1" bgcolor="#e3eadf" font-size="9" text-border-color="#000000" />
+
+				<prop name="MAP_TL_HDR_ATTR" disablevisible="MAP_CAMBIO_INV=0" text-border="true" text-border-left="true" text-border-bottom="true" text-border-top="true" type="TL" width="30%" height="15p"	title="  Nombre del campo  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000"  />
+				<prop name="MAP_TL_HDR_VALOR_ANT" disablevisible="MAP_CAMBIO_INV=0" text-border="true" text-border-left="true" text-border-bottom="true" text-border-top="true" type="TL" width="35%" height="15p"	title="  Valor Anterior  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000" newline="false" />
+				<prop name="MAP_TL_HDR_VALOR" disablevisible="MAP_CAMBIO_INV=0" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" text-border-top="true" type="TL" width="35%" height="15p"	title="  Nuevo Valor  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000" newline="false"  />
 
 				<prop name="MAP_INVENTARIO" content="@Inventario"  type="Z" disablevisible="MAP_CAMBIO_INV=0"/>
 				<content name="@Inventario" src="Inventario" filter="cin.COD_REC_OT_CABECERA='##FLD_COD_REC_OT_CABECERA##' AND cin.G3E_FID=##FLD_MAP_G3E_FID## AND cin.G3E_FNO=##FLD_MAP_G3E_FNO##"/>
@@ -129,29 +129,16 @@ LEFT OUTER JOIN gen_cambiosinventario CID ON CID.ID=CI.ID AND CID.COD_REC_OT_CAB
 
 	</coll>		
 	
-	<coll name="Inventario" sql="SELECT 
+	<coll name="Inventario" sql="SELECT
 								CONCAT('  ',ATTR) AS ATTR,
 								CONCAT('  ',VALOR) AS VALOR,
-								CONCAT('  ',VALOR_ANT) AS VALOR_ANT,
-								CONCAT('Revisión Inventario') as MAP_TITLE_REVINV
+								CONCAT('  ',VALOR_ANT) AS VALOR_ANT
 								from gen_cambiosinventario cin								"
 							lmargin="10p" rmargin="10p" tmargin="10p" filter="" entrypoint="true" show-header="false">
 
-		<frame name="frmREVINV" width="100%" tmargin="15p">
-			<frame name="frmTITLE_REVINV" border="true" border-left="true" border-bottom="true" border-right="true" border-top="true" border-color="#000000" width="100%" bgcolor="#7b9c66">
-				<prop name="MAP_TITLE_REVINV" type="T" width="98%" height="15p" align="center"
-					  bgcolor="#00000000" font-size="10" lines="1" fontbold="true" forecolor="#ffffff" border-color="#000000" lmargin="1%"/>
-			</frame>
-		</frame>
-
-		<prop name="MAP_TL_ATTR" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Nombre del campo  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000" />
-		<prop name="ATTR" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000" />
-
-		<prop name="MAP_TL_VALOR_ANT" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Valor Anterior  " align="center" bgcolor="#ffffff" lines="1" font-size="9" text-border-color="#000000" />
-		<prop name="VALOR_ANT" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#ffffff" font-size="9" text-border-color="#000000" />
-
-		<prop name="MAP_TL_VALOR" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Nuevo Valor  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000" />
-		<prop name="VALOR" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000" />
+		<prop name="ATTR" text-border="true" text-border-left="true" text-border-bottom="true" type="T" width="30%" height="15p"	align="left" lines="1"  bgcolor="#ffffff" font-size="9" text-border-color="#000000" />
+		<prop name="VALOR_ANT" text-border="true" text-border-left="true" text-border-bottom="true" type="T" width="35%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#ffffff" font-size="9" text-border-color="#000000" />
+		<prop name="VALOR" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="35%" height="15p"	align="left" newline="false" lines="1" bgcolor="#ffffff" font-size="9" text-border-color="#000000" />
 
 	</coll>
 		
@@ -200,13 +187,17 @@ LEFT OUTER JOIN gen_cambiosinventario CID ON CID.ID=CI.ID AND CID.COD_REC_OT_CAB
 
 	</coll>
 
-	<coll name="ElementosRevisados" sql="select p.*, @rownum := @rownum + 1 AS MINDEX, 
-CASE WHEN cnt.TOTAL = @rownum THEN 1 ELSE 0 END AS MAP_ES_ULTIMO, 
-CASE WHEN p.MAP_NFC IS NULL THEN '/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/Apoyo_Etiquetado_Blanco.png' WHEN p.MAP_NFC = '11:11:11:11:11' 
-THEN '/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/Apoyo_Etiquetado_Azul.png' 
-ELSE '/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/Apoyo_Etiquetado_Verde.png' 
-END AS MAP_ICONO_ETIQUETADO 
-from 
+	<coll name="ElementosRevisados" sql="select p.*, @rownum := @rownum + 1 AS MINDEX,
+CASE WHEN cnt.TOTAL = @rownum THEN 1 ELSE 0 END AS MAP_ES_ULTIMO,
+CASE WHEN p.MAP_NFC IS NULL THEN '/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/Apoyo_Etiquetado_Blanco.png' WHEN p.MAP_NFC = '11:11:11:11:11'
+THEN '/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/Apoyo_Etiquetado_Azul.png'
+ELSE '/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/Apoyo_Etiquetado_Verde.png'
+END AS MAP_ICONO_ETIQUETADO,
+(SELECT COUNT(1) FROM gen_unfuncio unf INNER JOIN gen_ri_ot_elementos_rev rev ON unf.G3E_FID=rev.G3E_FID AND unf.G3E_FNO=rev.G3E_FNO AND rev.PASO=1 WHERE rev.COD_REC_OT_CABECERA=p.COD_REC_OT_CABECERA AND unf.ID_PADRE_CELDA=p.G3E_FID AND IFNULL(unf.BAJA,0)=0) AS MAP_NUM_UF_CELDA,
+(SELECT COUNT(1) FROM gen_unfuncio unf INNER JOIN gen_ri_ot_elementos_rev rev ON unf.G3E_FID=rev.G3E_FID AND unf.G3E_FNO=rev.G3E_FNO AND rev.PASO=1 WHERE rev.COD_REC_OT_CABECERA=p.COD_REC_OT_CABECERA AND (unf.ID_PADRE_CT=p.G3E_FID OR unf.ID_PADRE_CTC=p.G3E_FID) AND unf.ID_PADRE_CELDA IS NULL AND IFNULL(unf.BAJA,0)=0) AS MAP_NUM_UF_CT,
+(SELECT COUNT(1) FROM gen_trafo trafo INNER JOIN gen_ri_ot_elementos_rev rev ON trafo.G3E_FID=rev.G3E_FID AND trafo.G3E_FNO=rev.G3E_FNO AND rev.PASO=2 AND rev.TABLA='TRAFO' WHERE rev.COD_REC_OT_CABECERA=p.COD_REC_OT_CABECERA AND trafo.ID_PADRE_POS_TRAFO=p.G3E_FID AND IFNULL(trafo.BAJA,0)=0) AS MAP_NUM_TRAFO,
+(SELECT COUNT(*) FROM gen_ri_ot_propiedades_actualizadas gropa INNER JOIN gen_ri_maestro_propiedades mp2 ON mp2.TABLA=gropa.TABLA AND mp2.PROPIEDAD=gropa.ATTR AND mp2.TIPO_CENTRO&lt;=&gt;gropa.TIPO_CENTRO WHERE gropa.TABLA=p.TABLA AND gropa.COD_REC_OT_CABECERA=p.COD_REC_OT_CABECERA AND gropa.G3E_FID=p.G3E_FID AND gropa.G3E_FNO=p.G3E_FNO) AS MAP_NUM_PROPIEDADES
+from
 (SELECT * FROM view_pdf_rec_bloques_iniciales_new) p,
 (SELECT @rownum := 0) afec_index ,
 (SELECT COUNT(1) AS TOTAL,COD_REC_OT_CABECERA  FROM view_pdf_rec_bloques_iniciales_new group by COD_REC_OT_CABECERA) cnt"
@@ -224,33 +215,33 @@ from
 		<prop name="MAP_OBSERVACIONES" disablevisible="MAP_PUEDE_TENER_OBS=0" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#ffffff" font-size="9" text-border-color="#000000" />
 		
 		<!--Cabecera -->
-		<prop name="MAP_TL_DESCRIPCION" disablevisible="MAP_NUM_PROPIEDADES=0" text-border="true" text-border-left="true" text-border-bottom="true" text-border-top="true" type="TL" width="15%" height="15p"	title="  Propiedad  " 
+		<prop name="MAP_TL_DESCRIPCION" disablevisible="MAP_PUEDE_TENER_REV_PROPIEDADES=0 or MAP_NUM_PROPIEDADES=0" text-border="true" text-border-left="true" text-border-bottom="true" text-border-top="true" type="TL" width="15%" height="15p"	title="  Propiedad  "
 			align="center" bgcolor="#e3eadf" lines="1" font-size="8" text-border-color="#000000" />
-		<prop name="MAP_TL_TIPO_PROPIEDAD" disablevisible="MAP_NUM_PROPIEDADES=0" text-border="true" text-border-left="true" text-border-bottom="true" text-border-top="true" type="TL" width="15%" height="15p"	title="  Tipo propiedad  " 
+		<prop name="MAP_TL_TIPO_PROPIEDAD" disablevisible="MAP_PUEDE_TENER_REV_PROPIEDADES=0 or MAP_NUM_PROPIEDADES=0" text-border="true" text-border-left="true" text-border-bottom="true" text-border-top="true" type="TL" width="15%" height="15p"	title="  Tipo propiedad  "
 			align="center" bgcolor="#e3eadf" lines="1" font-size="8" text-border-color="#000000" newline="false"/>
-		<prop name="MAP_TL_REQUIERE_DIBUJO" disablevisible="MAP_NUM_PROPIEDADES=0" text-border="true" text-border-left="true" text-border-bottom="true" text-border-top="true" type="TL" width="5%" height="15p"	title="  R.D  " 
+		<prop name="MAP_TL_REQUIERE_DIBUJO" disablevisible="MAP_PUEDE_TENER_REV_PROPIEDADES=0 or MAP_NUM_PROPIEDADES=0" text-border="true" text-border-left="true" text-border-bottom="true" text-border-top="true" type="TL" width="5%" height="15p"	title="  R.D  "
 			align="center" bgcolor="#e3eadf" lines="1" font-size="8" text-border-color="#000000" newline="false" />
-		<prop name="MAP_TL_VALOR_PROPIEDAD" disablevisible="MAP_NUM_PROPIEDADES=0" text-border="true" text-border-left="true" text-border-bottom="true" text-border-top="true" type="TL" width="27%" height="15p"	title="  Valor Propiedad  " 
+		<prop name="MAP_TL_VALOR_PROPIEDAD" disablevisible="MAP_PUEDE_TENER_REV_PROPIEDADES=0 or MAP_NUM_PROPIEDADES=0" text-border="true" text-border-left="true" text-border-bottom="true" text-border-top="true" type="TL" width="27%" height="15p"	title="  Valor Propiedad  "
 			align="center" bgcolor="#e3eadf" lines="1" font-size="8" text-border-color="#000000" newline="false" />
-		<prop name="MAP_TL_CORREGIR" disablevisible="MAP_NUM_PROPIEDADES=0" text-border="true" text-border-left="true" text-border-bottom="true" text-border-top="true" type="TL" width="11%" height="15p"	title="  Corregir  " 
+		<prop name="MAP_TL_CORREGIR" disablevisible="MAP_PUEDE_TENER_REV_PROPIEDADES=0 or MAP_NUM_PROPIEDADES=0" text-border="true" text-border-left="true" text-border-bottom="true" text-border-top="true" type="TL" width="11%" height="15p"	title="  Corregir  "
 			align="center" bgcolor="#e3eadf" lines="1" font-size="8" text-border-color="#000000" newline="false" />
-		<prop name="MAP_TL_ACCION_OFICIAL" disablevisible="MAP_NUM_PROPIEDADES=0" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" text-border-top="true" type="TL" width="27%" height="15p"	title="  Accion Oficial  " 
-			align="center" bgcolor="#e3eadf" lines="1" font-size="8" text-border-color="#000000" newline="false" />		
+		<prop name="MAP_TL_ACCION_OFICIAL" disablevisible="MAP_PUEDE_TENER_REV_PROPIEDADES=0 or MAP_NUM_PROPIEDADES=0" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" text-border-top="true" type="TL" width="27%" height="15p"	title="  Accion Oficial  "
+			align="center" bgcolor="#e3eadf" lines="1" font-size="8" text-border-color="#000000" newline="false" />
 
-		<prop name="ElementosRevisadosPropiedades" disablevisible="MAP_PUEDE_TENER_REV_PROPIEDADES=0" content="@ElementosRevisadosPropiedades"  type="Z"/>
+		<prop name="ElementosRevisadosPropiedades" disablevisible="MAP_PUEDE_TENER_REV_PROPIEDADES=0 or MAP_NUM_PROPIEDADES=0" content="@ElementosRevisadosPropiedades"  type="Z"/>
 		<content name="@ElementosRevisadosPropiedades" src="ElementosRevisadosPropiedades" filter="elm.ID=##FLD_MAP_ID##"/>
 			
 		<prop name="FotosElementoRevisados" disablevisible="MAP_PUEDE_TENER_REV_FOTOS=0" grid-column="4" viewmode="grid" content="@FotosElementoRevisados"  type="Z"/>
 		<content name="@FotosElementoRevisados" src="FotosElementoRevisados" filter="F.TABLA='##FLD_MAP_TABLA##' AND F.G3E_FID=##FLD_MAP_G3E_FID## AND F.G3E_FNO=##FLD_MAP_G3E_FNO## AND F.COD_REC_OT_CABECERA='##FLD_MAP_COD_REC_OT_CABECERA##' and IFNULL(F.BAJA,0)=0 and substring_index(lower(F.NOMBRE_FICHERO),'.',-1) in ('png','jpg','jpeg')"/>		
 
 		<!-- Ponemos los elementos-->
-		<prop name="UnfuncionCelda" disablevisible="TIPO&lt;&gt;1" content="@UnfuncionCelda"  type="Z"/>
+		<prop name="UnfuncionCelda" disablevisible="TIPO&lt;&gt;1 or MAP_NUM_UF_CELDA=0" content="@UnfuncionCelda"  type="Z"/>
 		<content name="@UnfuncionCelda" src="UnfuncionCelda" filter="rev.COD_REC_OT_CABECERA='##FLD_COD_REC_OT_CABECERA##' AND unf.ID_PADRE_CELDA=##FLD_G3E_FID## AND IFNULL(unf.BAJA,0)=0"/>
 
-		<prop name="UnfuncionCT" disablevisible="TIPO&lt;&gt;2" content="@UnfuncionCT"  type="Z"/>
+		<prop name="UnfuncionCT" disablevisible="TIPO&lt;&gt;2 or MAP_NUM_UF_CT=0" content="@UnfuncionCT"  type="Z"/>
 		<content name="@UnfuncionCT" src="UnfuncionCT" filter="rev.COD_REC_OT_CABECERA='##FLD_COD_REC_OT_CABECERA##' AND (unf.ID_PADRE_CT=##FLD_G3E_FID## or unf.ID_PADRE_CTC=##FLD_G3E_FID##) AND unf.ID_PADRE_CELDA IS NULL AND IFNULL(unf.BAJA,0)=0"/>
 
-		<prop name="trafoPosicion" disablevisible="TIPO&lt;&gt;3" content="@trafoPosicion"  type="Z"/>
+		<prop name="trafoPosicion" disablevisible="TIPO&lt;&gt;3 or MAP_NUM_TRAFO=0" content="@trafoPosicion"  type="Z"/>
 		<content name="@trafoPosicion" src="trafoPosicion" filter="rev.COD_REC_OT_CABECERA='##FLD_COD_REC_OT_CABECERA##' AND trafo.ID_PADRE_POS_TRAFO=##FLD_G3E_FID## AND IFNULL(trafo.BAJA,0)=0"/>
 
 		<break-page disablevisible="MAP_ES_ULTIMO=1"/>
@@ -417,10 +408,10 @@ from
 
 			mp.ID 
 		FROM gen_ri_ot_elementos_rev elm
-		LEFT JOIN (SELECT MAX(ID) AS ID,pa.TABLA,pa.G3E_FID,pa.G3E_FNO FROM gen_ri_ot_propiedades_actualizadas pa GROUP BY pa.TABLA,pa.G3E_FID,pa.G3E_FNO) tp on tp.TABLA=elm.TABLA and tp.G3E_FID=elm.G3E_FID and tp.G3E_FNO=elm.G3E_FNO
-		LEFT JOIN gen_ri_maestro_propiedades mp on mp.TABLA=elm.TABLA AND mp.TIPO_CENTRO=(SELECT TIPO_CENTRO FROM gen_ri_ot_propiedades_actualizadas pa where pa.ID=tp.ID LIMIT 1)
-		left join gen_ri_ot_propiedades_actualizadas gropa 
-			on gropa.TABLA=mp.TABLA and gropa.ATTR = mp.PROPIEDAD and gropa.TIPO_CENTRO = mp.TIPO_CENTRO and gropa.COD_REC_OT_CABECERA=elm.COD_REC_OT_CABECERA and gropa.G3E_FID=elm.G3E_FID and gropa.G3E_FNO=elm.G3E_FNO		
+		LEFT JOIN (SELECT MAX(ID) AS ID,pa.TABLA,pa.G3E_FID,pa.G3E_FNO,pa.COD_REC_OT_CABECERA FROM gen_ri_ot_propiedades_actualizadas pa GROUP BY pa.TABLA,pa.G3E_FID,pa.G3E_FNO,pa.COD_REC_OT_CABECERA) tp on tp.TABLA=elm.TABLA and tp.G3E_FID=elm.G3E_FID and tp.G3E_FNO=elm.G3E_FNO and tp.COD_REC_OT_CABECERA=elm.COD_REC_OT_CABECERA
+		LEFT JOIN gen_ri_maestro_propiedades mp on mp.TABLA=elm.TABLA AND mp.TIPO_CENTRO&lt;=&gt;(SELECT TIPO_CENTRO FROM gen_ri_ot_propiedades_actualizadas pa where pa.ID=tp.ID LIMIT 1)
+		left join gen_ri_ot_propiedades_actualizadas gropa
+			on gropa.TABLA=mp.TABLA and gropa.ATTR = mp.PROPIEDAD and gropa.TIPO_CENTRO&lt;=&gt;mp.TIPO_CENTRO and gropa.COD_REC_OT_CABECERA=elm.COD_REC_OT_CABECERA and gropa.G3E_FID=elm.G3E_FID and gropa.G3E_FNO=elm.G3E_FNO
 		LEFT JOIN propiedad_valores pv ON pv.ID = gropa.ID"
 					lmargin="10p" rmargin="10p" tmargin="10p" filter="" show-header="false">
 		
@@ -475,10 +466,11 @@ from
 			rev.COD_REC_OT_CABECERA AS MAP_COD_REC_OT_CABECERA,
 			concat('  ','UF: ',ifnull(unf.nom_nombre,''),' - G3E_FID: ',unf.G3E_FID,' - ',ifnull(unf.TEXT_B3_SPECTRUM,'')) as MAP_TITLE_ELEMENTO,
 			ifnull(unf.NUM_MATRICULA,'') AS MAP_MATRICULA,
-			(select count(*) from gen_ri_ot_propiedades_actualizadas gropa where gropa.TABLA=rev.TABLA and gropa.COD_REC_OT_CABECERA=rev.COD_REC_OT_CABECERA and gropa.G3E_FID=rev.G3E_FID and gropa.G3E_FNO=rev.G3E_FNO) AS MAP_NUM_PROPIEDADES,
+			(select count(*) from gen_ri_ot_propiedades_actualizadas gropa inner join gen_ri_maestro_propiedades mp2 on mp2.TABLA=gropa.TABLA and mp2.PROPIEDAD=gropa.ATTR and mp2.TIPO_CENTRO&lt;=&gt;gropa.TIPO_CENTRO where gropa.TABLA=rev.TABLA and gropa.COD_REC_OT_CABECERA=rev.COD_REC_OT_CABECERA and gropa.G3E_FID=rev.G3E_FID and gropa.G3E_FNO=rev.G3E_FNO) AS MAP_NUM_PROPIEDADES,
+			(select count(1) from gen_emint em inner join gen_ri_ot_elementos_rev rev2 on em.G3E_FID=rev2.G3E_FID and em.G3E_FNO=rev2.G3E_FNO and rev2.PASO=1 where rev2.COD_REC_OT_CABECERA=rev.COD_REC_OT_CABECERA and em.ID_PADRE_UN_FUNCIO=unf.G3E_FID and IFNULL(em.BAJA,0)=0) AS MAP_NUM_EM,
 			CONCAT('  ',rev.OBSERVACIONES) AS MAP_OBSERVACIONES,
 			1 as MAP_PUEDE_TENER_ETIQUETADO,
-			CASE WHEN (SELECT COUNT(1) FROM gen_unfuncio unf2 inner join gen_ri_ot_elementos_rev rev2 on unf2.G3E_FID=rev2.G3E_FID and unf2.G3E_FNO=rev2.G3E_FNO and rev2.PASO=1 WHERE rev2.COD_REC_OT_CABECERA=rev.COD_REC_OT_CABECERA AND unf2.ID_PADRE_CELDA=unf.ID_PADRE_CELDA AND IFNULL(unf2.BAJA,0)=0) = @rownum THEN 1 ELSE 0 END AS MAP_ES_ULTIMO,	
+			CASE WHEN (SELECT COUNT(1) FROM gen_unfuncio unf2 inner join gen_ri_ot_elementos_rev rev2 on unf2.G3E_FID=rev2.G3E_FID and unf2.G3E_FNO=rev2.G3E_FNO and rev2.PASO=1 WHERE rev2.COD_REC_OT_CABECERA=rev.COD_REC_OT_CABECERA AND unf2.ID_PADRE_CELDA=unf.ID_PADRE_CELDA AND IFNULL(unf2.BAJA,0)=0) = @rownum THEN 1 ELSE 0 END AS MAP_ES_ULTIMO,
 			@nfc:=ifnull(ci2.VALOR,unf.ID_CHIP_NFC),
 			CASE 
 						WHEN @nfc IS NULL THEN 
@@ -522,12 +514,12 @@ from
 			
 		<prop name="ElementosRevisadosPropiedades" disablevisible="MAP_NUM_PROPIEDADES=0" content="@ElementosRevisadosPropiedades"  type="Z"/>
 		<content name="@ElementosRevisadosPropiedades" src="ElementosRevisadosPropiedades" filter="elm.ID=##FLD_MAP_ID##"/>
-			
+
 		<prop name="FotosElementoRevisados" grid-column="4" viewmode="grid" content="@FotosElementoRevisados"  type="Z"/>
-		<content name="@FotosElementoRevisados" src="FotosElementoRevisados" filter="F.TABLA='##FLD_MAP_TABLA##' AND F.G3E_FID=##FLD_MAP_G3E_FID## AND F.G3E_FNO=##FLD_MAP_G3E_FNO## AND F.COD_REC_OT_CABECERA='##FLD_MAP_COD_REC_OT_CABECERA##' and IFNULL(F.BAJA,0)=0 and substring_index(lower(F.NOMBRE_FICHERO),'.',-1) in ('png','jpg','jpeg')"/>		
+		<content name="@FotosElementoRevisados" src="FotosElementoRevisados" filter="F.TABLA='##FLD_MAP_TABLA##' AND F.G3E_FID=##FLD_MAP_G3E_FID## AND F.G3E_FNO=##FLD_MAP_G3E_FNO## AND F.COD_REC_OT_CABECERA='##FLD_MAP_COD_REC_OT_CABECERA##' and IFNULL(F.BAJA,0)=0 and substring_index(lower(F.NOMBRE_FICHERO),'.',-1) in ('png','jpg','jpeg')"/>
 
 		<!-- Ponemos los elementos-->
-		<prop name="ElementosManiUnf" content="@ElementosManiUnf"  type="Z"/>
+		<prop name="ElementosManiUnf" disablevisible="MAP_NUM_EM=0" content="@ElementosManiUnf"  type="Z"/>
 		<content name="@ElementosManiUnf" src="ElementosManiUnf" filter="rev.COD_REC_OT_CABECERA='##FLD_MAP_COD_REC_OT_CABECERA##' and em.ID_PADRE_UN_FUNCIO=##FLD_MAP_G3E_FID## AND IFNULL(em.BAJA,0)=0"/>
 
 		<break-page disablevisible="MAP_ES_ULTIMO=1"/>
@@ -541,7 +533,7 @@ from
 			rev.G3E_FNO AS MAP_G3E_FNO,
 			rev.COD_REC_OT_CABECERA AS MAP_COD_REC_OT_CABECERA,	
 			concat('  ','EM: ',tip.DES_DESCRIPCION,' - G3E_FID: ',em.G3E_FID) AS MAP_TITLE_ELEMENTO,
-			(select count(*) from gen_ri_ot_propiedades_actualizadas gropa where gropa.TABLA=rev.TABLA and gropa.COD_REC_OT_CABECERA=rev.COD_REC_OT_CABECERA and gropa.G3E_FID=rev.G3E_FID and gropa.G3E_FNO=rev.G3E_FNO) AS MAP_NUM_PROPIEDADES,
+			(select count(*) from gen_ri_ot_propiedades_actualizadas gropa inner join gen_ri_maestro_propiedades mp2 on mp2.TABLA=gropa.TABLA and mp2.PROPIEDAD=gropa.ATTR and mp2.TIPO_CENTRO&lt;=&gt;gropa.TIPO_CENTRO where gropa.TABLA=rev.TABLA and gropa.COD_REC_OT_CABECERA=rev.COD_REC_OT_CABECERA and gropa.G3E_FID=rev.G3E_FID and gropa.G3E_FNO=rev.G3E_FNO) AS MAP_NUM_PROPIEDADES,
 			CONCAT('  ',rev.OBSERVACIONES) AS MAP_OBSERVACIONES,
 			CASE WHEN (SELECT COUNT(1) FROM gen_emint em2 inner join gen_ri_ot_elementos_rev rev2 on em2.G3E_FID =rev2.G3E_FID and em2.G3E_FNO =rev2.G3E_FNO and rev2.PASO=1 WHERE rev2.COD_REC_OT_CABECERA=rev.COD_REC_OT_CABECERA and em2.ID_PADRE_UN_FUNCIO=em.ID_PADRE_UN_FUNCIO AND IFNULL(em2.BAJA,0)=0) = @rownum THEN 1 ELSE 0 END AS MAP_ES_ULTIMO,	
 			0 as MAP_PUEDE_TENER_ETIQUETADO
@@ -576,11 +568,11 @@ from
 		<prop name="MAP_TL_ACCION_OFICIAL" disablevisible="MAP_NUM_PROPIEDADES=0" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" text-border-top="true" type="TL" width="27%" height="15p"	title="  Accion Oficial  " 
 			align="center" bgcolor="#e3eadf" lines="1" font-size="8" text-border-color="#000000" newline="false" />		
 
-		<prop name="ElementosRevisadosPropiedades" content="@ElementosRevisadosPropiedades"  type="Z"/>
+		<prop name="ElementosRevisadosPropiedades" disablevisible="MAP_NUM_PROPIEDADES=0" content="@ElementosRevisadosPropiedades"  type="Z"/>
 		<content name="@ElementosRevisadosPropiedades" src="ElementosRevisadosPropiedades" filter="elm.ID=##FLD_MAP_ID##"/>
-			
+
 		<prop name="FotosElementoRevisados" grid-column="4" viewmode="grid" content="@FotosElementoRevisados"  type="Z"/>
-		<content name="@FotosElementoRevisados" src="FotosElementoRevisados" filter="F.TABLA='##FLD_MAP_TABLA##' AND F.G3E_FID=##FLD_MAP_G3E_FID## AND F.G3E_FNO=##FLD_MAP_G3E_FNO## AND F.COD_REC_OT_CABECERA='##FLD_MAP_COD_REC_OT_CABECERA##' and IFNULL(F.BAJA,0)=0 and substring_index(lower(F.NOMBRE_FICHERO),'.',-1) in ('png','jpg','jpeg')"/>		
+		<content name="@FotosElementoRevisados" src="FotosElementoRevisados" filter="F.TABLA='##FLD_MAP_TABLA##' AND F.G3E_FID=##FLD_MAP_G3E_FID## AND F.G3E_FNO=##FLD_MAP_G3E_FNO## AND F.COD_REC_OT_CABECERA='##FLD_MAP_COD_REC_OT_CABECERA##' and IFNULL(F.BAJA,0)=0 and substring_index(lower(F.NOMBRE_FICHERO),'.',-1) in ('png','jpg','jpeg')"/>
 
 		<break-page disablevisible="MAP_ES_ULTIMO=1"/>
 	</coll>
@@ -601,10 +593,11 @@ from
 			rev.COD_REC_OT_CABECERA AS MAP_COD_REC_OT_CABECERA,
 			concat('  ','UF: ',ifnull(unf.nom_nombre,''),' - G3E_FID: ',unf.G3E_FID,' - ',ifnull(unf.TEXT_B3_SPECTRUM,'')) as MAP_TITLE_ELEMENTO,
 			ifnull(unf.NUM_MATRICULA,'') AS MAP_MATRICULA,
-			(select count(*) from gen_ri_ot_propiedades_actualizadas gropa where gropa.TABLA=rev.TABLA and gropa.COD_REC_OT_CABECERA=rev.COD_REC_OT_CABECERA and gropa.G3E_FID=rev.G3E_FID and gropa.G3E_FNO=rev.G3E_FNO) AS MAP_NUM_PROPIEDADES,
+			(select count(*) from gen_ri_ot_propiedades_actualizadas gropa inner join gen_ri_maestro_propiedades mp2 on mp2.TABLA=gropa.TABLA and mp2.PROPIEDAD=gropa.ATTR and mp2.TIPO_CENTRO&lt;=&gt;gropa.TIPO_CENTRO where gropa.TABLA=rev.TABLA and gropa.COD_REC_OT_CABECERA=rev.COD_REC_OT_CABECERA and gropa.G3E_FID=rev.G3E_FID and gropa.G3E_FNO=rev.G3E_FNO) AS MAP_NUM_PROPIEDADES,
+			(select count(1) from gen_emint em inner join gen_ri_ot_elementos_rev rev2 on em.G3E_FID=rev2.G3E_FID and em.G3E_FNO=rev2.G3E_FNO and rev2.PASO=1 where rev2.COD_REC_OT_CABECERA=rev.COD_REC_OT_CABECERA and em.ID_PADRE_UN_FUNCIO=unf.G3E_FID and IFNULL(em.BAJA,0)=0) AS MAP_NUM_EM,
 			CONCAT('  ',rev.OBSERVACIONES) AS MAP_OBSERVACIONES,
 			@nfc:=ifnull(ci2.VALOR,unf.ID_CHIP_NFC),
-			CASE WHEN (SELECT COUNT(1) FROM gen_unfuncio unf2 inner join gen_ri_ot_elementos_rev rev2 on unf2.G3E_FID=rev2.G3E_FID and unf2.G3E_FNO=rev2.G3E_FNO and rev2.PASO=1 WHERE rev.COD_REC_OT_CABECERA=rev2.COD_REC_OT_CABECERA AND (unf.ID_PADRE_CT=unf2.ID_PADRE_CT or unf.ID_PADRE_CTC=unf2.ID_PADRE_CTC) AND unf2.ID_PADRE_CELDA IS NULL AND IFNULL(unf2.BAJA,0)=0) = @rownum THEN 1 ELSE 0 END AS MAP_ES_ULTIMO,	
+			CASE WHEN (SELECT COUNT(1) FROM gen_unfuncio unf2 inner join gen_ri_ot_elementos_rev rev2 on unf2.G3E_FID=rev2.G3E_FID and unf2.G3E_FNO=rev2.G3E_FNO and rev2.PASO=1 WHERE rev.COD_REC_OT_CABECERA=rev2.COD_REC_OT_CABECERA AND (unf.ID_PADRE_CT=unf2.ID_PADRE_CT or unf.ID_PADRE_CTC=unf2.ID_PADRE_CTC) AND unf2.ID_PADRE_CELDA IS NULL AND IFNULL(unf2.BAJA,0)=0) = @rownum THEN 1 ELSE 0 END AS MAP_ES_ULTIMO,
 			1 as MAP_PUEDE_TENER_ETIQUETADO,
 			CASE 
 						WHEN @nfc IS NULL THEN 
@@ -646,14 +639,14 @@ from
 		<prop name="MAP_TL_ACCION_OFICIAL" disablevisible="MAP_NUM_PROPIEDADES=0" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" text-border-top="true" type="TL" width="27%" height="15p"	title="  Accion Oficial  " 
 			align="center" bgcolor="#e3eadf" lines="1" font-size="8" text-border-color="#000000" newline="false" />		
 		
-			<prop name="ElementosRevisadosPropiedades" content="@ElementosRevisadosPropiedades"  type="Z"/>
+			<prop name="ElementosRevisadosPropiedades" disablevisible="MAP_NUM_PROPIEDADES=0" content="@ElementosRevisadosPropiedades"  type="Z"/>
 		<content name="@ElementosRevisadosPropiedades" src="ElementosRevisadosPropiedades" filter="elm.ID=##FLD_MAP_ID##"/>
-			
+
 		<prop name="FotosElementoRevisados" grid-column="4" viewmode="grid" content="@FotosElementoRevisados"  type="Z"/>
-		<content name="@FotosElementoRevisados" src="FotosElementoRevisados" filter="F.TABLA='##FLD_MAP_TABLA##' AND F.G3E_FID=##FLD_MAP_G3E_FID## AND F.G3E_FNO=##FLD_MAP_G3E_FNO## AND F.COD_REC_OT_CABECERA='##FLD_MAP_COD_REC_OT_CABECERA##' and IFNULL(F.BAJA,0)=0 and substring_index(lower(F.NOMBRE_FICHERO),'.',-1) in ('png','jpg','jpeg')"/>		
+		<content name="@FotosElementoRevisados" src="FotosElementoRevisados" filter="F.TABLA='##FLD_MAP_TABLA##' AND F.G3E_FID=##FLD_MAP_G3E_FID## AND F.G3E_FNO=##FLD_MAP_G3E_FNO## AND F.COD_REC_OT_CABECERA='##FLD_MAP_COD_REC_OT_CABECERA##' and IFNULL(F.BAJA,0)=0 and substring_index(lower(F.NOMBRE_FICHERO),'.',-1) in ('png','jpg','jpeg')"/>
 
 		<!-- Ponemos los elementos-->
-		<prop name="ElementosManiUnf" content="@ElementosManiUnf"  type="Z"/>
+		<prop name="ElementosManiUnf" disablevisible="MAP_NUM_EM=0" content="@ElementosManiUnf"  type="Z"/>
 		<content name="@ElementosManiUnf" src="ElementosManiUnf" filter="rev.COD_REC_OT_CABECERA='##FLD_MAP_COD_REC_OT_CABECERA##' and em.ID_PADRE_UN_FUNCIO=##FLD_MAP_G3E_FID## AND IFNULL(em.BAJA,0)=0"/>
 
 		<break-page disablevisible="MAP_ES_ULTIMO=1"/>
@@ -674,7 +667,8 @@ from
 		rev.G3E_FNO AS MAP_G3E_FNO,
 		rev.COD_REC_OT_CABECERA AS MAP_COD_REC_OT_CABECERA,	
 		concat('  ','Trafo',' - ',fab.DES_DESCRIPCION,' - ',trafo.NUM_SERIE,' - G3E_FID: ',trafo.G3E_FID) AS MAP_TITLE_ELEMENTO,
-		(select count(*) from gen_ri_ot_propiedades_actualizadas gropa where gropa.TABLA=rev.TABLA and gropa.COD_REC_OT_CABECERA=rev.COD_REC_OT_CABECERA and gropa.G3E_FID=rev.G3E_FID and gropa.G3E_FNO=rev.G3E_FNO) AS MAP_NUM_PROPIEDADES,
+		(select count(*) from gen_ri_ot_propiedades_actualizadas gropa inner join gen_ri_maestro_propiedades mp2 on mp2.TABLA=gropa.TABLA and mp2.PROPIEDAD=gropa.ATTR and mp2.TIPO_CENTRO&lt;=&gt;gropa.TIPO_CENTRO where gropa.TABLA=rev.TABLA and gropa.COD_REC_OT_CABECERA=rev.COD_REC_OT_CABECERA and gropa.G3E_FID=rev.G3E_FID and gropa.G3E_FNO=rev.G3E_FNO) AS MAP_NUM_PROPIEDADES,
+		(select count(1) from gen_cuadrobt cuadro inner join gen_ri_ot_elementos_rev rev2 on cuadro.G3E_FID=rev2.G3E_FID and cuadro.G3E_FNO=rev2.G3E_FNO and rev2.PASO=2 where rev2.COD_REC_OT_CABECERA=rev.COD_REC_OT_CABECERA and cuadro.ID_PADRE_POS_TRAFO=trafo.G3E_FID and IFNULL(cuadro.BAJA,0)=0) AS MAP_NUM_CUADRO,
 		CONCAT('  ',rev.OBSERVACIONES) AS MAP_OBSERVACIONES,
 		@nfc:=ifnull(ci2.VALOR,trafo.ID_CHIP_NFC),
 		CASE WHEN (SELECT COUNT(1) FROM gen_trafo trafo2 inner join gen_ri_ot_elementos_rev rev2 on trafo2.G3E_FID =rev2.G3E_FID and trafo2.G3E_FNO =rev2.G3E_FNO and rev2.PASO=2 and rev2.TABLA='TRAFO' WHERE rev2.COD_REC_OT_CABECERA=rev.COD_REC_OT_CABECERA AND trafo2.ID_PADRE_POS_TRAFO=trafo.ID_PADRE_POS_TRAFO AND IFNULL(trafo2.BAJA,0)=0) = @rownum THEN 1 ELSE 0 END AS MAP_ES_ULTIMO,	
@@ -718,14 +712,14 @@ from
 		<prop name="MAP_TL_ACCION_OFICIAL" disablevisible="MAP_NUM_PROPIEDADES=0" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" text-border-top="true" type="TL" width="27%" height="15p"	title="  Accion Oficial  " 
 			align="center" bgcolor="#e3eadf" lines="1" font-size="8" text-border-color="#000000" newline="false" />	
 
-		<prop name="ElementosRevisadosPropiedades" content="@ElementosRevisadosPropiedades"  type="Z"/>
+		<prop name="ElementosRevisadosPropiedades" disablevisible="MAP_NUM_PROPIEDADES=0" content="@ElementosRevisadosPropiedades"  type="Z"/>
 		<content name="@ElementosRevisadosPropiedades" src="ElementosRevisadosPropiedades" filter="elm.ID=##FLD_MAP_ID##"/>
-			
+
 		<prop name="FotosElementoRevisados" grid-column="4" viewmode="grid" content="@FotosElementoRevisados"  type="Z"/>
-		<content name="@FotosElementoRevisados" src="FotosElementoRevisados" filter="F.TABLA='##FLD_MAP_TABLA##' AND F.G3E_FID=##FLD_MAP_G3E_FID## AND F.G3E_FNO=##FLD_MAP_G3E_FNO## AND F.COD_REC_OT_CABECERA='##FLD_MAP_COD_REC_OT_CABECERA##' and IFNULL(F.BAJA,0)=0 and substring_index(lower(F.NOMBRE_FICHERO),'.',-1) in ('png','jpg','jpeg')"/>		
+		<content name="@FotosElementoRevisados" src="FotosElementoRevisados" filter="F.TABLA='##FLD_MAP_TABLA##' AND F.G3E_FID=##FLD_MAP_G3E_FID## AND F.G3E_FNO=##FLD_MAP_G3E_FNO## AND F.COD_REC_OT_CABECERA='##FLD_MAP_COD_REC_OT_CABECERA##' and IFNULL(F.BAJA,0)=0 and substring_index(lower(F.NOMBRE_FICHERO),'.',-1) in ('png','jpg','jpeg')"/>
 
 		<!-- Ponemos los elementos-->
-		<prop name="CuandroBtTrafo" content="@CuandroBtTrafo"  type="Z"/>
+		<prop name="CuandroBtTrafo" disablevisible="MAP_NUM_CUADRO=0" content="@CuandroBtTrafo"  type="Z"/>
 		<content name="@CuandroBtTrafo" src="CuandroBtTrafo" filter="rev.COD_REC_OT_CABECERA='##FLD_MAP_COD_REC_OT_CABECERA##' AND cuadro.ID_PADRE_POS_TRAFO=##FLD_MAP_G3E_FID## AND IFNULL(cuadro.BAJA,0)=0"/>
 
 		<break-page disablevisible="MAP_ES_ULTIMO=1"/>
@@ -745,7 +739,7 @@ from
 		rev.G3E_FID AS MAP_G3E_FID,
 		rev.G3E_FNO AS MAP_G3E_FNO,
 		rev.COD_REC_OT_CABECERA AS MAP_COD_REC_OT_CABECERA,	
-		(select count(*) from gen_ri_ot_propiedades_actualizadas gropa where gropa.TABLA=rev.TABLA and gropa.COD_REC_OT_CABECERA=rev.COD_REC_OT_CABECERA and gropa.G3E_FID=rev.G3E_FID and gropa.G3E_FNO=rev.G3E_FNO) AS MAP_NUM_PROPIEDADES,
+		(select count(*) from gen_ri_ot_propiedades_actualizadas gropa inner join gen_ri_maestro_propiedades mp2 on mp2.TABLA=gropa.TABLA and mp2.PROPIEDAD=gropa.ATTR and mp2.TIPO_CENTRO&lt;=&gt;gropa.TIPO_CENTRO where gropa.TABLA=rev.TABLA and gropa.COD_REC_OT_CABECERA=rev.COD_REC_OT_CABECERA and gropa.G3E_FID=rev.G3E_FID and gropa.G3E_FNO=rev.G3E_FNO) AS MAP_NUM_PROPIEDADES,
 		CONCAT('  ',rev.OBSERVACIONES) AS MAP_OBSERVACIONES,
 		concat('  ','Cuadro BT: ',cuadro.NUM_CUADRO_BT,' - G3E_FID: ',cuadro.G3E_FID) AS MAP_TITLE_ELEMENTO,
 		@nfc:=ifnull(ci2.VALOR,cuadro.ID_CHIP_NFC),
@@ -788,7 +782,7 @@ from
 		<prop name="MAP_TL_ACCION_OFICIAL" disablevisible="MAP_NUM_PROPIEDADES=0" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" text-border-top="true" type="TL" width="27%" height="15p"	title="  Accion Oficial  " 
 			align="center" bgcolor="#e3eadf" lines="1" font-size="8" text-border-color="#000000" newline="false" />	
 
-		<prop name="ElementosRevisadosPropiedades" content="@ElementosRevisadosPropiedades"  type="Z"/>
+		<prop name="ElementosRevisadosPropiedades" disablevisible="MAP_NUM_PROPIEDADES=0" content="@ElementosRevisadosPropiedades"  type="Z"/>
 		<content name="@ElementosRevisadosPropiedades" src="ElementosRevisadosPropiedades" filter="elm.ID=##FLD_MAP_ID##"/>
 			
 		<prop name="FotosElementoRevisados" grid-column="4" viewmode="grid" content="@FotosElementoRevisados"  type="Z"/>
