@@ -8,7 +8,7 @@ IFNULL(IFNULL(ct.G3E_FID,ctc.G3E_FID),0) AS MAP_G3E_FID,
 IFNULL(IFNULL(ct.G3E_FNO,ctc.G3E_FNO),0) AS MAP_G3E_FNO,
 CASE WHEN substr(O.BRIGADA,4,1) = 'E' THEN 1 ELSE 0 END AS MAP_EXTERNO,
 CONCAT('Revisión Inventario - OBLIGATORIA') as MAP_TITLE_REVINV,
-(select count(*) from gen_cambiosinventario cin WHERE cin.COD_REC_OT_CABECERA=O.COD_REC_OT_CABECERA AND cin.G3E_FID=IFNULL(ct.G3E_FID,ctc.G3E_FID) AND cin.G3E_FNO=IFNULL(ct.G3E_FNO,ctc.G3E_FNO)) AS MAP_CAMBIO_INV,
+(select count(*) from gen_cambiosinventario cin WHERE cin.COD_REC_OT_CABECERA=O.COD_REC_OT_CABECERA AND cin.G3E_FID=IFNULL(ct.G3E_FID,ctc.G3E_FID) AND cin.G3E_FNO=IFNULL(ct.G3E_FNO,ctc.G3E_FNO) AND IFNULL(cin.BAJA,0)=0) AS MAP_CAMBIO_INV,
 CID.VALOR,IFNULL(ct.ID_CHIP_NFC,ctc.ID_CHIP_NFC),
 CASE 
 	WHEN CID.VALOR IS NULL 
@@ -57,7 +57,7 @@ from gen_rec_ot_cabecera O
 left outer join gen_ct ct on ct.g3e_fid = O.FID_UT
 left outer join gen_ctc ctc on ctc.g3e_fid = O.FID_UT
 left join gen_maestroveclactmvl gm on gm.COD_CLA_CTM = IFNULL(ct.COD_CLA_CT,ctc.COD_CLA_CTC)
-LEFT OUTER JOIN (select MAX(ID) AS ID,G3E_FID,G3E_FNO,ATTR from gen_cambiosinventario WHERE TIPO='CT_ETQ' AND ATTR='ID_CHIP_NFC'
+LEFT OUTER JOIN (select MAX(ID) AS ID,G3E_FID,G3E_FNO,ATTR from gen_cambiosinventario WHERE TIPO='CT_ETQ' AND ATTR='ID_CHIP_NFC' AND IFNULL(BAJA,0)=0
 group by G3E_FID,G3E_FNO,ATTR) CI ON CI.G3E_FID=IFNULL(ct.G3E_FID,ctc.G3E_FID) AND CI.G3E_FNO=IFNULL(ct.G3E_FNO,ctc.G3E_FNO)
 LEFT OUTER JOIN gen_cambiosinventario CID ON CID.ID=CI.ID AND CID.COD_REC_OT_CABECERA=O.COD_REC_OT_CABECERA " lmargin="5%" rmargin="5%" tmargin="5%" bmargin="5%" 
 		  filter="O.ID=##ID## and (ct.ID is not null or ctc.ID is not NULL) order by O.ID DESC" entry-point="true" show-header="false" show-pagination="true" show-file-date-creation="true"> 
@@ -99,7 +99,7 @@ LEFT OUTER JOIN gen_cambiosinventario CID ON CID.ID=CI.ID AND CID.COD_REC_OT_CAB
 				<prop name="MAP_TL_HDR_VALOR" disablevisible="MAP_CAMBIO_INV=0" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" text-border-top="true" type="TL" width="35%" height="15p"	title="  Nuevo Valor  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000" newline="false"  />
 
 				<prop name="MAP_INVENTARIO" content="@Inventario"  type="Z" disablevisible="MAP_CAMBIO_INV=0"/>
-				<content name="@Inventario" src="Inventario" filter="cin.COD_REC_OT_CABECERA='##FLD_COD_REC_OT_CABECERA##' AND cin.G3E_FID=##FLD_MAP_G3E_FID## AND cin.G3E_FNO=##FLD_MAP_G3E_FNO##"/>
+				<content name="@Inventario" src="Inventario" filter="cin.COD_REC_OT_CABECERA='##FLD_COD_REC_OT_CABECERA##' AND cin.G3E_FID=##FLD_MAP_G3E_FID## AND cin.G3E_FNO=##FLD_MAP_G3E_FNO## AND IFNULL(cin.BAJA,0)=0"/>
 
 				<break-page />
 
@@ -453,8 +453,8 @@ from
 	<coll name="UnfuncionCelda" sql="
 		with ranked_ci as (
 			select max(ID) AS ID,ATTR,COD_REC_OT_CABECERA,G3E_FID
-			FROM gen_cambiosinventario 
-			where ATTR='ID_CHIP_NFC'
+			FROM gen_cambiosinventario
+			where ATTR='ID_CHIP_NFC' AND IFNULL(BAJA,0)=0
 			GROUP BY ATTR,COD_REC_OT_CABECERA,G3E_FID
 		)
 		SELECT unf.*,
@@ -580,8 +580,8 @@ from
 	<coll name="UnfuncionCT" sql="
 		with ranked_ci as (
 			select max(ID) AS ID,ATTR,COD_REC_OT_CABECERA,G3E_FID
-			FROM gen_cambiosinventario 
-			where ATTR='ID_CHIP_NFC'
+			FROM gen_cambiosinventario
+			where ATTR='ID_CHIP_NFC' AND IFNULL(BAJA,0)=0
 			GROUP BY ATTR,COD_REC_OT_CABECERA,G3E_FID
 		)
 		SELECT unf.*,
@@ -655,8 +655,8 @@ from
 	<coll name="trafoPosicion" sql="
 		with ranked_ci as (
 			select max(ID) AS ID,ATTR,COD_REC_OT_CABECERA,G3E_FID
-			FROM gen_cambiosinventario 
-			where ATTR='ID_CHIP_NFC'
+			FROM gen_cambiosinventario
+			where ATTR='ID_CHIP_NFC' AND IFNULL(BAJA,0)=0
 			GROUP BY ATTR,COD_REC_OT_CABECERA,G3E_FID
 		)							
 		SELECT trafo.*,
@@ -728,8 +728,8 @@ from
 	<coll name="CuandroBtTrafo" sql="
 		with ranked_ci as (
 			select max(ID) AS ID,ATTR,COD_REC_OT_CABECERA,G3E_FID
-			FROM gen_cambiosinventario 
-			where ATTR='ID_CHIP_NFC'
+			FROM gen_cambiosinventario
+			where ATTR='ID_CHIP_NFC' AND IFNULL(BAJA,0)=0
 			GROUP BY ATTR,COD_REC_OT_CABECERA,G3E_FID
 		)
 		SELECT cuadro.*,
