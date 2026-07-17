@@ -7,8 +7,6 @@ CONCAT('  ',O.OBSERVACIONES) AS MAP_OBSERVACIONES,
 IFNULL(IFNULL(ct.G3E_FID,ctc.G3E_FID),0) AS MAP_G3E_FID,
 IFNULL(IFNULL(ct.G3E_FNO,ctc.G3E_FNO),0) AS MAP_G3E_FNO,
 CASE WHEN substr(O.BRIGADA,4,1) = 'E' THEN 1 ELSE 0 END AS MAP_EXTERNO,
-CONCAT('Revisión Inventario - OBLIGATORIA') as MAP_TITLE_REVINV,
-(select count(*) from gen_cambiosinventario cin WHERE cin.COD_REC_OT_CABECERA=O.COD_REC_OT_CABECERA AND cin.G3E_FID=IFNULL(ct.G3E_FID,ctc.G3E_FID) AND cin.G3E_FNO=IFNULL(ct.G3E_FNO,ctc.G3E_FNO) AND IFNULL(cin.BAJA,0)=0) AS MAP_CAMBIO_INV,
 CID.VALOR,IFNULL(ct.ID_CHIP_NFC,ctc.ID_CHIP_NFC),
 CASE 
 	WHEN CID.VALOR IS NULL 
@@ -47,6 +45,9 @@ concat('RESUMEN REC - ',O.COD_REC_OT_CABECERA ) AS MAP_TITULO,
 O.ID as ID,
 O.COD_REC_OT_CABECERA,
 concat('  ',CASE WHEN O.UBICACION_TECNICA IS NOT NULL THEN concat(O.UBICACION_TECNICA,' - ') ELSE '' END,O.NOMBRE_UBICACION) AS MAP_INSTALACION,
+CONCAT('  ',O.ID_OBRA_GENERADORA) AS MAP_NUMERO_OBRA,
+CONCAT('  ',DATE_FORMAT(O.FECHA_INICIO,'%d/%m/%Y')) AS MAP_FECHA_INICIO,
+CONCAT('  ',O.BUZON) AS MAP_CREADOR,
 'Revisión de inventario' as MAP_TITLE_ELMCTI,
 (SELECT count(*) FROM gen_ri_ot_elementos_rev er WHERE er.COD_REC_OT_CABECERA = O.COD_REC_OT_CABECERA  ) as MAP_VER_ELMCTI,
 'Estudio de Inundabilidad' AS MAP_TITLE_INUNDABILIDAD,
@@ -74,10 +75,19 @@ LEFT OUTER JOIN gen_cambiosinventario CID ON CID.ID=CI.ID AND CID.COD_REC_OT_CAB
 					
 					<prop name="MAP_TL_NUMEROORDEN" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Numero de OT:  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000" />
 					<prop name="MAP_NUMEROORDEN" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000" />
-			
+
+					<prop name="MAP_TL_NUMERO_OBRA" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Nº de obra: " align="center" bgcolor="#ffffff" lines="1" font-size="9" text-border-color="#000000"/>
+					<prop name="MAP_NUMERO_OBRA" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1" newline="false" bgcolor="#ffffff" font-size="9" text-border-color="#000000"/>
+
+					<prop name="MAP_TL_FECHA_INICIO" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Fecha inicio: " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000"/>
+					<prop name="MAP_FECHA_INICIO" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1" newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000"/>
+
 					<prop name="MAP_TL_INSTALACION" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Instalacion: " align="center" bgcolor="#ffffff" lines="1" font-size="9" text-border-color="#000000"/>
 					<prop name="MAP_INSTALACION" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1" newline="false" bgcolor="#ffffff" font-size="9" text-border-color="#000000"/>
-				
+
+					<prop name="MAP_TL_CREADOR" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Creador: " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000"/>
+					<prop name="MAP_CREADOR" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1" newline="false" bgcolor="#e3eadf" font-size="9" text-border-color="#000000"/>
+
 					<prop name="MAP_TL_OBSERVACIONES" text-border="true" text-border-left="true" text-border-bottom="true" type="TL" width="30%" height="15p"	title="  Observaciones: " align="center" bgcolor="#ffffff" lines="2" font-size="9" text-border-color="#000000"/>
 					<prop name="MAP_OBSERVACIONES" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1" newline="false" bgcolor="#ffffff" font-size="9" text-border-color="#000000"/>
 					
@@ -91,15 +101,6 @@ LEFT OUTER JOIN gen_cambiosinventario CID ON CID.ID=CI.ID AND CID.COD_REC_OT_CAB
 							  bgcolor="#00000000" font-size="10" lines="1" fontbold="true" forecolor="#ffffff" border-color="#000000" lmargin="1%"/>
 					</frame>
 				</frame>
-
-				<prop name="MAP_LITERAL_REVINV" disablevisible="MAP_CAMBIO_INV&gt;0" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="TL" title="  Sin cambios" width="100%" height="15p"	align="left" lines="1" bgcolor="#e3eadf" font-size="9" text-border-color="#000000" />
-
-				<prop name="MAP_TL_HDR_ATTR" disablevisible="MAP_CAMBIO_INV=0" text-border="true" text-border-left="true" text-border-bottom="true" text-border-top="true" type="TL" width="30%" height="15p"	title="  Nombre del campo  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000"  />
-				<prop name="MAP_TL_HDR_VALOR_ANT" disablevisible="MAP_CAMBIO_INV=0" text-border="true" text-border-left="true" text-border-bottom="true" text-border-top="true" type="TL" width="35%" height="15p"	title="  Valor Anterior  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000" newline="false" />
-				<prop name="MAP_TL_HDR_VALOR" disablevisible="MAP_CAMBIO_INV=0" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" text-border-top="true" type="TL" width="35%" height="15p"	title="  Nuevo Valor  " align="center" bgcolor="#e3eadf" lines="1" font-size="9" text-border-color="#000000" newline="false"  />
-
-				<prop name="MAP_INVENTARIO" content="@Inventario"  type="Z" disablevisible="MAP_CAMBIO_INV=0"/>
-				<content name="@Inventario" src="Inventario" filter="cin.COD_REC_OT_CABECERA='##FLD_COD_REC_OT_CABECERA##' AND cin.G3E_FID=##FLD_MAP_G3E_FID## AND cin.G3E_FNO=##FLD_MAP_G3E_FNO## AND IFNULL(cin.BAJA,0)=0"/>
 
 				<break-page />
 
@@ -229,7 +230,7 @@ from
 			align="center" bgcolor="#e3eadf" lines="1" font-size="8" text-border-color="#000000" newline="false" />
 
 		<prop name="ElementosRevisadosPropiedades" disablevisible="MAP_PUEDE_TENER_REV_PROPIEDADES=0 or MAP_NUM_PROPIEDADES=0" content="@ElementosRevisadosPropiedades"  type="Z"/>
-		<content name="@ElementosRevisadosPropiedades" src="ElementosRevisadosPropiedades" filter="elm.ID=##FLD_MAP_ID##"/>
+		<content name="@ElementosRevisadosPropiedades" src="ElementosRevisadosPropiedades" filter="b.ELM_ID=##FLD_MAP_ID##"/>
 			
 		<prop name="FotosElementoRevisados" disablevisible="MAP_PUEDE_TENER_REV_FOTOS=0" grid-column="4" viewmode="grid" content="@FotosElementoRevisados"  type="Z"/>
 		<content name="@FotosElementoRevisados" src="FotosElementoRevisados" filter="F.TABLA='##FLD_MAP_TABLA##' AND F.G3E_FID=##FLD_MAP_G3E_FID## AND F.G3E_FNO=##FLD_MAP_G3E_FNO## AND F.COD_REC_OT_CABECERA='##FLD_MAP_COD_REC_OT_CABECERA##' and IFNULL(F.BAJA,0)=0 and substring_index(lower(F.NOMBRE_FICHERO),'.',-1) in ('png','jpg','jpeg')"/>		
@@ -248,16 +249,63 @@ from
 	</coll> 
 
 	<coll name="ElementosRevisadosPropiedades" sql="
-	WITH propiedad_valores AS (
-    	SELECT 
-		gropa.ID,
-		CASE 
-			WHEN gm.ID is not null THEN gm.DES_DESCRIPCION 
-			WHEN gm2.ID is not null THEN gm2.DES_DESCRIPCION 
-			WHEN gm3.ID is not null THEN gm3.DES_DESCRIPCION 
-			WHEN gm4.ID is not null THEN gm4.DES_DESCRIPCION 
-			WHEN gm5.ID is not null THEN gm5.DES_DESCRIPCION 
-			WHEN gm6.ID is not null THEN gm6.NOM_MUNICIPIO 
+	WITH
+	base AS (
+	    SELECT
+	        elm.ID                      AS ELM_ID,
+	        elm.TABLA                   AS ELM_TABLA,
+	        elm.G3E_FID                 AS ELM_G3E_FID,
+	        elm.G3E_FNO                 AS ELM_G3E_FNO,
+	        elm.COD_REC_OT_CABECERA     AS ELM_COD_REC_OT_CABECERA,
+	        mp.PROPIEDAD,
+	        mp.TIPO_PROPIEDAD,
+	        mp.REQUIERE_DIBUJO,
+	        mp.DESCRIPCION,
+	        mp.ID                       AS MP_ID,
+	        gropa.ID                    AS GROPA_ID,
+	        gropa.MODIFICACION,
+	        gropa.VALOR,
+	        gropa.VALOR_ANT
+	    FROM gen_ri_ot_elementos_rev elm
+	    /* 1) “Último pa” SOLO del elm (sin GROUP BY global) */
+	    LEFT JOIN gen_ri_ot_propiedades_actualizadas pa_last
+	        ON pa_last.ID = (
+	            SELECT MAX(pa2.ID)
+	            FROM gen_ri_ot_propiedades_actualizadas pa2
+	            WHERE pa2.TABLA = elm.TABLA
+	              AND pa2.G3E_FID = elm.G3E_FID
+	              AND pa2.G3E_FNO = elm.G3E_FNO
+	              AND pa2.COD_REC_OT_CABECERA = elm.COD_REC_OT_CABECERA
+	        )
+	    /* 2) mp depende de TABLA (elm) y TIPO_CENTRO (pa_last) */
+	    LEFT JOIN gen_ri_maestro_propiedades mp
+	        ON mp.TABLA = elm.TABLA
+	       AND mp.TIPO_CENTRO &lt;=&gt; pa_last.TIPO_CENTRO
+	    /* 3) gropa acotado al elm (no global) */
+	    LEFT JOIN gen_ri_ot_propiedades_actualizadas gropa
+	        ON gropa.TABLA               = mp.TABLA
+	       AND gropa.ATTR                = mp.PROPIEDAD
+	       AND gropa.TIPO_CENTRO         &lt;=&gt; mp.TIPO_CENTRO
+	       AND gropa.COD_REC_OT_CABECERA = elm.COD_REC_OT_CABECERA
+	       AND gropa.G3E_FID             = elm.G3E_FID
+	       AND gropa.G3E_FNO             = elm.G3E_FNO
+	    WHERE elm.ID = ##FLD_MAP_ID##
+	),
+	ids AS (
+	    SELECT DISTINCT GROPA_ID AS ID
+	    FROM base
+	    WHERE GROPA_ID IS NOT NULL
+	),
+	propiedad_valores AS (
+    	SELECT
+		g1.ID,
+		CASE
+			WHEN gm.ID is not null THEN gm.DES_DESCRIPCION
+			WHEN gm2.ID is not null THEN gm2.DES_DESCRIPCION
+			WHEN gm3.ID is not null THEN gm3.DES_DESCRIPCION
+			WHEN gm4.ID is not null THEN gm4.DES_DESCRIPCION
+			WHEN gm5.ID is not null THEN gm5.DES_DESCRIPCION
+			WHEN gm6.ID is not null THEN gm6.NOM_MUNICIPIO
 			WHEN gm7.ID is not null THEN gm7.DES_DESCRIPCION
 			WHEN gm8.ID is not null THEN gm8.DES_DESCRIPCION
 			WHEN gm9.ID is not null THEN gm9.NOM_ENT_SING_POBLAC
@@ -277,15 +325,15 @@ from
 			WHEN gm22.ID is not null THEN gm22.DES_DESCRIPCION
 			WHEN gm23.ID is not null THEN gm23.DES_DESCRIPCION
 			WHEN gm24.ID is not null THEN gm24.DES_DESCRIPCION
-			ELSE gropa.VALOR
+			ELSE g1.VALOR
 		END AS MAP_VALOR,
-		CASE 
-			WHEN gm0.ID is not null THEN gm0.DES_DESCRIPCION 
-			WHEN gm02.ID is not null THEN gm02.DES_DESCRIPCION 
-			WHEN gm03.ID is not null THEN gm03.DES_DESCRIPCION 
-			WHEN gm04.ID is not null THEN gm04.DES_DESCRIPCION 
-			WHEN gm05.ID is not null THEN gm05.DES_DESCRIPCION 
-			WHEN gm06.ID is not null THEN gm06.NOM_MUNICIPIO 
+		CASE
+			WHEN gm0.ID is not null THEN gm0.DES_DESCRIPCION
+			WHEN gm02.ID is not null THEN gm02.DES_DESCRIPCION
+			WHEN gm03.ID is not null THEN gm03.DES_DESCRIPCION
+			WHEN gm04.ID is not null THEN gm04.DES_DESCRIPCION
+			WHEN gm05.ID is not null THEN gm05.DES_DESCRIPCION
+			WHEN gm06.ID is not null THEN gm06.NOM_MUNICIPIO
 			WHEN gm07.ID is not null THEN gm07.DES_DESCRIPCION
 			WHEN gm08.ID is not null THEN gm08.DES_DESCRIPCION
 			WHEN gm09.ID is not null THEN gm09.NOM_ENT_SING_POBLAC
@@ -305,114 +353,112 @@ from
 			WHEN gm022.ID is not null THEN gm022.DES_DESCRIPCION
 			WHEN gm023.ID is not null THEN gm023.DES_DESCRIPCION
 			WHEN gm024.ID is not null THEN gm024.DES_DESCRIPCION
-			ELSE gropa.VALOR_ANT
+			ELSE g1.VALOR_ANT
 		END AS MAP_VALOR_ANT
-   		FROM gen_ri_ot_propiedades_actualizadas gropa
+   		FROM gen_ri_ot_propiedades_actualizadas g1
+		JOIN ids i ON i.ID = g1.ID
 		/*PARA VALOR*/
-		left join gen_maestroveclactmvl gm on gm.COD_CLA_CTM = gropa.VALOR and gropa.ATTR='COD_CLA_CT'
-		LEFT JOIN gen_maestrovetipctmvl gm2 on gm2.COD_TIP_CTM = gropa.VALOR and gropa.ATTR='COD_TIP_CT'
-		left JOIN gen_maestrovbestadovl gm3 on gm3.STATE = gropa.VALOR and gropa.ATTR='STATE'
-		left JOIN gen_maestrovetiptelemctctcvl gm4 on gm4.COD_TIP_TELEMANDO_CT_CTC = gropa.VALOR and gropa.ATTR='COD_TIP_TELEMANDO_CT_CTC'
-		left JOIN gen_maestrovetiptelegestionvl gm5 on gm5.COD_TIP_TELEGEST_BT = gropa.VALOR and gropa.ATTR='COD_TIP_TELEGEST_BT'
-		left JOIN gen_maestrovlmunicipiovl gm6 on gm6.COD_MUNICIPIO = gropa.VALOR and gropa.ATTR='COD_MUNICIPIO'
-		left JOIN gen_maestrovetipceldavl gm7 on gm7.COD_TIP_CELDA = gropa.VALOR and gropa.ATTR='COD_TIP_CELDA'
-		left JOIN (select MAX(ID) AS ID,COD_FUN_CELDA,DES_DESCRIPCION FROM gen_maestrovefunceldavl group by COD_FUN_CELDA,DES_DESCRIPCION) gm8 on gm8.COD_FUN_CELDA = gropa.VALOR and gropa.ATTR='COD_FUN_CELDA'
-		left JOIN gen_maestrovlentsingulvl gm9 on gm9.COD_ENT_SING_POBLAC = gropa.VALOR and gropa.ATTR='COD_TENS_NOMI'
-		left JOIN gen_maestrovbfabricantvl gm10 on gm10.COD_FAB = gropa.VALOR and gropa.ATTR IN ('COD_FAB_CELDA','COD_FAB_ELEM_MANI','COD_FAB')
-		left JOIN gen_maestrovemodceldavl gm11 on gm11.COD_MOD_CELDA = gropa.VALOR and gropa.ATTR='COD_MOD_CELDA'
-		left JOIN gen_maestrovetippatceldavl gm12 on gm12.COD_TIP_PAT_CELDA = gropa.VALOR and gropa.ATTR='COD_TIP_PAT_CELDA'
-		left JOIN gen_maestrovefununifnclvl gm13 on gm13.COD_FUN_UNID_FUNC = gropa.VALOR and gropa.ATTR='COD_FUN_UNID_FUNC'
-		left JOIN gen_maestrovetipelemmanivl gm14 on gm14.COD_TIP_ELEM_MANI = gropa.VALOR and gropa.ATTR='COD_TIP_ELEM_MANI'
-		left JOIN gen_maestroveclaelemmanivl gm15 on gm15.COD_CLA_ELEM_MANI = gropa.VALOR and gropa.ATTR='COD_CLA_ELEM_MANI'
-		left JOIN gen_maestrovemodelemmanivl gm16 on gm16.COD_MOD_ELEM_MANI = gropa.VALOR and gropa.ATTR='COD_MOD_ELEM_MANI'
-		left JOIN gen_maestrovetipinterconexvl gm17 on gm17.COD_TIP_INTERC = gropa.VALOR and gropa.ATTR IN ('COD_TIP_INTERC_MT','COD_TIP_INTERC_BT')
-		left JOIN gen_maestrovetensdisevl gm18 on gm18.COD_TENS_NOMI = gropa.VALOR and gropa.ATTR IN ('COD_TENS_NOMI_PRI','COD_TENS_NOMI_SEC')
-		left JOIN gen_maestrovetipbornavl gm19 on gm19.COD_TIP_BORNA = gropa.VALOR and gropa.ATTR='COD_TIP_BORNA'
-		left JOIN gen_maestrovetipgrconextrafovl gm20 on gm20.COD_TIP_GRUPO_CONEX_TRAFO = gropa.VALOR and gropa.ATTR='COD_TIP_GRUPO_CONEX_TRAFO'
-		left JOIN gen_maestrovetensservvl gm21 on gm21.COD_TENS_SERV = gropa.VALOR and gropa.ATTR='COD_TENS_SERV'
-		left JOIN gen_maestrovefuncuadrobtvl gm22 on gm22.COD_FUN_CUADRO_BT = gropa.VALOR and gropa.ATTR='COD_FUN_CUADRO_BT'
-		left JOIN gen_maestrovemodcuadrobtvl gm23 on gm23.COD_MOD_CUADRO_BT = gropa.VALOR and gropa.ATTR='COD_MOD_CUADRO_BT'
-		left JOIN gen_maestrovetipmatinterconexvl gm24 on gm24.COD_TIP_MAT_INTERC = gropa.VALOR and gropa.ATTR='COD_TIP_MAT_INTERC_BT'   
+		left join gen_maestroveclactmvl gm on gm.COD_CLA_CTM = g1.VALOR and g1.ATTR='COD_CLA_CT'
+		LEFT JOIN gen_maestrovetipctmvl gm2 on gm2.COD_TIP_CTM = g1.VALOR and g1.ATTR='COD_TIP_CT'
+		left JOIN gen_maestrovbestadovl gm3 on gm3.STATE = g1.VALOR and g1.ATTR='STATE'
+		left JOIN gen_maestrovetiptelemctctcvl gm4 on gm4.COD_TIP_TELEMANDO_CT_CTC = g1.VALOR and g1.ATTR='COD_TIP_TELEMANDO_CT_CTC'
+		left JOIN gen_maestrovetiptelegestionvl gm5 on gm5.COD_TIP_TELEGEST_BT = g1.VALOR and g1.ATTR='COD_TIP_TELEGEST_BT'
+		left JOIN gen_maestrovlmunicipiovl gm6 on gm6.COD_MUNICIPIO = g1.VALOR and g1.ATTR='COD_MUNICIPIO'
+		left JOIN gen_maestrovetipceldavl gm7 on gm7.COD_TIP_CELDA = g1.VALOR and g1.ATTR='COD_TIP_CELDA'
+		left JOIN (select MAX(ID) AS ID,COD_FUN_CELDA,DES_DESCRIPCION FROM gen_maestrovefunceldavl group by COD_FUN_CELDA,DES_DESCRIPCION) gm8 on gm8.COD_FUN_CELDA = g1.VALOR and g1.ATTR='COD_FUN_CELDA'
+		left JOIN gen_maestrovlentsingulvl gm9 on gm9.COD_ENT_SING_POBLAC = g1.VALOR and g1.ATTR='COD_TENS_NOMI'
+		left JOIN gen_maestrovbfabricantvl gm10 on gm10.COD_FAB = g1.VALOR and g1.ATTR IN ('COD_FAB_CELDA','COD_FAB_ELEM_MANI','COD_FAB')
+		left JOIN gen_maestrovemodceldavl gm11 on gm11.COD_MOD_CELDA = g1.VALOR and g1.ATTR='COD_MOD_CELDA'
+		left JOIN gen_maestrovetippatceldavl gm12 on gm12.COD_TIP_PAT_CELDA = g1.VALOR and g1.ATTR='COD_TIP_PAT_CELDA'
+		left JOIN gen_maestrovefununifnclvl gm13 on gm13.COD_FUN_UNID_FUNC = g1.VALOR and g1.ATTR='COD_FUN_UNID_FUNC'
+		left JOIN gen_maestrovetipelemmanivl gm14 on gm14.COD_TIP_ELEM_MANI = g1.VALOR and g1.ATTR='COD_TIP_ELEM_MANI'
+		left JOIN gen_maestroveclaelemmanivl gm15 on gm15.COD_CLA_ELEM_MANI = g1.VALOR and g1.ATTR='COD_CLA_ELEM_MANI'
+		left JOIN gen_maestrovemodelemmanivl gm16 on gm16.COD_MOD_ELEM_MANI = g1.VALOR and g1.ATTR='COD_MOD_ELEM_MANI'
+		left JOIN gen_maestrovetipinterconexvl gm17 on gm17.COD_TIP_INTERC = g1.VALOR and g1.ATTR IN ('COD_TIP_INTERC_MT','COD_TIP_INTERC_BT')
+		left JOIN gen_maestrovetensdisevl gm18 on gm18.COD_TENS_NOMI = g1.VALOR and g1.ATTR IN ('COD_TENS_NOMI_PRI','COD_TENS_NOMI_SEC')
+		left JOIN gen_maestrovetipbornavl gm19 on gm19.COD_TIP_BORNA = g1.VALOR and g1.ATTR='COD_TIP_BORNA'
+		left JOIN gen_maestrovetipgrconextrafovl gm20 on gm20.COD_TIP_GRUPO_CONEX_TRAFO = g1.VALOR and g1.ATTR='COD_TIP_GRUPO_CONEX_TRAFO'
+		left JOIN gen_maestrovetensservvl gm21 on gm21.COD_TENS_SERV = g1.VALOR and g1.ATTR='COD_TENS_SERV'
+		left JOIN gen_maestrovefuncuadrobtvl gm22 on gm22.COD_FUN_CUADRO_BT = g1.VALOR and g1.ATTR='COD_FUN_CUADRO_BT'
+		left JOIN gen_maestrovemodcuadrobtvl gm23 on gm23.COD_MOD_CUADRO_BT = g1.VALOR and g1.ATTR='COD_MOD_CUADRO_BT'
+		left JOIN gen_maestrovetipmatinterconexvl gm24 on gm24.COD_TIP_MAT_INTERC = g1.VALOR and g1.ATTR='COD_TIP_MAT_INTERC_BT'
 		/*PARA VALOR ANT*/
-		left join gen_maestroveclactmvl gm0 on gm0.COD_CLA_CTM = gropa.VALOR_ANT and gropa.ATTR='COD_CLA_CT'
-		LEFT JOIN gen_maestrovetipctmvl gm02 on gm02.COD_TIP_CTM = gropa.VALOR_ANT and gropa.ATTR='COD_TIP_CT'
-		left JOIN gen_maestrovbestadovl gm03 on gm03.STATE = gropa.VALOR_ANT and gropa.ATTR='STATE'
-		left JOIN gen_maestrovetiptelemctctcvl gm04 on gm04.COD_TIP_TELEMANDO_CT_CTC = gropa.VALOR_ANT and gropa.ATTR='COD_TIP_TELEMANDO_CT_CTC'
-		left JOIN gen_maestrovetiptelegestionvl gm05 on gm05.COD_TIP_TELEGEST_BT = gropa.VALOR_ANT and gropa.ATTR='COD_TIP_TELEGEST_BT'
-		left JOIN gen_maestrovlmunicipiovl gm06 on gm06.COD_MUNICIPIO = gropa.VALOR_ANT and gropa.ATTR='COD_MUNICIPIO'
-		left JOIN gen_maestrovetipceldavl gm07 on gm07.COD_TIP_CELDA = gropa.VALOR_ANT and gropa.ATTR='COD_TIP_CELDA'
-		left JOIN (select MAX(ID) AS ID,COD_FUN_CELDA,DES_DESCRIPCION FROM gen_maestrovefunceldavl group by COD_FUN_CELDA,DES_DESCRIPCION) gm08 on gm08.COD_FUN_CELDA = gropa.VALOR_ANT and gropa.ATTR='COD_FUN_CELDA'
-		left JOIN gen_maestrovlentsingulvl gm09 on gm09.COD_ENT_SING_POBLAC = gropa.VALOR_ANT and gropa.ATTR='COD_TENS_NOMI'
-		left JOIN gen_maestrovbfabricantvl gm010 on gm010.COD_FAB = gropa.VALOR_ANT and gropa.ATTR IN ('COD_FAB_CELDA','COD_FAB_ELEM_MANI','COD_FAB')
-		left JOIN gen_maestrovemodceldavl gm011 on gm011.COD_MOD_CELDA = gropa.VALOR_ANT and gropa.ATTR='COD_MOD_CELDA'
-		left JOIN gen_maestrovetippatceldavl gm012 on gm012.COD_TIP_PAT_CELDA = gropa.VALOR_ANT and gropa.ATTR='COD_TIP_PAT_CELDA'
-		left JOIN gen_maestrovefununifnclvl gm013 on gm013.COD_FUN_UNID_FUNC = gropa.VALOR_ANT and gropa.ATTR='COD_FUN_UNID_FUNC'
-		left JOIN gen_maestrovetipelemmanivl gm014 on gm014.COD_TIP_ELEM_MANI = gropa.VALOR_ANT and gropa.ATTR='COD_TIP_ELEM_MANI'
-		left JOIN gen_maestroveclaelemmanivl gm015 on gm015.COD_CLA_ELEM_MANI = gropa.VALOR_ANT and gropa.ATTR='COD_CLA_ELEM_MANI'
-		left JOIN gen_maestrovemodelemmanivl gm016 on gm016.COD_MOD_ELEM_MANI = gropa.VALOR_ANT and gropa.ATTR='COD_MOD_ELEM_MANI'
-		left JOIN gen_maestrovetipinterconexvl gm017 on gm017.COD_TIP_INTERC = gropa.VALOR_ANT and gropa.ATTR IN ('COD_TIP_INTERC_MT','COD_TIP_INTERC_BT')
-		left JOIN gen_maestrovetensdisevl gm018 on gm018.COD_TENS_NOMI = gropa.VALOR_ANT and gropa.ATTR IN ('COD_TENS_NOMI_PRI','COD_TENS_NOMI_SEC')
-		left JOIN gen_maestrovetipbornavl gm019 on gm019.COD_TIP_BORNA = gropa.VALOR_ANT and gropa.ATTR='COD_TIP_BORNA'
-		left JOIN gen_maestrovetipgrconextrafovl gm020 on gm020.COD_TIP_GRUPO_CONEX_TRAFO = gropa.VALOR_ANT and gropa.ATTR='COD_TIP_GRUPO_CONEX_TRAFO'
-		left JOIN gen_maestrovetensservvl gm021 on gm021.COD_TENS_SERV = gropa.VALOR_ANT and gropa.ATTR='COD_TENS_SERV'
-		left JOIN gen_maestrovefuncuadrobtvl gm022 on gm022.COD_FUN_CUADRO_BT = gropa.VALOR_ANT and gropa.ATTR='COD_FUN_CUADRO_BT'
-		left JOIN gen_maestrovemodcuadrobtvl gm023 on gm023.COD_MOD_CUADRO_BT = gropa.VALOR_ANT and gropa.ATTR='COD_MOD_CUADRO_BT'
-		left JOIN gen_maestrovetipmatinterconexvl gm024 on gm024.COD_TIP_MAT_INTERC = gropa.VALOR_ANT and gropa.ATTR='COD_TIP_MAT_INTERC_BT'  
+		left join gen_maestroveclactmvl gm0 on gm0.COD_CLA_CTM = g1.VALOR_ANT and g1.ATTR='COD_CLA_CT'
+		LEFT JOIN gen_maestrovetipctmvl gm02 on gm02.COD_TIP_CTM = g1.VALOR_ANT and g1.ATTR='COD_TIP_CT'
+		left JOIN gen_maestrovbestadovl gm03 on gm03.STATE = g1.VALOR_ANT and g1.ATTR='STATE'
+		left JOIN gen_maestrovetiptelemctctcvl gm04 on gm04.COD_TIP_TELEMANDO_CT_CTC = g1.VALOR_ANT and g1.ATTR='COD_TIP_TELEMANDO_CT_CTC'
+		left JOIN gen_maestrovetiptelegestionvl gm05 on gm05.COD_TIP_TELEGEST_BT = g1.VALOR_ANT and g1.ATTR='COD_TIP_TELEGEST_BT'
+		left JOIN gen_maestrovlmunicipiovl gm06 on gm06.COD_MUNICIPIO = g1.VALOR_ANT and g1.ATTR='COD_MUNICIPIO'
+		left JOIN gen_maestrovetipceldavl gm07 on gm07.COD_TIP_CELDA = g1.VALOR_ANT and g1.ATTR='COD_TIP_CELDA'
+		left JOIN (select MAX(ID) AS ID,COD_FUN_CELDA,DES_DESCRIPCION FROM gen_maestrovefunceldavl group by COD_FUN_CELDA,DES_DESCRIPCION) gm08 on gm08.COD_FUN_CELDA = g1.VALOR_ANT and g1.ATTR='COD_FUN_CELDA'
+		left JOIN gen_maestrovlentsingulvl gm09 on gm09.COD_ENT_SING_POBLAC = g1.VALOR_ANT and g1.ATTR='COD_TENS_NOMI'
+		left JOIN gen_maestrovbfabricantvl gm010 on gm010.COD_FAB = g1.VALOR_ANT and g1.ATTR IN ('COD_FAB_CELDA','COD_FAB_ELEM_MANI','COD_FAB')
+		left JOIN gen_maestrovemodceldavl gm011 on gm011.COD_MOD_CELDA = g1.VALOR_ANT and g1.ATTR='COD_MOD_CELDA'
+		left JOIN gen_maestrovetippatceldavl gm012 on gm012.COD_TIP_PAT_CELDA = g1.VALOR_ANT and g1.ATTR='COD_TIP_PAT_CELDA'
+		left JOIN gen_maestrovefununifnclvl gm013 on gm013.COD_FUN_UNID_FUNC = g1.VALOR_ANT and g1.ATTR='COD_FUN_UNID_FUNC'
+		left JOIN gen_maestrovetipelemmanivl gm014 on gm014.COD_TIP_ELEM_MANI = g1.VALOR_ANT and g1.ATTR='COD_TIP_ELEM_MANI'
+		left JOIN gen_maestroveclaelemmanivl gm015 on gm015.COD_CLA_ELEM_MANI = g1.VALOR_ANT and g1.ATTR='COD_CLA_ELEM_MANI'
+		left JOIN gen_maestrovemodelemmanivl gm016 on gm016.COD_MOD_ELEM_MANI = g1.VALOR_ANT and g1.ATTR='COD_MOD_ELEM_MANI'
+		left JOIN gen_maestrovetipinterconexvl gm017 on gm017.COD_TIP_INTERC = g1.VALOR_ANT and g1.ATTR IN ('COD_TIP_INTERC_MT','COD_TIP_INTERC_BT')
+		left JOIN gen_maestrovetensdisevl gm018 on gm018.COD_TENS_NOMI = g1.VALOR_ANT and g1.ATTR IN ('COD_TENS_NOMI_PRI','COD_TENS_NOMI_SEC')
+		left JOIN gen_maestrovetipbornavl gm019 on gm019.COD_TIP_BORNA = g1.VALOR_ANT and g1.ATTR='COD_TIP_BORNA'
+		left JOIN gen_maestrovetipgrconextrafovl gm020 on gm020.COD_TIP_GRUPO_CONEX_TRAFO = g1.VALOR_ANT and g1.ATTR='COD_TIP_GRUPO_CONEX_TRAFO'
+		left JOIN gen_maestrovetensservvl gm021 on gm021.COD_TENS_SERV = g1.VALOR_ANT and g1.ATTR='COD_TENS_SERV'
+		left JOIN gen_maestrovefuncuadrobtvl gm022 on gm022.COD_FUN_CUADRO_BT = g1.VALOR_ANT and g1.ATTR='COD_FUN_CUADRO_BT'
+		left JOIN gen_maestrovemodcuadrobtvl gm023 on gm023.COD_MOD_CUADRO_BT = g1.VALOR_ANT and g1.ATTR='COD_MOD_CUADRO_BT'
+		left JOIN gen_maestrovetipmatinterconexvl gm024 on gm024.COD_TIP_MAT_INTERC = g1.VALOR_ANT and g1.ATTR='COD_TIP_MAT_INTERC_BT'
 	)
-	SELECT 
-	
-	mp.PROPIEDAD,
-	gropa.ID,
+	SELECT
 
-	CONCAT('  ',mp.TIPO_PROPIEDAD) AS MAP_PROPIEDAD,		
-	CONCAT('  ',mp.TIPO_PROPIEDAD) AS MAP_PROPIEDAD2,	
-	CONCAT('  ',mp.TIPO_PROPIEDAD) AS MAP_PROPIEDAD3,	
+	b.PROPIEDAD,
+	b.GROPA_ID AS ID,
 
-	CONCAT('  ',CASE WHEN mp.REQUIERE_DIBUJO = 1 THEN 'Si' ELSE 'No' END) AS MAP_REQUIERE_DIBUJO,
-	CONCAT('  ',CASE WHEN mp.REQUIERE_DIBUJO = 1 THEN 'Si' ELSE 'No' END) AS MAP_REQUIERE_DIBUJO2,
-	CONCAT('  ',CASE WHEN mp.REQUIERE_DIBUJO = 1 THEN 'Si' ELSE 'No' END) AS MAP_REQUIERE_DIBUJO3,
+	CONCAT('  ',b.TIPO_PROPIEDAD) AS MAP_PROPIEDAD,
+	CONCAT('  ',b.TIPO_PROPIEDAD) AS MAP_PROPIEDAD2,
+	CONCAT('  ',b.TIPO_PROPIEDAD) AS MAP_PROPIEDAD3,
+
+	CONCAT('  ',CASE WHEN b.REQUIERE_DIBUJO = 1 THEN 'Si' ELSE 'No' END) AS MAP_REQUIERE_DIBUJO,
+	CONCAT('  ',CASE WHEN b.REQUIERE_DIBUJO = 1 THEN 'Si' ELSE 'No' END) AS MAP_REQUIERE_DIBUJO2,
+	CONCAT('  ',CASE WHEN b.REQUIERE_DIBUJO = 1 THEN 'Si' ELSE 'No' END) AS MAP_REQUIERE_DIBUJO3,
 
 	CONCAT('  ',pv.MAP_VALOR_ANT) AS MAP_VALOR_PROPIEDAD,
 	CONCAT('  ',pv.MAP_VALOR_ANT) AS MAP_VALOR_PROPIEDAD2,
 	CONCAT('  ',pv.MAP_VALOR_ANT) AS MAP_VALOR_PROPIEDAD3,
 
-	CONCAT('  ',mp.DESCRIPCION) AS MAP_DESCRIPCION,
-	CONCAT('  ',mp.DESCRIPCION) AS MAP_DESCRIPCION2,
-	CONCAT('  ',mp.DESCRIPCION) AS MAP_DESCRIPCION3,	
+	CONCAT('  ',b.DESCRIPCION) AS MAP_DESCRIPCION,
+	CONCAT('  ',b.DESCRIPCION) AS MAP_DESCRIPCION2,
+	CONCAT('  ',b.DESCRIPCION) AS MAP_DESCRIPCION3,
 
-	@accion := CONCAT('  ',CASE 
-		WHEN (mp.TIPO_PROPIEDAD = 'MANUAL' or mp.TIPO_PROPIEDAD = 'CAMPO') and gropa.ID IS NOT NULL
-			THEN CONCAT('&quot;Nuevo valor&quot; ',ifnull(pv.MAP_VALOR,'Vacio')) 
-		WHEN mp.TIPO_PROPIEDAD = 'AUTOMATICA' 
-			THEN CASE WHEN gropa.ID IS NULL THEN '' ELSE CONCAT('Corrección automática ',ifnull(pv.MAP_VALOR,'')) END
-		WHEN mp.TIPO_PROPIEDAD = 'EXPERTO' 
-			THEN CASE WHEN gropa.ID IS NULL THEN '' ELSE 'Solictud de corrección' END
-		ELSE '' END), 	
-	@accion as MAP_ACCION,		
-	@accion as MAP_ACCION2,	
+	@accion := CONCAT('  ',CASE
+		WHEN (b.TIPO_PROPIEDAD = 'MANUAL' or b.TIPO_PROPIEDAD = 'CAMPO') and b.GROPA_ID IS NOT NULL
+			THEN CONCAT('&quot;Nuevo valor&quot; ',ifnull(pv.MAP_VALOR,'Vacio'))
+		WHEN b.TIPO_PROPIEDAD = 'AUTOMATICA'
+			THEN CASE WHEN b.GROPA_ID IS NULL THEN '' ELSE CONCAT('Corrección automática ',ifnull(pv.MAP_VALOR,'')) END
+		WHEN b.TIPO_PROPIEDAD = 'EXPERTO'
+			THEN CASE WHEN b.GROPA_ID IS NULL THEN '' ELSE 'Solictud de corrección' END
+		ELSE '' END),
+	@accion as MAP_ACCION,
+	@accion as MAP_ACCION2,
 	@accion as MAP_ACCION3,
 
-	CASE WHEN gropa.ID IS NOT NULL AND gropa.MODIFICACION=1
-		THEN CASE WHEN gropa.VALOR IS NULL OR LENGTH(gropa.VALOR) = 0 THEN 0 ELSE 2 END  
-		ELSE 1 
-	END AS MAP_COLOR_VISIBLE,	
+	CASE WHEN b.GROPA_ID IS NOT NULL AND b.MODIFICACION=1
+		THEN CASE WHEN b.VALOR IS NULL OR LENGTH(b.VALOR) = 0 THEN 0 ELSE 2 END
+		ELSE 1
+	END AS MAP_COLOR_VISIBLE,
 
-	@corregir := CONCAT('  ',CASE WHEN gropa.ID IS NOT NULL AND gropa.MODIFICACION=1
-		THEN CASE WHEN gropa.VALOR IS NULL OR LENGTH(gropa.VALOR) = 0 THEN 'Si' ELSE 'No' END  
-		ELSE 'No' 
+	@corregir := CONCAT('  ',CASE WHEN b.GROPA_ID IS NOT NULL AND b.MODIFICACION=1
+		THEN CASE WHEN b.VALOR IS NULL OR LENGTH(b.VALOR) = 0 THEN 'Si' ELSE 'No' END
+		ELSE 'No'
 	END),
 
-	@corregir as MAP_CORREGIR,		
-	@corregir as MAP_CORREGIR2,	
+	@corregir as MAP_CORREGIR,
+	@corregir as MAP_CORREGIR2,
 	@corregir as MAP_CORREGIR3,
 
-			mp.ID 
-		FROM gen_ri_ot_elementos_rev elm
-		LEFT JOIN (SELECT MAX(ID) AS ID,pa.TABLA,pa.G3E_FID,pa.G3E_FNO,pa.COD_REC_OT_CABECERA FROM gen_ri_ot_propiedades_actualizadas pa GROUP BY pa.TABLA,pa.G3E_FID,pa.G3E_FNO,pa.COD_REC_OT_CABECERA) tp on tp.TABLA=elm.TABLA and tp.G3E_FID=elm.G3E_FID and tp.G3E_FNO=elm.G3E_FNO and tp.COD_REC_OT_CABECERA=elm.COD_REC_OT_CABECERA
-		LEFT JOIN gen_ri_maestro_propiedades mp on mp.TABLA=elm.TABLA AND mp.TIPO_CENTRO&lt;=&gt;(SELECT TIPO_CENTRO FROM gen_ri_ot_propiedades_actualizadas pa where pa.ID=tp.ID LIMIT 1)
-		left join gen_ri_ot_propiedades_actualizadas gropa
-			on gropa.TABLA=mp.TABLA and gropa.ATTR = mp.PROPIEDAD and gropa.TIPO_CENTRO&lt;=&gt;mp.TIPO_CENTRO and gropa.COD_REC_OT_CABECERA=elm.COD_REC_OT_CABECERA and gropa.G3E_FID=elm.G3E_FID and gropa.G3E_FNO=elm.G3E_FNO
-		LEFT JOIN propiedad_valores pv ON pv.ID = gropa.ID"
+	b.MP_ID AS ID
+
+	FROM base b
+	LEFT JOIN propiedad_valores pv ON pv.ID = b.GROPA_ID"
 					lmargin="10p" rmargin="10p" tmargin="10p" filter="" show-header="false">
 		
 		<frame name="frmTp" width="100%" disablevisible="MAP_COLOR_VISIBLE&lt;&gt;0">
@@ -513,7 +559,7 @@ from
 			align="center" bgcolor="#e3eadf" lines="1" font-size="8" text-border-color="#000000" newline="false" />	
 			
 		<prop name="ElementosRevisadosPropiedades" disablevisible="MAP_NUM_PROPIEDADES=0" content="@ElementosRevisadosPropiedades"  type="Z"/>
-		<content name="@ElementosRevisadosPropiedades" src="ElementosRevisadosPropiedades" filter="elm.ID=##FLD_MAP_ID##"/>
+		<content name="@ElementosRevisadosPropiedades" src="ElementosRevisadosPropiedades" filter="b.ELM_ID=##FLD_MAP_ID##"/>
 
 		<prop name="FotosElementoRevisados" grid-column="4" viewmode="grid" content="@FotosElementoRevisados"  type="Z"/>
 		<content name="@FotosElementoRevisados" src="FotosElementoRevisados" filter="F.TABLA='##FLD_MAP_TABLA##' AND F.G3E_FID=##FLD_MAP_G3E_FID## AND F.G3E_FNO=##FLD_MAP_G3E_FNO## AND F.COD_REC_OT_CABECERA='##FLD_MAP_COD_REC_OT_CABECERA##' and IFNULL(F.BAJA,0)=0 and substring_index(lower(F.NOMBRE_FICHERO),'.',-1) in ('png','jpg','jpeg')"/>
@@ -569,7 +615,7 @@ from
 			align="center" bgcolor="#e3eadf" lines="1" font-size="8" text-border-color="#000000" newline="false" />		
 
 		<prop name="ElementosRevisadosPropiedades" disablevisible="MAP_NUM_PROPIEDADES=0" content="@ElementosRevisadosPropiedades"  type="Z"/>
-		<content name="@ElementosRevisadosPropiedades" src="ElementosRevisadosPropiedades" filter="elm.ID=##FLD_MAP_ID##"/>
+		<content name="@ElementosRevisadosPropiedades" src="ElementosRevisadosPropiedades" filter="b.ELM_ID=##FLD_MAP_ID##"/>
 
 		<prop name="FotosElementoRevisados" grid-column="4" viewmode="grid" content="@FotosElementoRevisados"  type="Z"/>
 		<content name="@FotosElementoRevisados" src="FotosElementoRevisados" filter="F.TABLA='##FLD_MAP_TABLA##' AND F.G3E_FID=##FLD_MAP_G3E_FID## AND F.G3E_FNO=##FLD_MAP_G3E_FNO## AND F.COD_REC_OT_CABECERA='##FLD_MAP_COD_REC_OT_CABECERA##' and IFNULL(F.BAJA,0)=0 and substring_index(lower(F.NOMBRE_FICHERO),'.',-1) in ('png','jpg','jpeg')"/>
@@ -640,7 +686,7 @@ from
 			align="center" bgcolor="#e3eadf" lines="1" font-size="8" text-border-color="#000000" newline="false" />		
 		
 			<prop name="ElementosRevisadosPropiedades" disablevisible="MAP_NUM_PROPIEDADES=0" content="@ElementosRevisadosPropiedades"  type="Z"/>
-		<content name="@ElementosRevisadosPropiedades" src="ElementosRevisadosPropiedades" filter="elm.ID=##FLD_MAP_ID##"/>
+		<content name="@ElementosRevisadosPropiedades" src="ElementosRevisadosPropiedades" filter="b.ELM_ID=##FLD_MAP_ID##"/>
 
 		<prop name="FotosElementoRevisados" grid-column="4" viewmode="grid" content="@FotosElementoRevisados"  type="Z"/>
 		<content name="@FotosElementoRevisados" src="FotosElementoRevisados" filter="F.TABLA='##FLD_MAP_TABLA##' AND F.G3E_FID=##FLD_MAP_G3E_FID## AND F.G3E_FNO=##FLD_MAP_G3E_FNO## AND F.COD_REC_OT_CABECERA='##FLD_MAP_COD_REC_OT_CABECERA##' and IFNULL(F.BAJA,0)=0 and substring_index(lower(F.NOMBRE_FICHERO),'.',-1) in ('png','jpg','jpeg')"/>
@@ -713,7 +759,7 @@ from
 			align="center" bgcolor="#e3eadf" lines="1" font-size="8" text-border-color="#000000" newline="false" />	
 
 		<prop name="ElementosRevisadosPropiedades" disablevisible="MAP_NUM_PROPIEDADES=0" content="@ElementosRevisadosPropiedades"  type="Z"/>
-		<content name="@ElementosRevisadosPropiedades" src="ElementosRevisadosPropiedades" filter="elm.ID=##FLD_MAP_ID##"/>
+		<content name="@ElementosRevisadosPropiedades" src="ElementosRevisadosPropiedades" filter="b.ELM_ID=##FLD_MAP_ID##"/>
 
 		<prop name="FotosElementoRevisados" grid-column="4" viewmode="grid" content="@FotosElementoRevisados"  type="Z"/>
 		<content name="@FotosElementoRevisados" src="FotosElementoRevisados" filter="F.TABLA='##FLD_MAP_TABLA##' AND F.G3E_FID=##FLD_MAP_G3E_FID## AND F.G3E_FNO=##FLD_MAP_G3E_FNO## AND F.COD_REC_OT_CABECERA='##FLD_MAP_COD_REC_OT_CABECERA##' and IFNULL(F.BAJA,0)=0 and substring_index(lower(F.NOMBRE_FICHERO),'.',-1) in ('png','jpg','jpeg')"/>
@@ -783,7 +829,7 @@ from
 			align="center" bgcolor="#e3eadf" lines="1" font-size="8" text-border-color="#000000" newline="false" />	
 
 		<prop name="ElementosRevisadosPropiedades" disablevisible="MAP_NUM_PROPIEDADES=0" content="@ElementosRevisadosPropiedades"  type="Z"/>
-		<content name="@ElementosRevisadosPropiedades" src="ElementosRevisadosPropiedades" filter="elm.ID=##FLD_MAP_ID##"/>
+		<content name="@ElementosRevisadosPropiedades" src="ElementosRevisadosPropiedades" filter="b.ELM_ID=##FLD_MAP_ID##"/>
 			
 		<prop name="FotosElementoRevisados" grid-column="4" viewmode="grid" content="@FotosElementoRevisados"  type="Z"/>
 		<content name="@FotosElementoRevisados" src="FotosElementoRevisados" filter="F.TABLA='##FLD_MAP_TABLA##' AND F.G3E_FID=##FLD_MAP_G3E_FID## AND F.G3E_FNO=##FLD_MAP_G3E_FNO## AND F.COD_REC_OT_CABECERA='##FLD_MAP_COD_REC_OT_CABECERA##' and IFNULL(F.BAJA,0)=0 and substring_index(lower(F.NOMBRE_FICHERO),'.',-1) in ('png','jpg','jpeg')"/>		
