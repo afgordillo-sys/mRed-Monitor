@@ -8,7 +8,7 @@
         cab.NUMERO_OBRA, -- Numero de la obra
         gut.UBICACION_PADRE, -- Ubicacion padre de la ST
         gut.DESC_UBICACION, -- Descripcion de la  ubicación
-        gut.DESC_UBICACION AS DENOM_UBICACION_VALOR, -- Descripcion de la  ubicación
+        IFNULL(gut.DESC_UBICACION, '-') AS DENOM_UBICACION_VALOR, -- Descripcion de la  ubicación
         CONCAT(mcab.COD_DOCUMENTO,' ',mcab.DESCRIPCION) as PIE_IZQUIERDA,
         CONCAT(mcab.COD_DOCUMENTO,' ',mcab.DESCRIPCION) as COD_DOCUMENTO,
         CONCAT(
@@ -22,18 +22,20 @@
                 ELSE '-'
                 END) as FECHAS,			  
         '/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/ide_iberdrola.png' AS MAP_LOGO,
-        mcab.ACTIVIDAD AS ACTIVIDAD_VALOR, -- Actividad
-        mcab.DESCRIPCION AS DESCRIPCION_VALOR, -- Descripcion
-        utseq.COD_UBICACION_SAP  AS SISTEMA_VALOR,
+        IFNULL(mcab.ACTIVIDAD, '-') AS ACTIVIDAD_VALOR, -- Actividad
+        IFNULL(mcab.DESCRIPCION, '-') AS DESCRIPCION_VALOR, -- Descripcion
+        COALESCE(utseq.COD_UBICACION_SAP, gut.COD_UBICACION, '-') AS SISTEMA_VALOR,
         utseq.DESC_EQUIPO        AS DESCRIPCION_UB,  -- Denominación de ubicacion
-        utseq.TIPO               AS DENOM_TIPO_VALOR, -- Denominación tipo
-        utseq.ANYO_CONSTRUCCION  AS ANIO_FABRICACION_VALOR, -- Año fabricación
+        utseq.TIPO AS DENOM_TIPO_VALOR, -- Denominación tipo
+        CASE WHEN utseq.TIPO IS NULL OR utseq.TIPO = '' THEN 1 ELSE 0 END AS MAP_DENOM_TIPO_VACIO, -- Flag: oculta la fila si es NULL
+        utseq.ANYO_CONSTRUCCION AS ANIO_FABRICACION_VALOR, -- Año fabricación
+        CASE WHEN utseq.ANYO_CONSTRUCCION IS NULL THEN 1 ELSE 0 END AS MAP_ANIO_FAB_VACIO, -- Flag: oculta la fila si es NULL
         mcab.COD_TIPO_PPI_CABECERA,
-        CONCAT(CASE mcab.TIPO
+        IFNULL(NULLIF(CONCAT_WS(' / ', CASE mcab.TIPO
             WHEN 'M' THEN 'Montaje'
             WHEN 'O' THEN 'Obra Civil'
             ELSE mcab.TIPO
-        END,' / ',SUBSTRING_INDEX(utseq.COD_UBICACION_SAP, '-', 1),' / ',utseq.COD_UBICACION_SAP,' / ',utseq.DESC_EQUIPO) AS JERARQUIA_N1,
+        END, COALESCE(utseq.COD_UBICACION_SAP, gut.COD_UBICACION), utseq.DESC_EQUIPO), ''), '-') AS JERARQUIA_N1,
         -- Campos de la Query 2 (Datos generales)
         cab.COD_PPI_CABECERA     
     FROM gen_obra_ppi_cabecera cab
@@ -87,20 +89,20 @@
 			<prop name="DESCRIPCION_VALOR" type="T" title="Descripción" width="49%" height="28p" font-size="10" lines="1" lmargin="1%" newline="false" align="center|left"/>
 		</frame>
 		<frame name="frmRowSistema" width="100%" height="28p" >
-			<prop name="SISTEMA" type="TL" title="Sistema" width="49%" height="28p" font-size="10" lines="1" lmargin="1%" align="center|left"/>
-			<prop name="SISTEMA_VALOR" type="T" title="Sistema" width="49%" height="28p" font-size="10" lines="1" lmargin="1%" newline="false" align="center|left"/>
+			<prop name="SISTEMA" type="TL" title="Ubicación Técnica" width="49%" height="28p" font-size="10" lines="1" lmargin="1%" align="center|left"/>
+			<prop name="SISTEMA_VALOR" type="T" title="Ubicación Técnica" width="49%" height="28p" font-size="10" lines="1" lmargin="1%" newline="false" align="center|left"/>
 		</frame>
 		<frame name="frmRowDenomUbic" width="100%" height="28p" bgcolor="#f5f8f3" >
 			<prop name="DENOM_UBICACION" type="TL" title="Denominación ubicación" height="28p" width="49%" font-size="10" lines="1" lmargin="1%" align="center|left"/>
 			<prop name="DENOM_UBICACION_VALOR" type="T" title="Denominación ubicación" height="28p" width="49%" font-size="10" lines="1" lmargin="1%" newline="false" align="center|left"/>
 		</frame>
-		<frame name="frmRowDenomTipo" width="100%" height="28p" >
-			<prop name="DENOM_TIPO" type="TL" title="Denominación tipo" width="49%" height="28p" font-size="10" lines="1" lmargin="1%" align="center|left"/>
-			<prop name="DENOM_TIPO_VALOR" type="T" title="Denominación tipo" width="49%" height="28p" font-size="10" lines="1" lmargin="1%" newline="false" align="center|left"/>
+		<frame name="frmRowDenomTipo" width="100%" height="28p" disablevisible="MAP_DENOM_TIPO_VACIO=1">
+			<prop name="DENOM_TIPO" type="TL" title="Denominación tipo" width="49%" height="28p" font-size="10" lines="1" lmargin="1%" align="center|left" disablevisible="MAP_DENOM_TIPO_VACIO=1"/>
+			<prop name="DENOM_TIPO_VALOR" type="T" title="Denominación tipo" width="49%" height="28p" font-size="10" lines="1" lmargin="1%" newline="false" align="center|left" disablevisible="MAP_DENOM_TIPO_VACIO=1"/>
 		</frame>
-		<frame name="frmRowAnio" width="100%" height="28p" bgcolor="#f5f8f3" >
-			<prop name="ANIO_FABRICACION" type="TL" title="Año fabricación" width="49%" height="28p" font-size="10" lines="1" lmargin="1%" align="center|left"/>
-			<prop name="ANIO_FABRICACION_VALOR" type="T" title="Año fabricación" width="49%" height="28p" font-size="10" lines="1" lmargin="1%" newline="false" align="center|left"/>
+		<frame name="frmRowAnio" width="100%" height="28p" bgcolor="#f5f8f3" disablevisible="MAP_ANIO_FAB_VACIO=1">
+			<prop name="ANIO_FABRICACION" type="TL" title="Año fabricación" width="49%" height="28p" font-size="10" lines="1" lmargin="1%" align="center|left" disablevisible="MAP_ANIO_FAB_VACIO=1"/>
+			<prop name="ANIO_FABRICACION_VALOR" type="T" title="Año fabricación" width="49%" height="28p" font-size="10" lines="1" lmargin="1%" newline="false" align="center|left" disablevisible="MAP_ANIO_FAB_VACIO=1"/>
 		</frame>
 		<!--  ── OBSERVACIONES GENERALES ─────────────────────────────────  -->
 		<frame name="frmObsTitulo" width="100%" height="22p" tmargin="20p">
