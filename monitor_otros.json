@@ -514,7 +514,7 @@
         "actions": [
           {
             "name": "create-text-file",
-            "path": "/var/www/vhosts/xoneideintcore.com/xonerepository/borrado_ficheros/para_borrar/listado_ot_fotos_ficheros_marcados_para_borrar.txt",
+            "path": "{{REPOSITORY_PATH}}borrado_ficheros/para_borrar/listado_ot_fotos_ficheros_marcados_para_borrar.txt",
             "value": "##ROW_NOMBRE_FICHERO##"
           },
           {
@@ -560,7 +560,7 @@
         "actions": [
           {
             "name": "create-text-file",
-            "path": "/var/www/vhosts/xoneideintcore.com/xonerepository/borrado_ficheros/para_borrar/listado_ri_ot_fotos_ficheros_marcados_para_borrar.txt",
+            "path": "{{REPOSITORY_PATH}}borrado_ficheros/para_borrar/listado_ri_ot_fotos_ficheros_marcados_para_borrar.txt",
             "value": "##ROW_NOMBRE_FICHERO##"
           },
           {
@@ -568,6 +568,52 @@
             "for-each-row": true,
             "execute-if-error": false,
             "value": "UPDATE mred_data_history.gen_ri_ot_fotos SET BORRADO=1 WHERE BORRADO=0 AND ID=##ROW_ID##"
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": false,
+            "execute-always": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Ok' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Error - ##EXCEPTION##' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          }
+        ]
+      }
+    },
+    {
+      "name": "I_BORRADO_FICHEROS_OT_FOTOS_AVISOS",
+      "cron-expression": "0 0 20 * * *",
+      "enable": true,
+      "type": "groupby",
+      "sql": {
+        "value": "select * from mred_data_history.gen_ot_fotos_avisos where BORRADO=0",
+        "groupby": "ID"
+      },
+      "errormessage": {
+        "subject": "",
+        "body": "",
+        "header": ""
+      },
+      "email": {
+        "to": "(SELECT EMAIL FROM adm_monitor_email WHERE PROCESS IN ('ALL','##CHKNAME##') AND DISABLED=0 AND EMAIL IS NOT NULL)",
+        "cc": "",
+        "bcc": ""
+      },
+      "actions": {
+        "actions": [
+          {
+            "name": "create-text-file",
+            "path": "{{REPOSITORY_PATH}}borrado_ficheros/para_borrar/listado_ot_fotos_avisos_ficheros_marcados_para_borrar.txt",
+            "value": "##ROW_NOMBRE_FICHERO##"
+          },
+          {
+            "name": "executequery",
+            "for-each-row": true,
+            "execute-if-error": false,
+            "value": "UPDATE mred_data_history.gen_ot_fotos_avisos SET BORRADO=1 WHERE BORRADO=0 AND ID=##ROW_ID##"
           },
           {
             "name": "executequery",
@@ -607,7 +653,7 @@
         "actions": [
           {
             "name": "send-command",
-            "value": "/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/comands/manage_transform.sh ##ROW_ACTION## -t ##ROW_NOMBRE_TRANSFORM##",
+            "value": "{{MONITOR_PATH}}comands/manage_transform.sh ##ROW_ACTION## -t ##ROW_NOMBRE_TRANSFORM##",
             "sleep": "10000"
           },
           {

@@ -21,7 +21,7 @@
                 DATE_FORMAT(cab.FECHA_FIN,'%d-%m-%Y')
                 ELSE '-'
                 END) as FECHAS,			  
-        '/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/ide_iberdrola.png' AS MAP_LOGO,
+        '{{MONITOR_PATH}}ide_iberdrola.png' AS MAP_LOGO,
         IFNULL(mcab.ACTIVIDAD, '-') AS ACTIVIDAD_VALOR, -- Actividad
         IFNULL(mcab.DESCRIPCION, '-') AS DESCRIPCION_VALOR, -- Descripcion
         COALESCE(utseq.COD_UBICACION_SAP, gut.COD_UBICACION, '-') AS SISTEMA_VALOR,
@@ -340,7 +340,7 @@
 		</frame>
 	</coll>
 
-	<coll name="collDocumentos" sql="SELECT NOM_FICHERO AS NUMERO_DOC, concat('/var/www/vhosts/xoneideintcore.com/xonerepository/ReplicaFiles/1KEGG99N/',NOM_FICHERO) AS MAP_IMAGEN_DOC FROM gen_obra_ppi_item_foto" show-header="false">
+	<coll name="collDocumentos" sql="SELECT NOM_FICHERO AS NUMERO_DOC, concat('{{REPLICA_FILES}}',NOM_FICHERO) AS MAP_IMAGEN_DOC FROM gen_obra_ppi_item_foto" show-header="false">
 		<frame name="frmDocCard" width="100%" height="256p" border="true">
 			<!--  Etiqueta "Documento N"  -->
 			<prop name="NUMERO_DOC" type="T" width="100%" font-size="10" height="16p" tmargin="10p" lines="1" align="left" lmargin="2%"/>

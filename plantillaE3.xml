@@ -12,7 +12,7 @@
 			'[Pendiente Duda] Obra civil / S3020 / S3020-M014K / Celda 2L2p-R0618332' AS JERARQUIA_N1, 
 			gut.DESC_UBICACION,
 			CONCAT(DATE_FORMAT(go.FECHA_INICIO, '%d-%m-%y'),' / ',DATE_FORMAT(go.FECHA_FIN,'%d-%m-%Y')) as FECHAS,		  
-		   '/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/ide_iberdrola.png' AS MAP_LOGO
+		   '{{MONITOR_PATH}}ide_iberdrola.png' AS MAP_LOGO
 			FROM gen_obra go
 			INNER JOIN gen_uts_ubicaciontecnica gut ON gut.COD_UBICACION = go.COD_UBICACION" filter="go.id=##ID##" entry-point="true" show-header="false" lmargin="5%" rmargin="5%" tmargin="3%" bmargin="5%">
 		<!--  ── CABECERA (se repite en todas las páginas) ───────────────  -->

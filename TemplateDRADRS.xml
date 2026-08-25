@@ -4,9 +4,9 @@
 	<coll name="coll1" sql="select CONCAT('  ',O.NUMEROORDEN) AS MAP_NUMEROORDEN,
 	CONCAT('  ',O.DESCRIPCION) AS MAP_DESCRIPCION,
 	CONCAT('  ',O.OBSERVACIONES) AS MAP_OBSERVACIONES,
-	'/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/qr_iberdrola.png' AS MAP_QR,
+	'{{MONITOR_PATH}}qr_iberdrola.png' AS MAP_QR,
 	concat('RESUMEN OT - ',O.NUMEROORDEN) AS MAP_TITULO,
-	'/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/ide_iberdrola.png' AS MAP_LOGO,
+	'{{MONITOR_PATH}}ide_iberdrola.png' AS MAP_LOGO,
 	O.ID as ID,
 	O.FID_EQ,
 	O.ENTIDAD_GIS_EQ,
@@ -169,7 +169,7 @@
 		CONCAT('  ',afec.COD_ACCION_FULL) as MAP_COD_ACCION_FULL,
 
 		length(ifnull(afec.IMG_EQUIPO,'')) as MAP_VER_FOTO,
-		concat('/var/www/vhosts/xoneideintcore.com/xonerepository/ReplicaFiles/1KEGG99N/',afec.IMG_EQUIPO) as MAP_IMG_EQUIPO,
+		concat('{{REPLICA_FILES}}',afec.IMG_EQUIPO) as MAP_IMG_EQUIPO,
 		CASE WHEN (SELECT COUNT(1) FROM gen_rd_ot_equipos_afectados WHERE NUMEROORDEN = afec.NUMEROORDEN) = @rownum THEN 1 ELSE 0 END AS MAP_ES_ULTIMO,		
 		CONCAT('  ',acc.descripcion_acciones) as MAP_DESCRIPCION_ACCIONES,
 		acc.fecha

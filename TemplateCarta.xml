@@ -2,9 +2,9 @@
 <xml>
 	<!-- CABECERA -->
 	<coll name="coll1" sql="select o.ID,o.NUMEROORDEN,
-		  '/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/carta_firma_mred.png' as MAP_IMAGEN_FONDO_PAGE,
-		  '/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/carta_img1.png' as MAP_IMG1,
-		  '/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/carta_img2.png' as MAP_IMG2,
+		  '{{MONITOR_PATH}}carta_firma_mred.png' as MAP_IMAGEN_FONDO_PAGE,
+		  '{{MONITOR_PATH}}carta_img1.png' as MAP_IMG1,
+		  '{{MONITOR_PATH}}carta_img2.png' as MAP_IMG2,
 CONCAT('Nos ponemos en contacto con usted en referencia a las instalaciones de ',
 ctc.COD_MUNICIPIO,
 ' ',
@@ -120,7 +120,7 @@ inner join gen_ctc ctc on ctc.G3E_FID = o.CODIGO_UBICACION" lmargin="15%" rmargi
 
 	</coll>
 	
-	<coll name="FotosAnomalias" sql="SELECT concat('/var/www/vhosts/xoneideintcore.com/xonerepository/ReplicaFiles/1KEGG99N/',NOMBRE_FICHERO) as MAP_TER_IMG FROM gen_an_foto F"
+	<coll name="FotosAnomalias" sql="SELECT concat('{{REPLICA_FILES}}',NOMBRE_FICHERO) as MAP_TER_IMG FROM gen_an_foto F"
 						lmargin="10p" rmargin="10p" tmargin="10p" filter="" entrypoint="true" show-header="false">
 
 		<frame name="frmIMAGEN" width="100%"  height="100p" align="center" border="true" border-left="true" border-bottom="true" border-right="true" border-top="true" border-color="#000000" bgcolor="#e3eadf">

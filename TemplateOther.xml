@@ -5,7 +5,7 @@
 	CONCAT('  ',O.DESCRIPCION) AS MAP_DESCRIPCION,
 	CONCAT('  ',O.OBSERVACIONES) AS MAP_OBSERVACIONES,
 						concat('RESUMEN OT - ',O.NUMEROORDEN) AS MAP_TITULO,
-						'/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/ide_iberdrola.png' AS MAP_LOGO,
+						'{{MONITOR_PATH}}ide_iberdrola.png' AS MAP_LOGO,
                         O.ID as ID,
 						O.NUMEROORDEN,
                         IFNULL(O.PDF_CREADO,0) AS PDF_CREADO,

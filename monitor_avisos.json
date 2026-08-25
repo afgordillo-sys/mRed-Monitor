@@ -175,7 +175,7 @@
         "endpoints": [
           {
             "name": "MRED-APi",
-            "url": "http://localhost:6060/healthz"
+            "url": "http://{{HEALTHZ_HOST}}:6060/healthz"
           }
         ]
       },
@@ -346,7 +346,7 @@
           {
             "name": "send-mail",
 			"use-template": true,
-			"path-template": "/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/Resumen_diario_plantilla.html"
+			"path-template": "{{MONITOR_PATH}}Resumen_diario_plantilla.html"
           },
           {
             "name": "executequery",
@@ -684,6 +684,44 @@
       "errormessage": {
         "subject": "(ALERTA) (##GP_ENV##): Hay un error de tipos que puede tener bloqueada la integración",
         "body": "##ROW_MAP_TOTAL## mensajes tipo 'Unable to cast object of type', <br> El ##ROW_MAP_ID_ULTIMO_ERROR## es el ultimo error dado en adm_mredapi_log <br> Revisar proceso ##ROW_PROCESO##",
+        "header": ""
+      },
+      "email": {
+        "to": "(SELECT EMAIL FROM adm_monitor_email WHERE PROCESS IN ('ALL','##CHKNAME##') AND DISABLED=0 AND EMAIL IS NOT NULL)",
+        "cc": "",
+        "bcc": ""
+      },
+      "actions": {
+        "actions": [
+          {
+            "name": "send-mail"
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": false,
+            "execute-always": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Ok' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Error - ##EXCEPTION##' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          }
+        ]
+      }
+    },
+    {
+      "name": "I_AVISO_DISCREPANCIA_CAMPOS_HISTORY",
+      "cron-expression": "0 0 6,12,18 * * MON-FRI",
+      "enable": true,
+      "type": "groupby",
+      "sql": {
+        "value": "SELECT            S.TABLE_NAME,            CONCAT(                'ALTER TABLE `mred_data_history`.`', S.TABLE_NAME, '` ',                GROUP_CONCAT(                    'ADD COLUMN `', S.COLUMN_NAME, '` ', S.COLUMN_TYPE, ' NULL'                    ORDER BY S.ORDINAL_POSITION                    SEPARATOR ', '                ),                ';'            ) AS ALTER_STMT        FROM INFORMATION_SCHEMA.COLUMNS S        WHERE S.TABLE_SCHEMA = '{{DB_SCHEMA}}'          AND EXISTS (                SELECT 1 FROM INFORMATION_SCHEMA.TABLES TT                WHERE TT.TABLE_SCHEMA = 'mred_data_history'                  AND TT.TABLE_NAME = S.TABLE_NAME          )          AND NOT EXISTS (                SELECT 1                FROM INFORMATION_SCHEMA.COLUMNS D                WHERE D.TABLE_SCHEMA = 'mred_data_history'                  AND D.TABLE_NAME = S.TABLE_NAME                  AND D.COLUMN_NAME = S.COLUMN_NAME          )        GROUP BY S.TABLE_NAME",
+        "groupby": "TABLE_NAME"
+      },
+      "errormessage": {
+        "subject": "(AVISO) (##GP_ENV##) Discrepancia de campos ({{DB_SCHEMA}} vs mred_data_history)",
+        "body": "Se han detectado columnas nuevas en {{DB_SCHEMA}}.##ROW_TABLE_NAME## que no existen en mred_data_history.##ROW_TABLE_NAME##.##NL####NL##Sentencia ALTER sugerida:##NL####NL####ROW_ALTER_STMT####NL####NL##Revisar y ejecutar manualmente antes de que corra el mantenimiento, o el mantenimiento no se ejecutará automáticamente.",
         "header": ""
       },
       "email": {

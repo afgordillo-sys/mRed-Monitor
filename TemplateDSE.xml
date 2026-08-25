@@ -5,7 +5,7 @@
                 CONCAT('  ',O.DESCRIPCION) AS MAP_DESCRIPCION,
                 CONCAT('  ',O.OBSERVACIONES) AS MAP_OBSERVACIONES,
                 concat('RESUMEN OT - ',O.NUMEROORDEN) AS MAP_TITULO,
-                '/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/ide_iberdrola.png' AS MAP_LOGO,
+                '{{MONITOR_PATH}}ide_iberdrola.png' AS MAP_LOGO,
                 O.ID as ID,
                 O.NUMEROORDEN,
 				O.TASK_ID,
@@ -331,7 +331,7 @@
 	</coll>
 
     <!-- Fotos Ot -->
-    <coll name="FotosOt" sql="SELECT concat('/var/www/vhosts/xoneideintcore.com/xonerepository/ReplicaFiles/1KEGG99N/',NOMBRE_FICHERO) as MAP_TER_IMG FROM gen_ot_fotos F"
+    <coll name="FotosOt" sql="SELECT concat('{{REPLICA_FILES}}',NOMBRE_FICHERO) as MAP_TER_IMG FROM gen_ot_fotos F"
 						lmargin="10p" rmargin="10p" tmargin="10p" filter="" show-header="false">
 
 		<frame name="frmIMAGEN" width="100%"  height="100p" align="center" border="true" border-left="true" border-bottom="true" border-right="true" border-top="true" border-color="#000000" bgcolor="#e3eadf">

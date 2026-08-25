@@ -4,9 +4,9 @@
 	<coll name="coll1" sql="select CONCAT('  ',O.NUMEROORDEN) AS MAP_NUMEROORDEN,
 	CONCAT('  ',O.DESCRIPCION) AS MAP_DESCRIPCION,
 	CONCAT('  ',O.OBSERVACIONES) AS MAP_OBSERVACIONES,
-						'/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/qr_iberdrola.png' AS MAP_QR,
+						'{{MONITOR_PATH}}qr_iberdrola.png' AS MAP_QR,
 						concat('RESUMEN OT - ',O.NUMEROORDEN) AS MAP_TITULO,
-						'/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/ide_iberdrola.png' AS MAP_LOGO,
+						'{{MONITOR_PATH}}ide_iberdrola.png' AS MAP_LOGO,
                         O.ID as ID,
 						O.NUMEROORDEN,
                         IFNULL(O.PDF_CREADO,0) AS PDF_CREADO,
@@ -246,17 +246,17 @@ group by n.G3E_FID,n.G3E_FNO,n.NUMEROORDEN having count(1) > 1 ) n where n.NUMER
 								
 								CASE 
 									WHEN CID.VALOR IS NULL THEN 
-										case when APR.ACCESO_ETIQUETADO=1 or APR.ACCESO_REETIQUETADO=1 then '/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/Apoyo_Etiquetado_Verde.png'
-											when APR.ACCESO_INACCESIBLE=1 then '/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/Apoyo_Etiquetado_Azul.png' 
+										case when APR.ACCESO_ETIQUETADO=1 or APR.ACCESO_REETIQUETADO=1 then '{{MONITOR_PATH}}Apoyo_Etiquetado_Verde.png'
+											when APR.ACCESO_INACCESIBLE=1 then '{{MONITOR_PATH}}Apoyo_Etiquetado_Azul.png' 
 											else
-												CASE WHEN ap.ID_CHIP_NFC IS NULL THEN '/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/Apoyo_Etiquetado_Blanco.png'
-													WHEN ap.ID_CHIP_NFC = '11:11:11:11:11' THEN '/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/Apoyo_Etiquetado_Azul.png'
-													ELSE '/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/Apoyo_Etiquetado_Verde.png' END		
+												CASE WHEN ap.ID_CHIP_NFC IS NULL THEN '{{MONITOR_PATH}}Apoyo_Etiquetado_Blanco.png'
+													WHEN ap.ID_CHIP_NFC = '11:11:11:11:11' THEN '{{MONITOR_PATH}}Apoyo_Etiquetado_Azul.png'
+													ELSE '{{MONITOR_PATH}}Apoyo_Etiquetado_Verde.png' END		
 											end 
-									WHEN CID.VALOR = '11:11:11:11:11' THEN '/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/Apoyo_Etiquetado_Azul.png' 
-									when APR.ACCESO_ETIQUETADO=1 or APR.ACCESO_REETIQUETADO=1 then '/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/Apoyo_Etiquetado_Verde.png'
-									when APR.ACCESO_INACCESIBLE=1 then '/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/Apoyo_Etiquetado_Azul.png' 
-									ELSE '/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/Apoyo_Etiquetado_Verde.png' 
+									WHEN CID.VALOR = '11:11:11:11:11' THEN '{{MONITOR_PATH}}Apoyo_Etiquetado_Azul.png' 
+									when APR.ACCESO_ETIQUETADO=1 or APR.ACCESO_REETIQUETADO=1 then '{{MONITOR_PATH}}Apoyo_Etiquetado_Verde.png'
+									when APR.ACCESO_INACCESIBLE=1 then '{{MONITOR_PATH}}Apoyo_Etiquetado_Azul.png' 
+									ELSE '{{MONITOR_PATH}}Apoyo_Etiquetado_Verde.png' 
 								END AS MAP_ICONO_ETIQUETADO,
 									
 								CASE 
@@ -431,7 +431,7 @@ group by n.G3E_FID,n.G3E_FNO,n.NUMEROORDEN having count(1) > 1 ) n where n.NUMER
 			<prop name="MAP_OBSERVACIONES" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#ffffff" font-size="9" text-border-color="#000000" />
 
 			<prop name="MAP_FOTO_AVISOS" grid-column="4" viewmode="grid" content="@FotosAvisos"  type="Z"/>
-			<content name="@FotosAvisos" src="FotosAvisos" filter="(F.NUMEROAVISOGAMAD='##FLD_QMNUM##'  OR F.NUMEROAVISOMOVILIDAD='##FLD_ZIDMICRO##') AND F.TIPO='AVISO'"/>
+			<content name="@FotosAvisos" src="FotosAvisos" filter="(F.NUMEROAVISOGAMAD='##FLD_QMNUM##'  OR F.NUMEROAVISOMOVILIDAD='##FLD_ZIDMICRO##')"/>
 
 	</coll>
 	
@@ -576,7 +576,7 @@ group by n.G3E_FID,n.G3E_FNO,n.NUMEROORDEN having count(1) > 1 ) n where n.NUMER
 	</coll> 
 	
 	<!-- termografia -->
-	<coll name="FotosTermografia" sql="SELECT concat('/var/www/vhosts/xoneideintcore.com/xonerepository/ReplicaFiles/1KEGG99N/',NOMBRE_FICHERO) as MAP_TER_IMG FROM gen_ot_fotos F" 
+	<coll name="FotosTermografia" sql="SELECT concat('{{REPLICA_FILES}}',NOMBRE_FICHERO) as MAP_TER_IMG FROM gen_ot_fotos F" 
 						lmargin="10p" rmargin="10p" tmargin="10p" filter="" show-header="false">
 
 		<frame name="frmIMAGEN" width="100%"  height="100p" align="center" border="true" border-left="true" border-bottom="true" border-right="true" border-top="true" border-color="#000000" bgcolor="#e3eadf">
@@ -584,7 +584,7 @@ group by n.G3E_FID,n.G3E_FNO,n.NUMEROORDEN having count(1) > 1 ) n where n.NUMER
 		</frame>
 	</coll>
 
-	<coll name="FotosAvisos" sql="SELECT concat('/var/www/vhosts/xoneideintcore.com/xonerepository/ReplicaFiles/1KEGG99N/',NOMBRE_FICHERO) as MAP_TER_IMG FROM gen_ot_fotos F" 
+	<coll name="FotosAvisos" sql="SELECT concat('{{REPLICA_FILES}}',NOMBRE_FICHERO) as MAP_TER_IMG FROM gen_ot_fotos_avisos F" 
 						lmargin="10p" rmargin="10p" tmargin="10p" filter="" show-header="false">
 
 		<frame name="frmIMAGEN" width="100%"  height="100p" align="center" border="true" border-left="true" border-bottom="true" border-right="true" border-top="true" border-color="#000000" bgcolor="#e3eadf">
@@ -592,7 +592,7 @@ group by n.G3E_FID,n.G3E_FNO,n.NUMEROORDEN having count(1) > 1 ) n where n.NUMER
 		</frame>
 	</coll>
 
-	<coll name="FotosAnomalias" sql="SELECT concat('/var/www/vhosts/xoneideintcore.com/xonerepository/ReplicaFiles/1KEGG99N/',NOMBRE_FICHERO) as MAP_TER_IMG FROM gen_an_foto F" 
+	<coll name="FotosAnomalias" sql="SELECT concat('{{REPLICA_FILES}}',NOMBRE_FICHERO) as MAP_TER_IMG FROM gen_an_foto F" 
 						lmargin="10p" rmargin="10p" tmargin="10p" filter="" show-header="false">
 
 		<frame name="frmIMAGEN" width="100%"  height="100p" align="center" border="true" border-left="true" border-bottom="true" border-right="true" border-top="true" border-color="#000000" bgcolor="#e3eadf">
@@ -601,7 +601,7 @@ group by n.G3E_FID,n.G3E_FNO,n.NUMEROORDEN having count(1) > 1 ) n where n.NUMER
 	</coll>
 
 	<!-- Fotos no accesible -->
-	<coll name="NoAccesible" sql="SELECT concat('/var/www/vhosts/xoneideintcore.com/xonerepository/ReplicaFiles/1KEGG99N/',NOMBRE_FICHERO) as MAP_TER_IMG FROM gen_ot_fotos F"
+	<coll name="NoAccesible" sql="SELECT concat('{{REPLICA_FILES}}',NOMBRE_FICHERO) as MAP_TER_IMG FROM gen_ot_fotos F"
 						lmargin="10p" rmargin="10p" tmargin="10p" filter="" show-header="false">
 
 		<frame name="frmIMAGEN" width="100%"  height="100p" align="center" border="true" border-left="true" border-bottom="true" border-right="true" border-top="true" border-color="#000000" bgcolor="#e3eadf">

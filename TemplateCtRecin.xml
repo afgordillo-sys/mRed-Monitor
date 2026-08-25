@@ -13,15 +13,15 @@ CASE
 		THEN 
 			CASE 
 			WHEN IFNULL(ct.ID_CHIP_NFC,ctc.ID_CHIP_NFC) IS NULL 
-				THEN '/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/Apoyo_Etiquetado_Blanco.png'
+				THEN '{{MONITOR_PATH}}Apoyo_Etiquetado_Blanco.png'
 			WHEN IFNULL(ct.ID_CHIP_NFC,ctc.ID_CHIP_NFC) = '11:11:11:11:11' 
-				THEN '/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/Apoyo_Etiquetado_Azul.png'
+				THEN '{{MONITOR_PATH}}Apoyo_Etiquetado_Azul.png'
 		ELSE 
-			'/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/Apoyo_Etiquetado_Verde.png' 
+			'{{MONITOR_PATH}}Apoyo_Etiquetado_Verde.png' 
 		END			
 	WHEN CID.VALOR = '11:11:11:11:11' 
-		THEN '/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/Apoyo_Etiquetado_Azul.png'
-	ELSE '/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/Apoyo_Etiquetado_Verde.png'
+		THEN '{{MONITOR_PATH}}Apoyo_Etiquetado_Azul.png'
+	ELSE '{{MONITOR_PATH}}Apoyo_Etiquetado_Verde.png'
 END AS MAP_ICONO_ETIQUETADO,
 CASE 
 	WHEN CID.VALOR IS NULL THEN 
@@ -39,9 +39,9 @@ CONCAT('&lt;b&gt; CT ',ct.SAP_TPLNR,'&lt;/b&gt; - ', CASE
 				ELSE ' CT Accesible' END	
 	WHEN CID.VALOR = '11:11:11:11:11' THEN ' CT No Accesible' 
 	ELSE ' CT Etiquetado' END) AS MAP_DESCRIPCION_CT,
-'/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/qr_iberdrola.png' AS MAP_QR,
+'{{MONITOR_PATH}}qr_iberdrola.png' AS MAP_QR,
 concat('RESUMEN REC - ',O.COD_REC_OT_CABECERA ) AS MAP_TITULO,
-'/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/ide_iberdrola.png' AS MAP_LOGO,
+'{{MONITOR_PATH}}ide_iberdrola.png' AS MAP_LOGO,
 O.ID as ID,
 O.COD_REC_OT_CABECERA,
 concat('  ',CASE WHEN O.UBICACION_TECNICA IS NOT NULL THEN concat(O.UBICACION_TECNICA,' - ') ELSE '' END,O.NOMBRE_UBICACION) AS MAP_INSTALACION,
@@ -190,9 +190,9 @@ LEFT OUTER JOIN gen_cambiosinventario CID ON CID.ID=CI.ID AND CID.COD_REC_OT_CAB
 
 	<coll name="ElementosRevisados" sql="select p.*, @rownum := @rownum + 1 AS MINDEX,
 CASE WHEN cnt.TOTAL = @rownum THEN 1 ELSE 0 END AS MAP_ES_ULTIMO,
-CASE WHEN p.MAP_NFC IS NULL THEN '/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/Apoyo_Etiquetado_Blanco.png' WHEN p.MAP_NFC = '11:11:11:11:11'
-THEN '/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/Apoyo_Etiquetado_Azul.png'
-ELSE '/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/Apoyo_Etiquetado_Verde.png'
+CASE WHEN p.MAP_NFC IS NULL THEN '{{MONITOR_PATH}}Apoyo_Etiquetado_Blanco.png' WHEN p.MAP_NFC = '11:11:11:11:11'
+THEN '{{MONITOR_PATH}}Apoyo_Etiquetado_Azul.png'
+ELSE '{{MONITOR_PATH}}Apoyo_Etiquetado_Verde.png'
 END AS MAP_ICONO_ETIQUETADO,
 (SELECT COUNT(1) FROM gen_unfuncio unf INNER JOIN gen_ri_ot_elementos_rev rev ON unf.G3E_FID=rev.G3E_FID AND unf.G3E_FNO=rev.G3E_FNO AND rev.PASO=1 WHERE rev.COD_REC_OT_CABECERA=p.COD_REC_OT_CABECERA AND unf.ID_PADRE_CELDA=p.G3E_FID AND IFNULL(unf.BAJA,0)=0) AS MAP_NUM_UF_CELDA,
 (SELECT COUNT(1) FROM gen_unfuncio unf INNER JOIN gen_ri_ot_elementos_rev rev ON unf.G3E_FID=rev.G3E_FID AND unf.G3E_FNO=rev.G3E_FNO AND rev.PASO=1 WHERE rev.COD_REC_OT_CABECERA=p.COD_REC_OT_CABECERA AND (unf.ID_PADRE_CT=p.G3E_FID OR unf.ID_PADRE_CTC=p.G3E_FID) AND unf.ID_PADRE_CELDA IS NULL AND IFNULL(unf.BAJA,0)=0) AS MAP_NUM_UF_CT,
@@ -520,9 +520,9 @@ from
 			@nfc:=ifnull(ci2.VALOR,unf.ID_CHIP_NFC),
 			CASE 
 						WHEN @nfc IS NULL THEN 
-							'/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/Apoyo_Etiquetado_Blanco.png'
-						WHEN @nfc = '11:11:11:11:11' THEN '/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/Apoyo_Etiquetado_Azul.png' 
-						ELSE '/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/Apoyo_Etiquetado_Verde.png'				
+							'{{MONITOR_PATH}}Apoyo_Etiquetado_Blanco.png'
+						WHEN @nfc = '11:11:11:11:11' THEN '{{MONITOR_PATH}}Apoyo_Etiquetado_Azul.png' 
+						ELSE '{{MONITOR_PATH}}Apoyo_Etiquetado_Verde.png'				
 					END AS MAP_ICONO_ETIQUETADO		
 			from gen_unfuncio unf
 			LEFT JOIN (SELECT @rownum := 0) afec_index ON 1=1
@@ -647,9 +647,9 @@ from
 			1 as MAP_PUEDE_TENER_ETIQUETADO,
 			CASE 
 						WHEN @nfc IS NULL THEN 
-							'/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/Apoyo_Etiquetado_Blanco.png'
-						WHEN @nfc = '11:11:11:11:11' THEN '/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/Apoyo_Etiquetado_Azul.png' 
-						ELSE '/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/Apoyo_Etiquetado_Verde.png'				
+							'{{MONITOR_PATH}}Apoyo_Etiquetado_Blanco.png'
+						WHEN @nfc = '11:11:11:11:11' THEN '{{MONITOR_PATH}}Apoyo_Etiquetado_Azul.png' 
+						ELSE '{{MONITOR_PATH}}Apoyo_Etiquetado_Verde.png'				
 					END AS MAP_ICONO_ETIQUETADO	
 			from gen_unfuncio unf
 			LEFT JOIN (SELECT @rownum := 0) afec_index ON 1=1
@@ -721,9 +721,9 @@ from
 		1 as MAP_PUEDE_TENER_ETIQUETADO,
 		CASE 
 					WHEN @nfc IS NULL THEN 
-						'/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/Apoyo_Etiquetado_Blanco.png'
-					WHEN @nfc = '11:11:11:11:11' THEN '/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/Apoyo_Etiquetado_Azul.png' 
-					ELSE '/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/Apoyo_Etiquetado_Verde.png'				
+						'{{MONITOR_PATH}}Apoyo_Etiquetado_Blanco.png'
+					WHEN @nfc = '11:11:11:11:11' THEN '{{MONITOR_PATH}}Apoyo_Etiquetado_Azul.png' 
+					ELSE '{{MONITOR_PATH}}Apoyo_Etiquetado_Verde.png'				
 				END AS MAP_ICONO_ETIQUETADO	
 		from gen_trafo trafo 
 		LEFT JOIN (SELECT @rownum := 0) afec_index ON 1=1
@@ -792,9 +792,9 @@ from
 		CASE WHEN (SELECT COUNT(1) FROM gen_cuadrobt cuadro2 inner join gen_ri_ot_elementos_rev rev2 on cuadro2.G3E_FID =rev2.G3E_FID and cuadro2.G3E_FNO =rev2.G3E_FNO and rev2.PASO=2 WHERE rev2.COD_REC_OT_CABECERA=rev.COD_REC_OT_CABECERA and rev2.COD_REC_OT_CABECERA=rev.COD_REC_OT_CABECERA AND cuadro2.ID_PADRE_POS_TRAFO=cuadro.ID_PADRE_POS_TRAFO AND IFNULL(cuadro2.BAJA,0)=0) = @rownum THEN 1 ELSE 0 END AS MAP_ES_ULTIMO,	
 		CASE 
 					WHEN @nfc IS NULL THEN 
-						'/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/Apoyo_Etiquetado_Blanco.png'
-					WHEN @nfc = '11:11:11:11:11' THEN '/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/Apoyo_Etiquetado_Azul.png' 
-					ELSE '/var/www/vhosts/xoneideintcore.com/core/xonemonitorcore/Monitor/Apoyo_Etiquetado_Verde.png'				
+						'{{MONITOR_PATH}}Apoyo_Etiquetado_Blanco.png'
+					WHEN @nfc = '11:11:11:11:11' THEN '{{MONITOR_PATH}}Apoyo_Etiquetado_Azul.png' 
+					ELSE '{{MONITOR_PATH}}Apoyo_Etiquetado_Verde.png'				
 				END AS MAP_ICONO_ETIQUETADO		
 		from gen_cuadrobt cuadro 
 		LEFT JOIN (SELECT @rownum := 0) afec_index ON 1=1
@@ -837,7 +837,7 @@ from
 		<break-page disablevisible="MAP_ES_ULTIMO=1"/>
 	</coll>
 
-	<coll name="FotosElementoRevisados" sql="SELECT concat('/var/www/vhosts/xoneideintcore.com/xonerepository/ReplicaFiles/1KEGG99N/',NOMBRE_FICHERO) as MAP_TER_IMG,
+	<coll name="FotosElementoRevisados" sql="SELECT concat('{{REPLICA_FILES}}',NOMBRE_FICHERO) as MAP_TER_IMG,
 				CONCAT('  ',grmtf.DESC_TIPO_FOTO) as MAP_DESCRIPCION
 				FROM gen_ri_ot_fotos F
 				inner join gen_ri_maestro_tipo_fotos grmtf on grmtf.COD_TIPO_FOTO=F.COD_TIPO_FOTO" 
