@@ -2,7 +2,7 @@
     "checkings": [
         {
       "name": "RevisarDispositivoSinReplicar",
-      "cron-expression": "0 */1 7-21 * * *",
+      "cron-expression": "0 */1 6-21 * * *",
       "enable": false,
       "type": "groupby",
       "sql": {
@@ -30,6 +30,7 @@
             "device-type": "0",
             "mute": "true",
             "priority": "high",
+            "ttl": "120",
             "notification-type": "0",
             "collapse-key": "9998",
             "after-action": [
@@ -339,6 +340,7 @@
             "priority": "high",
             "notification-type": "0",
             "collapse-key": "9996",
+            "ttl": "300",
             "extra-params":"{'action':'RevisarJornadaAutomatica'}",
             "after-action": [
               {
@@ -381,6 +383,7 @@
         "bcc": ""
       },
       "actions": {
+		    "execute-actions-for-row": true,
         "actions": [
           {
             "name": "http-request",
@@ -711,7 +714,7 @@
     },
     {
       "name": "LimpiezaActualizaciones",
-      "cron-expression": "0 30 22 * * *",
+      "cron-expression": "0 30 21 * * *",
       "enable": true,
       "errormessage": {
         "subject": "",
@@ -787,7 +790,7 @@
     },
     {
       "name": "BORRADOLOGS",
-      "cron-expression": "0 35 22 * * *",
+      "cron-expression": "0 30 22 * * *",
       "enable": true,
       "errormessage": {
         "subject": "",
@@ -808,13 +811,7 @@
             "filter": "*.log",
             "delete-time": "7D"
           },
-          {
-            "name": "delete-file",
-            "value": "##GP_LOGSAPIPATH##",   
-            "scan-directory": true,  
-            "filter": "*.log",
-            "delete-time": "7D"
-          },
+          "{{BORRADOLOGS_API}}",
           {
             "name": "delete-file",
             "value": "##GP_LOGSMANAGERPATH##",   
@@ -822,20 +819,8 @@
             "filter": "*.log",
             "delete-time": "7D"
           },
-          {
-            "name": "delete-file",
-            "value": "##GP_LOGSITFPATH##",   
-            "scan-directory": true,  
-            "filter": "*.log",
-            "delete-time": "7D"
-          },
-          {
-            "name": "delete-file",
-            "value": "##GP_LOGSITF2PATH##",   
-            "scan-directory": true,  
-            "filter": "*.log",
-            "delete-time": "7D"
-          },
+          "{{BORRADOLOGS_ITF}}",
+          "{{BORRADOLOGS_ITF2}}",
           {
             "name": "delete-file",
             "value": "##GP_LOGSLIVEPATH##",   

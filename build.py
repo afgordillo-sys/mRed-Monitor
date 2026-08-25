@@ -41,6 +41,31 @@ CONFIG_PREFIX = "monitor_"
 # espacios, minusculas o puntos: {{ if data }}, {{elm.MAP_TITLE}}.
 PLACEHOLDER = re.compile(r"\{\{([A-Z][A-Z0-9_]*)\}\}")
 
+# Placeholder que ocupa un valor JSON completo, entre comillas y en posicion de
+# valor de objeto: "enable": "{{FLAG}}". Si el valor resuelto parsea como JSON, se
+# emite SIN las comillas, para que el fichero generado lleve el tipo correcto y no
+# una cadena. Vale cualquier JSON: booleano, null, numero, objeto o array.
+#
+# Dos guardas deliberadas:
+#   1. Exige un ':' delante, asi que una clave JSON que fuera un placeholder
+#      ("{{X}}": 1) nunca pierde las comillas y no puede generar JSON invalido.
+#   2. Exige que el placeholder ocupe el valor entero, asi que
+#      "http://{{HEALTHZ_HOST}}:6060/healthz" sigue siendo sustitucion de cadena.
+RAW_IN_JSON = re.compile(r':(\s*)"\{\{([A-Z][A-Z0-9_]*)\}\}"')
+
+# Placeholder entre comillas, en cualquier posicion. Se usa para clasificar por el
+# caracter no blanco de alrededor y decidir el tratamiento: valor de objeto,
+# elemento de array, clave de objeto o texto dentro de una cadena mayor.
+QUOTED_PLACEHOLDER = re.compile(r'"\{\{([A-Z][A-Z0-9_]*)\}\}"')
+
+# Placeholder sin comillas en un .json: rompe el JSON fuente. Se detecta para dar
+# un error accionable en lugar de un fallo del parser.
+UNQUOTED_IN_JSON = re.compile(r':(\s*)(\{\{[A-Z][A-Z0-9_]*\}\})')
+
+# Literales de Python que no son JSON valido. Escribirlos en el .env deja el valor
+# como cadena en silencio, asi que se avisa.
+PYTHON_LITERALS = {"True", "False", "None"}
+
 # Limite de pasadas al resolver {{...}} anidado dentro de los valores del .env.
 MAX_DEPTH = 10
 
@@ -174,29 +199,181 @@ def line_of(text: str, offset: int) -> int:
     return text.count("\n", 0, offset) + 1
 
 
-def render(text: str, values: dict[str, str]) -> tuple[str, int, set[str], dict[str, int]]:
+def json_value(value: str) -> tuple[bool, object]:
+    """Intenta interpretar el valor del .env como JSON. Devuelve (parsea, resultado).
+
+    Es el filtro que decide si un placeholder que ocupa un valor entero se emite
+    SIN comillas. Una sola regla para las dos posiciones (valor de objeto y
+    elemento de array): si parsea como JSON se inyecta, si no se queda como cadena.
+
+    Notese lo que NO parsea, y es justo lo que se quiere:
+        localhost, mredint, 1KEGG99N   -> cadena
+        192.168.1.14                   -> cadena, no es un numero valido
+        01, 007                        -> cadena, JSON prohibe ceros a la izquierda
+        True, False, None              -> cadena, mayuscula de Python (se avisa)
+    """
+    try:
+        return True, json.loads(value)
+    except (json.JSONDecodeError, ValueError):
+        return False, None
+
+
+def antes_de(text: str, pos: int) -> str:
+    """Ultimo caracter no blanco antes de pos, o '' si no hay."""
+    i = pos - 1
+    while i >= 0 and text[i].isspace():
+        i -= 1
+    return text[i] if i >= 0 else ""
+
+
+def despues_de(text: str, pos: int) -> str:
+    """Primer caracter no blanco desde pos, o '' si no hay."""
+    i = pos
+    while i < len(text) and text[i].isspace():
+        i += 1
+    return text[i] if i < len(text) else ""
+
+
+def es_elemento_de_array(text: str, inicio: int, fin: int) -> bool:
+    """True si el placeholder entre comillas ocupa un elemento de array entero.
+
+    Antes tiene que haber '[' o ',' (abre el array o separa del elemento previo) y
+    despues ',' o ']'. Un ':' en cualquiera de los dos lados descarta: seria un
+    valor de objeto (lo trata la pasada de escalares) o una clave de objeto (que
+    no se toca nunca).
+    """
+    return antes_de(text, inicio) in "[," and despues_de(text, fin) in ",]"
+
+
+class Rendered:
+    """Resultado de sustituir un fichero."""
+
+    def __init__(self) -> None:
+        self.text = ""
+        self.subs = 0
+        self.used: set[str] = set()
+        self.unknown: dict[str, int] = {}
+        # Inyecciones sin comillas aplicadas: (clave, valor, linea).
+        self.raw: list[tuple[str, str, int]] = []
+        # Elementos de array inyectados y omitidos: (clave, linea).
+        self.elementos_inyectados: list[tuple[str, int]] = []
+        self.elementos_omitidos: list[tuple[str, int]] = []
+        # Claves con literal de Python en posicion sin comillas: (clave, valor, linea).
+        self.python_literals: list[tuple[str, str, int]] = []
+        # Errores propios de la sustitucion, ya con fichero:linea resuelto aparte.
+        self.errors: list[tuple[str, int]] = []
+
+
+def render(text: str, values: dict[str, str], is_json: bool) -> Rendered:
     """Sustituye los placeholders conocidos.
 
-    Una clave desconocida se deja INTACTA, nunca se sustituye por cadena
-    vacia. Eso es lo que protege a Scriban en los .html.
+    En los .json se hace primero una pasada de inyeccion sin comillas, para que
+    un valor booleano o numerico salga con su tipo real y no como cadena. El
+    resto se sustituye como texto.
 
-    Devuelve (texto, sustituciones, claves usadas, {clave desconocida: linea}).
+    Una clave desconocida se deja INTACTA, nunca se sustituye por cadena vacia.
+    Eso es lo que protege a Scriban en los .html.
     """
-    count = 0
-    used: set[str] = set()
-    unknown: dict[str, int] = {}
+    result = Rendered()
+
+    if is_json:
+        def inject(match: re.Match[str]) -> str:
+            spacing, name = match.group(1), match.group(2)
+            if name not in values:
+                return match.group(0)  # la pasada normal lo reporta como desconocida
+            value = values[name]
+            line = line_of(text, match.start())
+            if value in PYTHON_LITERALS:
+                result.python_literals.append((name, value, line))
+                return match.group(0)
+            if not json_value(value)[0]:
+                return match.group(0)  # sigue siendo cadena, la pasada normal lo hace
+            result.used.add(name)
+            result.subs += 1
+            result.raw.append((name, value, line))
+            return f":{spacing}{value}"
+
+        text = RAW_IN_JSON.sub(inject, text)
+        text = render_array_elements(text, values, result)
 
     def substitute(match: re.Match[str]) -> str:
-        nonlocal count
         name = match.group(1)
         if name not in values:
-            unknown.setdefault(name, line_of(text, match.start()))
+            result.unknown.setdefault(name, line_of(text, match.start()))
             return match.group(0)
-        used.add(name)
-        count += 1
+        result.used.add(name)
+        result.subs += 1
         return values[name]
 
-    return PLACEHOLDER.sub(substitute, text), count, used, unknown
+    result.text = PLACEHOLDER.sub(substitute, text)
+    return result
+
+
+def render_array_elements(text: str, values: dict[str, str], result: Rendered) -> str:
+    """Inyecta u omite placeholders que ocupan un elemento de array entero.
+
+    Un valor vacio OMITE el elemento, consumiendo una coma adyacente para que el
+    array siga siendo valido. Un valor que parsea como JSON se inyecta verbatim.
+    Cualquier otra cosa es un error: en posicion de elemento de array se puede ser
+    estricto, porque un array de cadenas no es algo que aparezca en estos ficheros.
+
+    Se recorre de derecha a izquierda para que las posiciones ya calculadas no se
+    desplacen al ir modificando el texto.
+    """
+    for match in reversed(list(QUOTED_PLACEHOLDER.finditer(text))):
+        name = match.group(1)
+        inicio, fin = match.start(), match.end()
+        if not es_elemento_de_array(text, inicio, fin):
+            continue
+        if name not in values:
+            continue  # la pasada normal lo reporta como clave desconocida
+
+        line = line_of(text, inicio)
+        value = values[name]
+
+        if value == "":
+            # Omision: se come UNA coma adyacente. Si la hay detras se lleva la coma
+            # y los blancos siguientes, con lo que la linea desaparece limpia y el
+            # elemento siguiente conserva el sangrado que tenia el placeholder.
+            fin_recorte = fin
+            while fin_recorte < len(text) and text[fin_recorte].isspace():
+                fin_recorte += 1
+            if fin_recorte < len(text) and text[fin_recorte] == ",":
+                fin_recorte += 1
+                while fin_recorte < len(text) and text[fin_recorte] in " \t\r\n":
+                    fin_recorte += 1
+                inicio_recorte = inicio
+            else:
+                # Es el ultimo elemento: hay que quitar la coma de delante.
+                inicio_recorte = inicio
+                j = inicio - 1
+                while j >= 0 and text[j].isspace():
+                    j -= 1
+                if j >= 0 and text[j] == ",":
+                    inicio_recorte = j
+                fin_recorte = fin
+            text = text[:inicio_recorte] + text[fin_recorte:]
+            result.used.add(name)
+            result.subs += 1
+            result.elementos_omitidos.append((name, line))
+            continue
+
+        parsea, _ = json_value(value)
+        if not parsea:
+            result.errors.append((
+                f"el valor de {name} ocupa un elemento de array, asi que debe ser "
+                f"JSON valido (un objeto entre llaves) o estar vacio para omitir el "
+                f"elemento. Valor actual: {value[:60]}",
+                line,
+            ))
+            continue
+
+        text = text[:inicio] + value + text[fin:]
+        result.used.add(name)
+        result.subs += 1
+        result.elementos_inyectados.append((name, line))
+
+    return text
 
 
 def parses_as_xml(text: str) -> bool:
@@ -205,6 +382,35 @@ def parses_as_xml(text: str) -> bool:
     except ET.ParseError:
         return False
     return True
+
+
+def validate_json_source(source: Path, original: str) -> list[str]:
+    """Comprueba que un .json fuente sigue siendo JSON valido.
+
+    Se hace independientemente del entorno: mide la sintaxis del fichero, no los
+    valores. Para eso los placeholders se neutralizan por una cadena antes de
+    parsear.
+    """
+    errors: list[str] = []
+
+    # Un placeholder sin comillas rompe el JSON. Se detecta aparte para poder dar
+    # el arreglo concreto en lugar de un error del parser.
+    for match in UNQUOTED_IN_JSON.finditer(original):
+        token = match.group(2)
+        errors.append(
+            f"{source.name}:{line_of(original, match.start())}: {token} sin comillas "
+            f"rompe el JSON fuente. Escribelo como \"{token}\": build.py quitara las "
+            f"comillas al generar si el valor es booleano, null o numero"
+        )
+    if errors:
+        return errors
+
+    neutral = PLACEHOLDER.sub("X", original)
+    try:
+        json.loads(neutral)
+    except json.JSONDecodeError as exc:
+        errors.append(f"{source.name}: el JSON fuente no parsea ({exc})")
+    return errors
 
 
 def validate_output(source: Path, original: str, rendered: str) -> list[str]:
@@ -248,15 +454,21 @@ def build_environment(env: str, sources: list[Path], check: bool) -> bool:
     # Las claves consumidas dentro de otro valor del .env ya cuentan como usadas.
     used: set[str] = set(referenced)
     total_subs = 0
+    raw_injections: list[str] = []
+    elementos: list[str] = []
     pending: list[tuple[Path, str]] = []
 
     for source in sources:
         original = read_source(source)
-        rendered, subs, keys, unknown = render(original, values)
-        used |= keys
-        total_subs += subs
+        is_json = source.suffix.lower() == ".json"
+        source_errors = validate_json_source(source, original) if is_json else []
+        errors.extend(source_errors)
 
-        for name, line in sorted(unknown.items()):
+        out = render(original, values, is_json)
+        used |= out.used
+        total_subs += out.subs
+
+        for name, line in sorted(out.unknown.items()):
             if source.suffix.lower() == ".html":
                 # En los .html puede ser Scriban legitimo: se avisa, no falla.
                 warnings.append(
@@ -268,13 +480,41 @@ def build_environment(env: str, sources: list[Path], check: bool) -> bool:
                     f"{source.name}:{line}: {{{{{name}}}}} no esta definida en {env}"
                 )
 
-        errors.extend(validate_output(source, original, rendered))
-        pending.append((destination_for(source, env), rendered))
+        # Cada inyeccion sin comillas se declara: es el efecto menos evidente del
+        # compilador y conviene que nunca pase desapercibido.
+        for name, value, line in out.raw:
+            raw_injections.append(f"{name}={value} en {source.name}:{line}")
+
+        for name, line in out.elementos_inyectados:
+            elementos.append(f"inyectado: {name} en {source.name}:{line}")
+        # La omision borra configuracion. Si el valor se quedo vacio por olvido, esta
+        # linea es lo unico que lo delata, asi que siempre se imprime.
+        for name, line in out.elementos_omitidos:
+            elementos.append(f"omitido:   {name} en {source.name}:{line}")
+
+        for mensaje, line in out.errors:
+            errors.append(f"{source.name}:{line}: {mensaje}")
+
+        for name, value, line in out.python_literals:
+            warnings.append(
+                f"{source.name}:{line}: {name}={value} usa mayuscula de Python; "
+                f"en JSON se escribe en minuscula ({value.lower()}). "
+                f"Se deja como cadena"
+            )
+
+        # Si la fuente ya estaba mal, validar la salida solo repite la misma causa.
+        if not source_errors:
+            errors.extend(validate_output(source, original, out.text))
+        pending.append((destination_for(source, env), out.text))
 
     unused = sorted(set(values) - used)
     if unused:
         warnings.append(f"claves definidas y no usadas: {', '.join(unused)}")
 
+    for injection in raw_injections:
+        print(f"{label} sin comillas: {injection}")
+    for elemento in elementos:
+        print(f"{label} elemento {elemento}")
     for warning in warnings:
         print(f"{label} aviso: {warning}")
     for error in errors:

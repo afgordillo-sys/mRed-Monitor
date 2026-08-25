@@ -43,7 +43,7 @@
     {
       "name": "I_CAMBIO_IMEI_ANDROID12",
       "cron-expression": "0 5 7 * * MON-FRI",
-      "enable": false,
+      "enable": "{{I_CAMBIO_IMEI_ANDROID12_ENABLED}}",
       "type": "groupby",
       "sql": {
         "value": "SELECT '1' AS GRUPO,ad.PIN AS IDENTIFICADOR, gc.IMEI,gc.IMEI2 AS IMEI2,ad.OWNER AS PROPIETARIO, s.MID,gc.TELEFONO1 AS TELEFONO,s.OSVERSION AS OSVERSIONSLAVE,gc.OSVERSION AS OSVERSIONDEVICE FROM adm_devices_application ada INNER JOIN adm_devices ad on ad.ID=ada.IDDEVICE INNER JOIN adm_devices_model adm on adm.ID=ad.IDMODEL INNER JOIN master_replica_slave s on  s.SERIAL=ada.LIC AND s.MID>0 AND adm.IDPLATAFORM<>3 AND s.PENDIENTE=0 LEFT OUTER JOIN gen_device gc ON s.MID=gc.MID WHERE ad.PIN<>gc.IMEI AND IF( instr( ifnull(s.OSVERSION,''),'.') = 0 ,CAST( ifnull(s.OSVERSION,0) AS SIGNED),CAST(substr(s.OSVERSION,0,LENGTH(s.OSVERSION)-instr(s.OSVERSION,'.')-2) AS SIGNED))>=12 ORDER BY gc.CODBRIGADA ASC, s.MID",
@@ -81,7 +81,7 @@
     {
       "name": "I_ERRORES_REPLICA_MRED",
       "cron-expression": "5 58 7 * * MON-FRI",
-      "enable": false,
+      "enable": "{{I_ERRORES_REPLICA_MRED_ENABLED}}",
       "type": "groupby",
       "sql": {
         "value": "SELECT * FROM ck_i_errores_replica_mred",
@@ -125,7 +125,7 @@
     {
       "name": "I_ERRORES_LIVE_MRED",
       "cron-expression": "5 55 7 * * MON-FRI",
-      "enable": false,
+      "enable": "{{I_ERRORES_LIVE_MRED_ENABLED}}",
       "type": "groupby",
       "sql": {
         "value": "SELECT * FROM ck_i_errores_live_mred",
@@ -248,8 +248,8 @@
     },      
     {
       "name": "I_DISP_10KOP_PENDIENTES",
-      "cron-expression": "0 */5 * * * MON-FRI",
-      "enable": false,
+      "cron-expression": "0 */20 * * * MON-FRI",
+      "enable": "{{I_DISP_10KOP_PENDIENTES_ENABLED}}",
       "type": "groupby",
       "sql": {
         "value": "WITH  max_id_cte AS ( SELECT MAX(id) AS max_id FROM master_replica_queue    ),    sdata AS (        SELECT s.mid, s.lastcid        FROM master_replica_slave s        WHERE s.CONDITIONAL = 1 AND s.pendiente = 0 AND s.lastcid <> 500000000    ),    qcounts AS (        SELECT s.mid, s.lastcid, COUNT(*) AS cnt        FROM master_replica_queue q        JOIN master_replica_slave s ON q.id > s.lastcid AND q.mid = 0         WHERE s.CONDITIONAL = 1 AND s.pendiente = 0 AND s.lastcid <> 500000000 GROUP BY s.mid),oper_cte AS (SELECT SUM((m.max_id - s.lastcid - IFNULL(q.cnt, 0))) AS total_oper FROM sdata s JOIN max_id_cte m LEFT JOIN qcounts q ON s.mid = q.mid) SELECT FORMAT(total_oper, 0, 'locale') AS total_oper FROM oper_cte WHERE total_oper > 2000000",
@@ -325,7 +325,7 @@
     {
       "name": "I_RESUMEN_DIARIO",
       "cron-expression": "0 0 8,16 * * MON-FRI",
-      "enable": false,
+      "enable": "{{I_RESUMEN_DIARIO_ENABLED}}",
       "type": "groupby",
       "sql": {
         "value": "select * from view_resumen_diario vrd INNER JOIN monitor_alerts_configuration mac on mac.CODE = vrd.CODE ORDER BY mac.PRIORITY DESC",
@@ -365,16 +365,16 @@
     {
       "name": "I_AVISO_OTS_SIN_ACEPTAR_15",
       "cron-expression": "0 */15 4-12 * * MON-FRI",
-      "enable": false,
+      "enable": "{{I_AVISO_OTS_SIN_ACEPTAR_15_ENABLED}}",
       "type": "groupby",
       "sql": {
-        "value": "SELECT 1 AS ID,count(ID) as MAP_TOTAL_OPERACIONES from ck_aviso_ots_sin_aceptar_hoy where FECHA < date_sub(sysdate(),INTERVAL 10 MINUTE) having count(ID) > 200",
+        "value": "WITH datos AS (    SELECT         DISPOSITIVO,        COUNT(*) AS MAP_TOTAL_OPERACIONES    FROM ck_aviso_ots_sin_aceptar_hoy    WHERE FECHA < DATE_SUB(SYSDATE(), INTERVAL 10 MINUTE)    GROUP BY DISPOSITIVO),total AS (    SELECT SUM(MAP_TOTAL_OPERACIONES) AS MAP_TOTAL_GLOBAL    FROM datos),total_disp AS (    SELECT count(DISPOSITIVO) AS MAP_TOTAL_DISP    FROM datos)SELECT     1 AS ID,    d.MAP_TOTAL_OPERACIONES,    d.DISPOSITIVO,    t.MAP_TOTAL_GLOBAL,    td.MAP_TOTAL_DISP FROM datos d CROSS JOIN total t CROSS JOIN total_disp td where t.MAP_TOTAL_GLOBAL > 500 or td.MAP_TOTAL_DISP > 100 UNION ALL SELECT     1 AS ID,    t.MAP_TOTAL_GLOBAL AS MAP_TOTAL_OPERACIONES,    'TOTAL' AS DISPOSITIVO,    t.MAP_TOTAL_GLOBAL,    td.MAP_TOTAL_DISP FROM total t CROSS JOIN total_disp td where t.MAP_TOTAL_GLOBAL > 500 or td.MAP_TOTAL_DISP > 100",
         "groupby": "ID"
       },
       "errormessage": {
         "subject": "(ALERTA) (##GP_ENV##): Ots sin aceptar",
-        "body": "##ROW_MAP_TOTAL_OPERACIONES## Ots de hoy, sin aceptar (+10 minutos)",
-        "header": ""
+        "body": "<br> ******************************************************************** <br> ##ROW_MAP_TOTAL_OPERACIONES## | ##ROW_DISPOSITIVO##",
+        "header": "Ots sin aceptar (+10 minutos)"
       },
       "email": {
         "to": "(SELECT EMAIL FROM adm_monitor_email WHERE PROCESS IN ('ALL','##CHKNAME##') AND DISABLED=0 AND EMAIL IS NOT NULL)",
@@ -403,16 +403,16 @@
     {
       "name": "I_AVISO_OTS_SIN_ACEPTAR_30",
       "cron-expression": "0 */15 6-20 * * MON-FRI",
-      "enable": false,
+      "enable": "{{I_AVISO_OTS_SIN_ACEPTAR_30_ENABLED}}",
       "type": "groupby",
       "sql": {
-        "value": "SELECT 1 AS ID,count(ID) as MAP_TOTAL_OPERACIONES from ck_aviso_ots_sin_aceptar_hoy where FECHA < date_sub(sysdate(),INTERVAL 30 MINUTE) having count(ID) > 200",
+        "value": "WITH datos AS (    SELECT         DISPOSITIVO,        COUNT(*) AS MAP_TOTAL_OPERACIONES    FROM ck_aviso_ots_sin_aceptar_hoy    WHERE FECHA < DATE_SUB(SYSDATE(), INTERVAL 30 MINUTE)    GROUP BY DISPOSITIVO),total AS (    SELECT SUM(MAP_TOTAL_OPERACIONES) AS MAP_TOTAL_GLOBAL    FROM datos),total_disp AS (    SELECT count(DISPOSITIVO) AS MAP_TOTAL_DISP    FROM datos)SELECT     1 AS ID,    d.MAP_TOTAL_OPERACIONES,    d.DISPOSITIVO,    t.MAP_TOTAL_GLOBAL,    td.MAP_TOTAL_DISP FROM datos d CROSS JOIN total t CROSS JOIN total_disp td where t.MAP_TOTAL_GLOBAL > 500 or td.MAP_TOTAL_DISP > 100 UNION ALL SELECT     1 AS ID,    t.MAP_TOTAL_GLOBAL AS MAP_TOTAL_OPERACIONES,    'TOTAL' AS DISPOSITIVO,    t.MAP_TOTAL_GLOBAL,    td.MAP_TOTAL_DISP FROM total t CROSS JOIN total_disp td where t.MAP_TOTAL_GLOBAL > 500 or td.MAP_TOTAL_DISP > 100",
         "groupby": "ID"
       },
       "errormessage": {
         "subject": "(ALERTA) (##GP_ENV##): Ots sin aceptar",
-        "body": "##ROW_MAP_TOTAL_OPERACIONES## Ots de hoy, sin aceptar (+30 minutos)",
-        "header": ""
+        "body": "<br> ******************************************************************** <br> ##ROW_MAP_TOTAL_OPERACIONES## | ##ROW_DISPOSITIVO##",
+        "header": "Ots sin aceptar (+30 minutos)"
       },
       "email": {
         "to": "(SELECT EMAIL FROM adm_monitor_email WHERE PROCESS IN ('ALL','##CHKNAME##') AND DISABLED=0 AND EMAIL IS NOT NULL)",
@@ -475,11 +475,49 @@
           }
         ]
       }
-    },    
+    },     
+    {
+      "name": "I_AVISO_NO_SELECTIVIDAD",
+      "cron-expression": "0 */5 * * * *",
+      "enable": true,
+      "type": "groupby",
+      "sql": {
+        "value": "select 1 AS ID,count(1) as MAP_TOTAL from (select count(1),mid from master_replica_selected group by mid) f having count(1) <> (select count(1) from master_replica_slave where mid>1)",
+        "groupby": "ID"
+      },
+      "errormessage": {
+        "subject": "(ALERTA) (##GP_ENV##): Hay un problema con la selectividad",
+        "body": "##ROW_MAP_TOTAL## dispositivos, que no aparecen en la selectividad",
+        "header": ""
+      },
+      "email": {
+        "to": "(SELECT EMAIL FROM adm_monitor_email WHERE PROCESS IN ('ALL','##CHKNAME##') AND DISABLED=0 AND EMAIL IS NOT NULL)",
+        "cc": "",
+        "bcc": ""
+      },
+      "actions": {
+        "actions": [
+          {
+            "name": "send-mail"
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": false,
+            "execute-always": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Ok' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          },
+          {
+            "name": "executequery",
+            "execute-if-error": true,
+            "value": "INSERT INTO adm_monitor_process (CHECKING,LOGMESSAGE,STARTTIME,SERVER) SELECT '##CHKNAME##' AS CHECKING, 'Error - ##EXCEPTION##' AS LOGMESSAGE,SYSDATE() AS STARTTIME,'##APPNAME##' AS SERVER from dual ON DUPLICATE KEY UPDATE  CHECKING=VALUES(CHECKING), LOGMESSAGE=VALUES(LOGMESSAGE), STARTTIME=VALUES(STARTTIME), SERVER=VALUES(SERVER)"
+          }
+        ]
+      }
+    },     
     {
       "name": "I_AVISO_OTS_SIN_LLAMAR_GAMAD_POR_TIEMPO_MAS_7_MIN",
       "cron-expression": "0 */5 * * * MON-FRI",
-      "enable": false,
+      "enable": "{{I_AVISO_OTS_SIN_LLAMAR_GAMAD_POR_TIEMPO_MAS_7_MIN_ENABLED}}",
       "type": "groupby",
       "sql": {
         "value": "WITH filtro AS (  SELECT ID  FROM gen_ot_cabecera  WHERE carga_completa = 0    AND ES_COLABORACION = 0    AND SISTEMA = 2    AND FECHA_RECIBIDO_CARGA_COMPLETA <= NOW() - INTERVAL 7 MINUTE),tot AS (  SELECT COUNT(*) AS MAP_TOTAL_OPERACIONES  FROM filtro) SELECT f.ID, t.MAP_TOTAL_OPERACIONES FROM filtro f CROSS JOIN tot t WHERE t.MAP_TOTAL_OPERACIONES > 10 LIMIT 1",
@@ -517,7 +555,7 @@
     {
       "name": "I_PDF_SIN_GENERAR_24_HORAS",
       "cron-expression": "0 0 17 * * MON-FRI",
-      "enable": false,
+      "enable": "{{I_PDF_SIN_GENERAR_24_HORAS_ENABLED}}",
       "type": "groupby",
       "sql": {
         "value": "select 1 AS ID,COUNT(O.ID) AS MAP_TOTAL from gen_ot_cabecera O INNER JOIN (select MAX(ID) AS ID,TASK_ID from gen_ot_estados  GROUP BY TASK_ID) E ON E.TASK_ID = O.TASK_ID  INNER JOIN gen_ot_estados ER ON ER.ID = E.ID left join monitor_ot_pdf_generate m on IFNULL(O.AREA_EMPRESA,'') like concat(m.AREA_EMPRESA,'%')  and ifnull(m.CLASE_ACTIVIDAD,O.CLASE_ACTIVIDAD) like concat('%',O.CLASE_ACTIVIDAD,'%') and ifnull(m.CLASE_ORDEN,O.CLASE_ORDEN) = O.CLASE_ORDEN  and ifnull(m.NO_CLASE_ACTIVIDAD,'')  not like concat('%',O.CLASE_ACTIVIDAD,'%')  and ifnull(m.NO_CLASE_ORDEN,'')  not like concat('%',O.CLASE_ORDEN,'%') WHERE ER.ESTADO IN (5)  and m.ID is not null  and m.PDF_PLANTILLA is not null and IFNULL(O.PDF_CREADO,0) = 0  and TIMESTAMPDIFF(HOUR,ER.FECHA,NOW()) >= 24 HAVING COUNT(O.ID) > 0",
@@ -555,10 +593,10 @@
     {
       "name": "I_ESTAD0S_SIN_PROCESAR_MAS10MIN",
       "cron-expression": "0 0,30 * * * MON-FRI",
-      "enable": false,
+      "enable": "{{I_ESTAD0S_SIN_PROCESAR_MAS10MIN_ENABLED}}",
       "type": "groupby",
       "sql": {
-        "value": "select 1 AS ID,COUNT(ID) AS MAP_TOTAL from gen_ot_estados where procesado=0 AND FECHA < (NOW() - INTERVAL 10 MINUTE) HAVING COUNT(ID) > 1",
+        "value": "select 1 AS ID,COUNT(ID) AS MAP_TOTAL from gen_ot_estados where procesado=0 AND IFNULL(MONITOR_NO_AVISO,0)=0 AND FECHA < (NOW() - INTERVAL 10 MINUTE) HAVING COUNT(ID) > 1",
         "groupby": "ID"
       },
       "errormessage": {
@@ -593,10 +631,10 @@
 	{
       "name": "I_ESTAD0S_SIN_PROCESAR_MAS10MIN_SIN_TASK_ID",
       "cron-expression": "0 0,30 * * * MON-FRI",
-      "enable": false,
+      "enable": "{{I_ESTAD0S_SIN_PROCESAR_MAS10MIN_SIN_TASK_ID_ENABLED}}",
       "type": "groupby",
       "sql": {
-        "value": "select 1 AS ID,COUNT(ID) AS MAP_TOTAL from gen_ot_estados where procesado=0 AND FECHA < (NOW() - INTERVAL 10 MINUTE) AND TASK_ID IS NULL HAVING COUNT(ID) > 1",
+        "value": "select 1 AS ID,COUNT(ID) AS MAP_TOTAL from gen_ot_estados where procesado=0 AND IFNULL(MONITOR_NO_AVISO,0)=0 AND FECHA < (NOW() - INTERVAL 10 MINUTE) AND TASK_ID IS NULL HAVING COUNT(ID) > 1",
         "groupby": "ID"
       },
       "errormessage": {
@@ -616,7 +654,7 @@
             "after-action": [
               {
                 "name": "executequery",
-                "value": "UPDATE gen_ot_estados SET MONITOR_NO_AVISO=1 WHERE ID IN (select ID from gen_ot_estados goe where procesado=0 and goe.TASK_ID is null and goe.MONITOR_NO_AVISO=0 AND goe.FECHA < (NOW() - INTERVAL 60 MINUTE))"
+                "value": "UPDATE gen_ot_estados SET MONITOR_NO_AVISO=1 WHERE ID IN (select ID from gen_ot_estados goe where procesado=0 and goe.TASK_ID is null and goe.MONITOR_NO_AVISO=0 AND goe.FECHA < (NOW() - INTERVAL 10 MINUTE))"
               }
             ]
           },          
@@ -637,7 +675,7 @@
     {
       "name": "I_PROCESADO99_MAS1HORA_HOY",
       "cron-expression": "0 */60 * * * MON-FRI",
-      "enable": false,
+      "enable": "{{I_PROCESADO99_MAS1HORA_HOY_ENABLED}}",
       "type": "groupby",
       "sql": {
         "value": "select 1 AS ID,COUNT(ID) AS MAP_TOTAL from gen_ot_estados where procesado=-99 AND FECHA < (NOW() - INTERVAL 60 MINUTE) and fecha > CURDATE() HAVING COUNT(ID) > 0",
@@ -675,10 +713,10 @@
     {
       "name": "I_ERROR_API_URGENTE_1",
       "cron-expression": "0 */15 * * * MON-FRI",
-      "enable": false,
+      "enable": "{{I_ERROR_API_URGENTE_1_ENABLED}}",
       "type": "groupby",
       "sql": {
-        "value": "Select 1 as ID, PROCESO, COUNT(1) AS MAP_TOTAL, MAX(ID) AS MAP_ID_ULTIMO_ERROR from mred_infolog.adm_mredapi_log where MENSAJE LIKE '%Unable to cast object of type%' GROUP BY PROCESO having count(1) > 0",
+        "value": "SELECT lg.* from (Select 1 as ID, L.PROCESO, COUNT(1) AS MAP_TOTAL,MAX(L.ID) AS MAP_ID_ULTIMO_ERROR from mred_infolog.adm_mredapi_log L where L.MENSAJE LIKE '%Unable to cast object of type%' GROUP BY L.PROCESO having count(1) > 50) lg JOIN mred_infolog.adm_mredapi_log le on le.ID= lg.MAP_ID_ULTIMO_ERROR where le.FECHA > (NOW() - INTERVAL 5 MINUTE)",
         "groupby": "ID"
       },
       "errormessage": {
@@ -690,7 +728,7 @@
         "to": "(SELECT EMAIL FROM adm_monitor_email WHERE PROCESS IN ('ALL','##CHKNAME##') AND DISABLED=0 AND EMAIL IS NOT NULL)",
         "cc": "",
         "bcc": ""
-      },
+      },      
       "actions": {
         "actions": [
           {
@@ -716,12 +754,12 @@
       "enable": true,
       "type": "groupby",
       "sql": {
-        "value": "SELECT            S.TABLE_NAME,            CONCAT(                'ALTER TABLE `mred_data_history`.`', S.TABLE_NAME, '` ',                GROUP_CONCAT(                    'ADD COLUMN `', S.COLUMN_NAME, '` ', S.COLUMN_TYPE, ' NULL'                    ORDER BY S.ORDINAL_POSITION                    SEPARATOR ', '                ),                ';'            ) AS ALTER_STMT        FROM INFORMATION_SCHEMA.COLUMNS S        WHERE S.TABLE_SCHEMA = '{{DB_SCHEMA}}'          AND EXISTS (                SELECT 1 FROM INFORMATION_SCHEMA.TABLES TT                WHERE TT.TABLE_SCHEMA = 'mred_data_history'                  AND TT.TABLE_NAME = S.TABLE_NAME          )          AND NOT EXISTS (                SELECT 1                FROM INFORMATION_SCHEMA.COLUMNS D                WHERE D.TABLE_SCHEMA = 'mred_data_history'                  AND D.TABLE_NAME = S.TABLE_NAME                  AND D.COLUMN_NAME = S.COLUMN_NAME          )        GROUP BY S.TABLE_NAME",
-        "groupby": "TABLE_NAME"
+        "value": "SELECT    1 as ID,        S.TABLE_NAME,            CONCAT(                'ALTER TABLE `mred_data_history`.`', S.TABLE_NAME, '` ',                GROUP_CONCAT(                    'ADD COLUMN `', S.COLUMN_NAME, '` ', S.COLUMN_TYPE, ' NULL'                    ORDER BY S.ORDINAL_POSITION                    SEPARATOR ', '                ),                ';'            ) AS ALTER_STMT        FROM INFORMATION_SCHEMA.COLUMNS S        WHERE S.TABLE_SCHEMA = '{{DB_SCHEMA}}'          AND EXISTS (                SELECT 1 FROM INFORMATION_SCHEMA.TABLES TT                WHERE TT.TABLE_SCHEMA = 'mred_data_history'                  AND TT.TABLE_NAME = S.TABLE_NAME          )          AND NOT EXISTS (                SELECT 1                FROM INFORMATION_SCHEMA.COLUMNS D                WHERE D.TABLE_SCHEMA = 'mred_data_history'                  AND D.TABLE_NAME = S.TABLE_NAME                  AND D.COLUMN_NAME = S.COLUMN_NAME          )        GROUP BY S.TABLE_NAME",
+        "groupby": "ID"
       },
       "errormessage": {
         "subject": "(AVISO) (##GP_ENV##) Discrepancia de campos ({{DB_SCHEMA}} vs mred_data_history)",
-        "body": "Se han detectado columnas nuevas en {{DB_SCHEMA}}.##ROW_TABLE_NAME## que no existen en mred_data_history.##ROW_TABLE_NAME##.##NL####NL##Sentencia ALTER sugerida:##NL####NL####ROW_ALTER_STMT####NL####NL##Revisar y ejecutar manualmente antes de que corra el mantenimiento, o el mantenimiento no se ejecutará automáticamente.",
+        "body": "<br><br>Se han detectado columnas nuevas en <b>{{DB_SCHEMA}}.##ROW_TABLE_NAME##</b> que no existen en <b>mred_data_history.##ROW_TABLE_NAME##</b>.<br><ul><li>Sentencia ALTER sugerida: <b>##ROW_ALTER_STMT##</b></li></ul><br> <span style='padding: 12px 16px; background: #fff8e6; border: 1px solid #ffe9b8; color: #6a4b00;'>Revisar y ejecutar manualmente antes de que corra el mantenimiento, o el mantenimiento no se ejecutará automáticamente.</span>",
         "header": ""
       },
       "email": {

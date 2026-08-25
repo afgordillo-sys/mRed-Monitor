@@ -148,16 +148,195 @@ de un entorno es editar **una sola línea**.
 
 ### Claves disponibles
 
-| Clave | Para qué sirve | Usos |
-|-------|----------------|------|
-| `MONITOR_PATH` | Carpeta `Monitor/` del servidor: logos, QR, plantillas HTML, scripts | 90 |
-| `REPLICA_FILES` | Carpeta de ficheros replicados, incluye el código de repositorio | 27 |
-| `REPOSITORY_PATH` | Raíz de `xonerepository/`, para rutas de borrado de ficheros | 3 |
-| `HEALTHZ_HOST` | Host del endpoint de healthcheck | 1 |
-| `VHOST` | Host del vhost. No se usa directo, solo dentro de otras claves | — |
-| `REPLICA_CODE` | Código de repositorio. Solo dentro de `REPLICA_FILES` | — |
+| Clave | Para qué sirve | Tipo | Usos |
+|-------|----------------|------|------|
+| `MONITOR_PATH` | Carpeta `Monitor/` del servidor: logos, QR, plantillas HTML, scripts | texto | 90 |
+| `REPLICA_FILES` | Carpeta de ficheros replicados, incluye el código de repositorio | texto | 27 |
+| `REPOSITORY_PATH` | Raíz de `xonerepository/`, para rutas de borrado de ficheros | texto | 3 |
+| `DB_SCHEMA` | Esquema de base de datos, dentro de consultas SQL | texto | 3 |
+| `HEALTHZ_HOST` | Host del endpoint de healthcheck | texto | 1 |
+| `<CHECKING>_ENABLED` | 13 flags, uno por checking. Ver abajo | **booleano** | 13 |
+| `BORRADOLOGS_API` | Acción de borrado de logs de la API: existe en int, no en prod | **objeto JSON** | 1 |
+| `VHOST` | Host del vhost. No se usa directo, solo dentro de otras claves | texto | — |
+| `REPLICA_CODE` | Código de repositorio. Solo dentro de `REPLICA_FILES` | texto | — |
 
-Total: **121 sustituciones** en 26 ficheros.
+Total: **138 sustituciones** en 26 ficheros.
+
+### Flags de checkings
+
+Convención: la clave es **el nombre del checking más el sufijo `_ENABLED`**. Así se sabe
+de un vistazo a qué checking corresponde cada flag, y darle uno nuevo a otro checking no
+requiere inventar nada.
+
+Los 13 avisos informativos de `monitor_avisos.json` están **apagados en integración y
+encendidos en producción**, para que integración no genere alertas:
+
+| Checking | int | prod |
+|----------|-----|------|
+| `I_AVISO_OTS_SIN_ACEPTAR_15` | `false` | `true` |
+| `I_AVISO_OTS_SIN_ACEPTAR_30` | `false` | `true` |
+| `I_AVISO_OTS_SIN_LLAMAR_GAMAD_POR_TIEMPO_MAS_7_MIN` | `false` | `true` |
+| `I_CAMBIO_IMEI_ANDROID12` | `false` | `true` |
+| `I_DISP_10KOP_PENDIENTES` | `false` | `true` |
+| `I_ERRORES_LIVE_MRED` | `false` | `true` |
+| `I_ERRORES_REPLICA_MRED` | `false` | `true` |
+| `I_ERROR_API_URGENTE_1` | `false` | `true` |
+| `I_ESTAD0S_SIN_PROCESAR_MAS10MIN` | `false` | `true` |
+| `I_ESTAD0S_SIN_PROCESAR_MAS10MIN_SIN_TASK_ID` | `false` | `true` |
+| `I_PDF_SIN_GENERAR_24_HORAS` | `false` | `true` |
+| `I_PROCESADO99_MAS1HORA_HOY` | `false` | `true` |
+| `I_RESUMEN_DIARIO` | `false` | `true` |
+
+Cada uno tiene su propia clave, así que encender o apagar cualquiera es editar una línea
+del `.env` de ese entorno, sin afectar a los demás.
+
+> **No todos los `enable` llevan flag, y es correcto.** `I_REVISAR_ERRORES_API`,
+> `I_CARGA_100KOP_INVENTARIO` y `I_AVISO_OTS_SIN_LLAMAR_GAMAD_20` están en `false` en los
+> **dos** entornos, así que siguen fijos en la fuente. Solo se parametriza lo que de verdad
+> cambia entre entornos.
+
+### Valores que no son texto: booleanos y números
+
+En JSON un booleano va **sin comillas**, pero un placeholder tiene que estar dentro del
+fichero. Eso deja dos formas y ninguna sirve por sí sola:
+
+| Forma en la fuente | ¿Fuente válida? | Salida |
+|--------------------|-----------------|--------|
+| `"enable": {{FLAG}}` | **No.** El fichero deja de parsear | `true` — correcto |
+| `"enable": "{{FLAG}}"` | Sí | `"true"` — **cadena, tipo incorrecto** |
+
+**La regla:** el placeholder se escribe **entre comillas**, y `build.py` las quita al
+generar cuando el valor resuelto es un literal JSON. Así la fuente sigue siendo JSON
+válido y la salida lleva el tipo correcto.
+
+```json
+"enable": "{{I_CAMBIO_IMEI_ANDROID12_ENABLED}}",
+```
+
+```
+# .env.int                              # .env.prod
+I_CAMBIO_IMEI_ANDROID12_ENABLED=false   I_CAMBIO_IMEI_ANDROID12_ENABLED=true
+```
+
+Genera `"enable": false` en int y `"enable": true` en prod, como booleanos reales.
+
+> El tipo importa: en los 3 JSON y en los dos entornos desplegados, `enable` aparece
+> **115 veces y siempre como booleano**, nunca como cadena. Solo `continue-if-error` usa
+> la forma con comillas.
+
+#### Qué se emite sin comillas
+
+Se intenta interpretar el valor del `.env` como literal JSON. Se acepta si es
+`true`, `false`, `null` o un número; cualquier otra cosa se queda como cadena.
+
+| Valor en el `.env` | Resultado |
+|--------------------|-----------|
+| `true` · `false` · `null` | literal, sin comillas |
+| `3` · `-1` · `2.5` | número, sin comillas |
+| `localhost` · `mredint` · `1KEGG99N` | cadena (no parsea como JSON) |
+| `192.168.1.14` | cadena (no es un número válido) |
+| `007` · `01` | cadena (JSON prohíbe ceros a la izquierda) |
+| `{"a":1}` · `[1,2]` | objeto o array, sin comillas |
+| `True` · `False` (mayúscula de Python) | cadena, **y se avisa** |
+
+Es **una sola regla**: si el valor parsea como JSON, se inyecta con su tipo; si no, se queda
+como cadena. Vale igual para un booleano, un número, un objeto o un array.
+
+#### Dos guardas
+
+1. **Solo si ocupa el valor completo.** En
+   `"url": "http://{{HEALTHZ_HOST}}:6060/healthz"` el placeholder es parte de una cadena
+   mayor, así que se sustituye como texto y las comillas se quedan.
+2. **Nunca en una clave de objeto.** Un placeholder usado como clave
+   (`"{{X}}": 1`) conserva siempre las comillas, así que no se puede generar JSON inválido
+   por esa vía.
+
+En `.xml` y `.html` no aplica: los atributos XML son siempre cadenas.
+
+> **Cuidado con las cadenas de solo dígitos.** Como se admiten números, una clave cuyo
+> valor sean solo dígitos pierde las comillas si ocupa un valor entero. Si necesitas que
+> un código numérico siga siendo cadena, no lo pongas como valor completo. Para que nunca
+> pase desapercibido, `build.py` **declara cada inyección sin comillas** en su salida:
+>
+> ```
+> [prod] sin comillas: I_CAMBIO_IMEI_ANDROID12_ENABLED=true en monitor_avisos.json:46
+> ```
+>
+> Si aparecen más líneas de las que esperabas, mira cuál.
+
+### Elementos de array: inyectar u omitir
+
+Caso distinto: un trozo de configuración que **existe en un entorno y no existe en otro**.
+El ejemplo real es la acción que borra los logs de la API, que solo tiene sentido en
+integración:
+
+```json
+"actions": [
+  { "name": "delete-file", "value": "##GP_LOGSMONITORPATH##", ... },
+  "{{BORRADOLOGS_API}}",
+  { "name": "delete-file", "value": "##GP_LOGSMANAGERPATH##", ... },
+```
+
+```
+# .env.int
+BORRADOLOGS_API={"name":"delete-file","value":"##GP_LOGSAPIPATH##","scan-directory":true,"filter":"*.log","delete-time":"7D"}
+
+# .env.prod  -> vacío a propósito
+BORRADOLOGS_API=
+```
+
+En int el array sale con 14 acciones; en prod con 13, y el elemento **desaparece con su
+coma**, sin dejar `""` ni `null`.
+
+#### Cómo decide la posición
+
+Un placeholder entre comillas se clasifica por el carácter no blanco de antes y de después:
+
+| Antes | Después | Posición | Tratamiento |
+|-------|---------|----------|-------------|
+| `:` | cualquiera | valor de objeto | inyecta el JSON, o cadena |
+| `[` o `,` | `,` o `]` | **elemento de array** | inyecta u omite |
+| cualquiera | `:` | clave de objeto | nunca se toca |
+| resto | resto | dentro de una cadena mayor | sustitución de texto |
+
+#### Qué vale como valor
+
+En posición de elemento de array la regla es **estricta**, porque en estos ficheros no hay
+ningún array con elementos de tipo cadena:
+
+| Valor en el `.env` | Resultado |
+|--------------------|-----------|
+| vacío | **el elemento se omite**, con una coma adyacente |
+| JSON válido | se inyecta verbatim |
+| cualquier otra cosa | **error**, indicando qué se esperaba |
+
+La coma se maneja según dónde esté el elemento: si le sigue una coma se elimina esa y la
+línea desaparece limpia; si es el último se elimina la coma anterior; si es el único, el
+array queda vacío. En los tres casos el resultado es JSON válido, y la validación de salida
+lo comprueba.
+
+> **Un vacío olvidado borra configuración.** Es el riesgo de este mecanismo: si alguien
+> define la clave y se deja el valor sin rellenar, el elemento desaparece sin más. Por eso
+> `build.py` **declara siempre las dos direcciones**:
+>
+> ```
+> [int]  elemento inyectado: BORRADOLOGS_API en monitor_otros.json:814
+> [prod] elemento omitido:   BORRADOLOGS_API en monitor_otros.json:814
+> ```
+>
+> Si ves un `omitido` que no esperabas, es que falta un valor. Conviene además dejar un
+> comentario en el `.env` cuando el vacío sea deliberado, para que nadie lo "arregle".
+
+#### Por qué no se usa un flag aquí
+
+Porque **una acción no se puede desactivar individualmente**. Según
+`references/actions-reference.md` del skill `xone-monitor-generator`, `<action>` solo admite
+`name`, `execute-if-error`, `execute-always`, `for-each-row` y `sleep`, más los atributos
+propios de cada acción. El `enable` existe en `<checking>` y en `<maintenance>`, nunca en
+`<action>` — y las 157 acciones del proyecto lo confirman.
+
+Para un **checking o un maintenance** completo, en cambio, el flag booleano sigue siendo la
+vía correcta: es más simple y usa una capacidad documentada del motor.
 
 ---
 
@@ -238,6 +417,32 @@ grep -rE "xoneideintcore|1KEGG99N" dist/prod/
 ```
 
 Las dos órdenes deben devolver **vacío**.
+
+Y, lo más importante antes de tocar producción, **qué checkings cambiarían de estado**.
+Compara lo que vas a subir con lo que hay desplegado:
+
+```bash
+python - <<'EOF'
+import json
+for env in ("int", "prod"):
+    g = {c["name"]: c.get("enable")
+         for c in json.load(open(f"dist/{env}/config/monitor_avisos.json",
+                                 encoding="utf-8"))["checkings"]}
+    d = {c["name"]: c.get("enable")
+         for c in json.load(open(f"env/{env}/config/monitor_avisos.json",
+                                 encoding="utf-8"))["checkings"]}
+    for n in sorted(set(g) & set(d)):
+        if g[n] != d[n]:
+            print(f"{env}: {n}  desplegado={d[n]} -> a subir={g[n]}")
+EOF
+```
+
+Cada línea es un checking que se encenderá o apagará al desplegar. Si alguna no es
+intencionada, **no subas el fichero**: parametriza ese `enable` primero.
+
+Ahora mismo esta comprobación **no devuelve nada** en ninguno de los dos entornos: los 18
+checkings comunes coinciden exactamente con lo desplegado. Ese es el estado correcto, y
+merece la pena ejecutarla cada vez para confirmar que sigue siéndolo.
 
 ### 5. Subir al servidor
 
@@ -341,8 +546,12 @@ Si alguna validación falla, **no se escribe ningún fichero de ese entorno**: n
 |------------|----------------|
 | Placeholder sin definir en `.xml` / `.json` | **Error**, con `fichero:línea` |
 | Placeholder sin definir en `.html` | Aviso; se deja intacto (posible Scriban) |
+| Placeholder **sin comillas** en un `.json` | **Error** con `fichero:línea` y el arreglo concreto |
+| El JSON **fuente** no parsea | **Error** |
 | El JSON generado no parsea | **Error** |
 | El XML generado no parsea | **Error**, solo si la fuente sí parseaba |
+| Valor no vacío y no JSON en un elemento de array | **Error**: debe ser JSON válido o estar vacío |
+| Valor `True` / `False` / `None` en posición sin comillas | Aviso: en JSON va en minúscula |
 | Clave definida y no usada | Aviso |
 | Referencia circular en el `.env` | **Error** |
 | Entorno inexistente | **Error**, lista los disponibles |
@@ -351,12 +560,30 @@ La validación del XML solo se exige si el fichero fuente ya era XML bien formad
 plantilla que hoy no lo sea no bloquea la compilación, pero sí se detecta si la sustitución
 la rompe.
 
+Los `.json` fuente, en cambio, **sí** deben parsear siempre: es lo que garantiza que
+editores, formateadores y validadores sigan funcionando sobre ellos. Para medir la sintaxis
+del fichero y no la de los valores, los placeholders se neutralizan antes de parsear.
+
 ### Ejemplos
+
+```
+[int] ERROR: monitor_avisos.json:46: {{FLAG}} sin comillas rompe el JSON fuente.
+    Escribelo como "{{FLAG}}": build.py quitara las comillas al generar si el valor
+    es booleano, null o numero
+[int] FALLIDO: 1 error(es), no se ha escrito nada
+Terminado CON ERRORES.
+```
 
 ```
 [int] ERROR: monitor_otros.json:517: {{RUTA_NUEVA}} no esta definida en int
 [int] FALLIDO: 1 error(es), no se ha escrito nada
 Terminado CON ERRORES.
+```
+
+```
+[int] ERROR: monitor_otros.json:814: el valor de BORRADOLOGS_API ocupa un elemento de
+    array, asi que debe ser JSON valido (un objeto entre llaves) o estar vacio para
+    omitir el elemento. Valor actual: delete-file
 ```
 
 ```
@@ -416,6 +643,49 @@ done
 ```
 
 No debe imprimir nada.
+
+### Checkings que no existen en los dos entornos
+
+Los flags arreglan el caso "está en los dos pero con distinto valor". Queda otro caso: un
+checking que **existe o no** según el entorno. La comprobación del paso 4 no lo detecta,
+porque solo compara los checkings comunes a ambos lados.
+
+Al leer el resultado, las dos direcciones no pesan igual:
+
+- **Se añadiría** — normalmente es correcto: un checking nuevo, hecho en la fuente y aún
+  sin desplegar. Hoy salen `I_AVISO_DISCREPANCIA_CAMPOS_HISTORY`, `CREAR-PDF-OBRAS`,
+  `CREAR-PDF_3` y, solo en prod, `CREAR-PDF-CARTA`.
+- **Se perdería** — siempre sospechoso: hay algo corriendo en el servidor que la fuente no
+  tiene. **Hoy no sale ninguno**, y ese es el estado correcto.
+
+> **`I_AVISO_NO_SELECTIVIDAD` merece un flag.** Está en la fuente con `enable: true`, pero
+> solo está desplegado en prod. Compilar int lo **activaría en integración**, que es
+> justo lo que los 13 flags evitan para el resto de avisos `I_*`. Si no debe correr en
+> integración, necesita su `I_AVISO_NO_SELECTIVIDAD_ENABLED`, apagado en int.
+
+> **Los nombres con guiones no valen como clave.** `CREAR-PDF-CARTA` tendría que usar
+> `CREAR_PDF_CARTA_ENABLED`, con guiones bajos, porque la clave debe encajar en
+> `[A-Z][A-Z0-9_]*`. En ese caso la convención nombre + `_ENABLED` no se puede aplicar
+> literalmente.
+
+Para ver ambas direcciones:
+
+```bash
+python - <<'EOF'
+import json, re, pathlib
+for f in ("monitor_avisos.json", "monitor_pdf.json"):
+    for env in ("int", "prod"):
+        def nombres(p):
+            t = re.sub(r"\{\{[A-Z][A-Z0-9_]*\}\}", "X",
+                       pathlib.Path(p).read_text(encoding="utf-8"))
+            return {c["name"] for c in json.loads(t)["checkings"]}
+        g, d = nombres(f"dist/{env}/config/{f}"), nombres(f"env/{env}/config/{f}")
+        for n in sorted(g - d):
+            print(f"{env} {f}: +{n} (se añadiría)")
+        for n in sorted(d - g):
+            print(f"{env} {f}: -{n} (se perdería)")
+EOF
+```
 
 ### Los `env/` están desincronizados
 
