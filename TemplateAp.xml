@@ -431,7 +431,7 @@ group by n.G3E_FID,n.G3E_FNO,n.NUMEROORDEN having count(1) > 1 ) n where n.NUMER
 			<prop name="MAP_OBSERVACIONES" text-border="true" text-border-left="true" text-border-bottom="true" text-border-right="true" type="T" width="70%" height="15p"	align="left" lines="1"  newline="false" bgcolor="#ffffff" font-size="9" text-border-color="#000000" />
 
 			<prop name="MAP_FOTO_AVISOS" grid-column="4" viewmode="grid" content="@FotosAvisos"  type="Z"/>
-			<content name="@FotosAvisos" src="FotosAvisos" filter="(F.NUMEROAVISOGAMAD='##FLD_QMNUM##'  OR F.NUMEROAVISOMOVILIDAD='##FLD_ZIDMICRO##')"/>
+			<content name="@FotosAvisos" src="FotosAvisos" filter="(F.NUMEROAVISOGAMAD='##FLD_QMNUM##'  OR F.NUMEROAVISOMOVILIDAD='##FLD_ZIDMICRO##') and IFNULL(F.BAJA,0)=0"/>
 
 	</coll>
 	
